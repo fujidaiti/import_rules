@@ -1,4 +1,4 @@
-import 'package:import_rules/import_rules.dart';
+import 'package:import_rules/src/import_rules.dart';
 import 'package:test/test.dart';
 
 void main() {
