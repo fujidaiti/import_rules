@@ -12,7 +12,6 @@
 # The core lints are also what is used by pub.dev for scoring packages.
 
 include: package:lints/recommended.yaml
-
 # Uncomment the following section to specify additional rules.
 
 # linter:
@@ -28,6 +27,6 @@ include: package:lints/recommended.yaml
 
 # For additional information about configuring this file, see
 # https://dart.dev/guides/language/analysis-options
-plugins:
-  import_rules:
-    path: ./
+# plugins:
+#   import_rules:
+#     path: ./

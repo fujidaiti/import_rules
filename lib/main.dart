@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:analysis_server_plugin/plugin.dart';
 import 'package:analysis_server_plugin/registry.dart';
 import 'package:analyzer/analysis_rule/analysis_rule.dart';
@@ -8,6 +6,7 @@ import 'package:analyzer/analysis_rule/rule_visitor_registry.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/ast/visitor.dart';
 import 'package:analyzer/error/error.dart';
+import 'package:analyzer/file_system/file_system.dart';
 
 final plugin = SimplePlugin();
 
@@ -18,12 +17,6 @@ class SimplePlugin extends Plugin {
   @override
   void register(PluginRegistry registry) {
     registry.registerWarningRule(MyRule());
-  }
-
-  @override
-  FutureOr<void> start() {
-    // TODO: implement start
-    return super.start();
   }
 }
 
@@ -47,6 +40,29 @@ class MyRule extends AnalysisRule {
   ) {
     var visitor = _Visitor(this, context);
     registry.addAwaitExpression(this, visitor);
+    if (context.package?.root case final package?) {
+      _loadRules(package);
+    }
+  }
+
+  void _loadRules(Folder package) {
+    const searchPaths = ['import_rules.yaml', 'analysis_options.yaml'];
+
+    File? rulesFile;
+    for (final searchPath in searchPaths) {
+      final file = package.getChild(searchPath);
+      if (file is File && file.exists) {
+        rulesFile = file;
+        break;
+      }
+    }
+    if (rulesFile == null) {
+      return;
+    }
+
+    // final yaml = rulesFile.readAsStringSync();
+    // tryParseRulesFromYaml(yaml);
+    // final timestamp = rulesFile.modificationStamp;
   }
 }
 

@@ -122,6 +122,16 @@ String _substituteDir(String pattern, String dirValue) {
   return pattern.replaceAll(r'$DIR', dirValue);
 }
 
+List<Rule>? tryParseRulesFromYaml(String yamlContent) {
+  try {
+    return parseRulesFromYaml(yamlContent);
+  } on FormatException catch (error, stackTrace) {
+    print('Error parsing rules from YAML: $error');
+    print('Stack trace: $stackTrace');
+    return null;
+  }
+}
+
 /// Parses import rules from a YAML string.
 ///
 /// The YAML should follow this structure:
