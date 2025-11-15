@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:import_rules/src/import_rules.dart';
+import 'package:import_rules/src/parser.dart';
 import 'package:test/test.dart';
 
 void main() {

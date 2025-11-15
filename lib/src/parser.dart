@@ -1,4 +1,7 @@
-part of 'import_rules.dart';
+import 'dart:io';
+
+import 'import_rules.dart';
+import 'package:yaml/yaml.dart';
 
 List<Rule>? tryParseRulesFromYaml(String yamlContent) {
   try {

@@ -1,10 +1,5 @@
-import 'dart:io';
-
 import 'package:glob/glob.dart';
 import 'package:path/path.dart' as p;
-import 'package:yaml/yaml.dart';
-
-part 'parser.dart';
 
 /// Represents an import rule that controls which files can import which files.
 class Rule {
