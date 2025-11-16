@@ -13,10 +13,9 @@ void main() {
 
     test('allows presentation to import domain models', () {
       expect(
-        canImport(
+        rule.canImport(
           'lib/presentation/pages/home.dart',
           'lib/data/models/user.dart',
-          rule,
         ),
         isTrue,
       );
@@ -24,10 +23,9 @@ void main() {
 
     test('denies presentation to import data repositories', () {
       expect(
-        canImport(
+        rule.canImport(
           'lib/presentation/pages/home.dart',
           'lib/data/repositories/user_repository.dart',
-          rule,
         ),
         isFalse,
       );
@@ -35,10 +33,9 @@ void main() {
 
     test('allows non-presentation files to import data layer', () {
       expect(
-        canImport(
+        rule.canImport(
           'lib/domain/usecases/login.dart',
           'lib/data/repositories/user_repository.dart',
-          rule,
         ),
         isTrue,
       );
@@ -55,10 +52,9 @@ void main() {
 
     test('denies core to import Flutter packages', () {
       expect(
-        canImport(
+        rule.canImport(
           'lib/core/entities/user.dart',
           'package:flutter/material.dart',
-          rule,
         ),
         isFalse,
       );
@@ -66,10 +62,9 @@ void main() {
 
     test('denies core to import UI layer', () {
       expect(
-        canImport(
+        rule.canImport(
           'lib/core/usecases/login.dart',
           'lib/ui/widgets/button.dart',
-          rule,
         ),
         isFalse,
       );
@@ -77,10 +72,9 @@ void main() {
 
     test('allows core to import other core files', () {
       expect(
-        canImport(
+        rule.canImport(
           'lib/core/usecases/login.dart',
           'lib/core/entities/user.dart',
-          rule,
         ),
         isTrue,
       );
@@ -101,10 +95,9 @@ void main() {
 
     test('denies auth to import profile', () {
       expect(
-        canImport(
+        rule.canImport(
           'lib/features/auth/login.dart',
           'lib/features/profile/profile_page.dart',
-          rule,
         ),
         isFalse,
       );
@@ -112,10 +105,9 @@ void main() {
 
     test('denies auth to import settings', () {
       expect(
-        canImport(
+        rule.canImport(
           'lib/features/auth/login.dart',
           'lib/features/settings/settings.dart',
-          rule,
         ),
         isFalse,
       );
@@ -123,10 +115,9 @@ void main() {
 
     test('allows auth to import within auth', () {
       expect(
-        canImport(
+        rule.canImport(
           'lib/features/auth/login.dart',
           'lib/features/auth/models/user.dart',
-          rule,
         ),
         isTrue,
       );
@@ -134,10 +125,9 @@ void main() {
 
     test('allows non-auth features to import profile', () {
       expect(
-        canImport(
+        rule.canImport(
           'lib/features/settings/settings.dart',
           'lib/features/profile/profile_page.dart',
-          rule,
         ),
         isTrue,
       );
@@ -155,10 +145,9 @@ void main() {
 
     test('allows same module to import from its own src/', () {
       expect(
-        canImport(
+        rule.canImport(
           'lib/features/auth/auth.dart',
           'lib/features/auth/src/utils.dart',
-          rule,
         ),
         isTrue,
       );
@@ -166,10 +155,9 @@ void main() {
 
     test('allows imports within same src/', () {
       expect(
-        canImport(
+        rule.canImport(
           'lib/features/auth/src/cache.dart',
           'lib/features/auth/src/utils.dart',
-          rule,
         ),
         isTrue,
       );
@@ -177,10 +165,9 @@ void main() {
 
     test('allows imports within same src/ at different levels', () {
       expect(
-        canImport(
+        rule.canImport(
           'lib/core/models/src/entity.dart',
           'lib/core/models/src/value.dart',
-          rule,
         ),
         isTrue,
       );
@@ -188,10 +175,9 @@ void main() {
 
     test('denies cross-module src/ imports', () {
       expect(
-        canImport(
+        rule.canImport(
           'lib/infrastructure/db.dart',
           'lib/domain/src/entity.dart',
-          rule,
         ),
         isFalse,
       );
@@ -199,10 +185,9 @@ void main() {
 
     test('denies cross-module src/ imports between src/ directories', () {
       expect(
-        canImport(
+        rule.canImport(
           'lib/features/auth/src/cache.dart',
           'lib/features/profile/src/utils.dart',
-          rule,
         ),
         isFalse,
       );
@@ -225,24 +210,23 @@ void main() {
 
     test('allows unit tests to import lib/', () {
       expect(
-        canImport('test/unit/user_test.dart', 'lib/models/user.dart', rule),
+        rule.canImport('test/unit/user_test.dart', 'lib/models/user.dart'),
         isTrue,
       );
     });
 
     test('allows unit tests to import test package', () {
       expect(
-        canImport('test/unit/user_test.dart', 'package:test/test.dart', rule),
+        rule.canImport('test/unit/user_test.dart', 'package:test/test.dart'),
         isTrue,
       );
     });
 
     test('denies unit tests to import integration tests', () {
       expect(
-        canImport(
+        rule.canImport(
           'test/unit/user_test.dart',
           'test/integration/helpers.dart',
-          rule,
         ),
         isFalse,
       );
@@ -250,7 +234,7 @@ void main() {
 
     test('allows unit tests to import other unit tests', () {
       expect(
-        canImport('test/unit/user_test.dart', 'test/unit/fixtures.dart', rule),
+        rule.canImport('test/unit/user_test.dart', 'test/unit/fixtures.dart'),
         isTrue,
       );
     });
@@ -267,10 +251,9 @@ void main() {
 
     test('allows android to import within android', () {
       expect(
-        canImport(
+        rule.canImport(
           'lib/platform/android/camera.dart',
           'lib/platform/android/sensor.dart',
-          rule,
         ),
         isTrue,
       );
@@ -278,10 +261,9 @@ void main() {
 
     test('denies ios to import android', () {
       expect(
-        canImport(
+        rule.canImport(
           'lib/platform/ios/camera.dart',
           'lib/platform/android/camera.dart',
-          rule,
         ),
         isFalse,
       );
@@ -289,10 +271,9 @@ void main() {
 
     test('allows web to import common', () {
       expect(
-        canImport(
+        rule.canImport(
           'lib/platform/web/storage.dart',
           'lib/platform/common/interface.dart',
-          rule,
         ),
         isTrue,
       );
@@ -300,10 +281,9 @@ void main() {
 
     test('allows android to import common', () {
       expect(
-        canImport(
+        rule.canImport(
           'lib/platform/android/storage.dart',
           'lib/platform/common/interface.dart',
-          rule,
         ),
         isTrue,
       );
@@ -321,11 +301,7 @@ void main() {
 
     test('denies external modules to import internal files', () {
       expect(
-        canImport(
-          'lib/app.dart',
-          'lib/features/auth/internal/cache.dart',
-          rule,
-        ),
+        rule.canImport('lib/app.dart', 'lib/features/auth/internal/cache.dart'),
         isFalse,
       );
     });
@@ -333,10 +309,9 @@ void main() {
     test('allows feature modules to import their own internal files', () {
       // Rule doesn't apply to lib/features/** due to excludeTarget
       expect(
-        canImport(
+        rule.canImport(
           'lib/features/auth/auth.dart',
           'lib/features/auth/internal/cache.dart',
-          rule,
         ),
         isTrue,
       );
@@ -355,10 +330,9 @@ void main() {
 
     test('denies new features to import legacy', () {
       expect(
-        canImport(
+        rule.canImport(
           'lib/features/auth/login.dart',
           'lib/features/legacy/old_auth.dart',
-          rule,
         ),
         isFalse,
       );
@@ -367,10 +341,9 @@ void main() {
     test('allows legacy to import legacy', () {
       // Rule doesn't apply to lib/features/legacy/** due to excludeTarget
       expect(
-        canImport(
+        rule.canImport(
           'lib/features/legacy/old_auth.dart',
           'lib/features/legacy/utils.dart',
-          rule,
         ),
         isTrue,
       );
@@ -388,10 +361,9 @@ void main() {
 
     test('denies direct firebase_analytics import', () {
       expect(
-        canImport(
+        rule.canImport(
           'lib/features/home/home.dart',
           'package:firebase_analytics/firebase_analytics.dart',
-          rule,
         ),
         isFalse,
       );
@@ -400,10 +372,9 @@ void main() {
     test('allows analytics wrapper to import firebase_analytics', () {
       // Rule doesn't apply to lib/core/analytics/** due to excludeTarget
       expect(
-        canImport(
+        rule.canImport(
           'lib/core/analytics/analytics_service.dart',
           'package:firebase_analytics/firebase_analytics.dart',
-          rule,
         ),
         isTrue,
       );
@@ -421,10 +392,9 @@ void main() {
 
     test('allows generated code to import packages', () {
       expect(
-        canImport(
+        rule.canImport(
           'lib/models/user.g.dart',
           'package:json_annotation/json_annotation.dart',
-          rule,
         ),
         isTrue,
       );
@@ -432,14 +402,14 @@ void main() {
 
     test('allows generated code to import other generated code', () {
       expect(
-        canImport('lib/models/user.g.dart', 'lib/models/address.g.dart', rule),
+        rule.canImport('lib/models/user.g.dart', 'lib/models/address.g.dart'),
         isTrue,
       );
     });
 
     test('denies generated code to import non-generated code', () {
       expect(
-        canImport('lib/models/user.g.dart', 'lib/utils/helpers.dart', rule),
+        rule.canImport('lib/models/user.g.dart', 'lib/utils/helpers.dart'),
         isFalse,
       );
     });
@@ -456,10 +426,9 @@ void main() {
 
     test('allows downward imports (same directory, deeper level)', () {
       expect(
-        canImport(
+        rule.canImport(
           'lib/features/auth/auth.dart',
           'lib/features/auth/models/user.dart',
-          rule,
         ),
         isTrue,
       );
@@ -467,10 +436,9 @@ void main() {
 
     test('allows imports within same directory', () {
       expect(
-        canImport(
+        rule.canImport(
           'lib/features/auth/auth.dart',
           'lib/features/auth/login.dart',
-          rule,
         ),
         isTrue,
       );
@@ -478,17 +446,16 @@ void main() {
 
     test('denies upward imports (to parent)', () {
       expect(
-        canImport('lib/features/auth/auth.dart', 'lib/main.dart', rule),
+        rule.canImport('lib/features/auth/auth.dart', 'lib/main.dart'),
         isFalse,
       );
     });
 
     test('denies sibling module imports', () {
       expect(
-        canImport(
+        rule.canImport(
           'lib/features/auth/auth.dart',
           'lib/features/settings/settings.dart',
-          rule,
         ),
         isFalse,
       );
@@ -496,10 +463,9 @@ void main() {
 
     test('allows imports to subdirectories', () {
       expect(
-        canImport(
+        rule.canImport(
           'lib/features/auth/auth.dart',
           'lib/features/auth/src/cache.dart',
-          rule,
         ),
         isTrue,
       );

@@ -12,7 +12,7 @@ void main() {
 
       // Rule doesn't apply to lib/core, so import is allowed
       expect(
-        canImport('lib/core/entity.dart', 'lib/data/repo.dart', rule),
+        rule.canImport('lib/core/entity.dart', 'lib/data/repo.dart'),
         isTrue,
       );
     });
@@ -26,7 +26,7 @@ void main() {
 
       // Rule applies to lib/features
       expect(
-        canImport('lib/features/auth/login.dart', 'lib/data/repo.dart', rule),
+        rule.canImport('lib/features/auth/login.dart', 'lib/data/repo.dart'),
         isFalse,
       );
     });
@@ -40,13 +40,13 @@ void main() {
 
       // Matches lib/core/service.dart
       expect(
-        canImport('lib/core/service.dart', 'lib/data/repo.dart', rule),
+        rule.canImport('lib/core/service.dart', 'lib/data/repo.dart'),
         isFalse,
       );
 
       // Does not match lib/core/nested/service.dart (too deep)
       expect(
-        canImport('lib/core/nested/service.dart', 'lib/data/repo.dart', rule),
+        rule.canImport('lib/core/nested/service.dart', 'lib/data/repo.dart'),
         isTrue,
       );
     });
@@ -60,13 +60,13 @@ void main() {
 
       // Matches lib/core/service.dart
       expect(
-        canImport('lib/core/service.dart', 'lib/data/repo.dart', rule),
+        rule.canImport('lib/core/service.dart', 'lib/data/repo.dart'),
         isFalse,
       );
 
       // Matches lib/core/nested/service.dart
       expect(
-        canImport('lib/core/nested/service.dart', 'lib/data/repo.dart', rule),
+        rule.canImport('lib/core/nested/service.dart', 'lib/data/repo.dart'),
         isFalse,
       );
     });
@@ -83,21 +83,16 @@ void main() {
 
       // Rule applies to lib/features
       expect(
-        canImport(
+        rule.canImport(
           'lib/features/auth.dart',
           'package:flutter/material.dart',
-          rule,
         ),
         isFalse,
       );
 
       // Rule does not apply to lib/core (excluded)
       expect(
-        canImport(
-          'lib/core/entity.dart',
-          'package:flutter/material.dart',
-          rule,
-        ),
+        rule.canImport('lib/core/entity.dart', 'package:flutter/material.dart'),
         isTrue,
       );
     });
@@ -111,26 +106,20 @@ void main() {
       );
 
       expect(
-        canImport(
+        rule.canImport(
           'lib/features/auth.dart',
           'package:flutter/material.dart',
-          rule,
         ),
         isFalse,
       );
       expect(
-        canImport(
-          'lib/core/entity.dart',
-          'package:flutter/material.dart',
-          rule,
-        ),
+        rule.canImport('lib/core/entity.dart', 'package:flutter/material.dart'),
         isTrue,
       );
       expect(
-        canImport(
+        rule.canImport(
           'lib/shared/utils.dart',
           'package:flutter/material.dart',
-          rule,
         ),
         isTrue,
       );
@@ -145,7 +134,7 @@ void main() {
         disallow: ['package:flutter/**'],
       );
 
-      expect(canImport('lib/app.dart', 'package:http/http.dart', rule), isTrue);
+      expect(rule.canImport('lib/app.dart', 'package:http/http.dart'), isTrue);
     });
 
     test('import denied when importee matches disallow', () {
@@ -156,7 +145,7 @@ void main() {
       );
 
       expect(
-        canImport('lib/app.dart', 'package:flutter/material.dart', rule),
+        rule.canImport('lib/app.dart', 'package:flutter/material.dart'),
         isFalse,
       );
     });
@@ -168,8 +157,8 @@ void main() {
         disallow: ['lib/data/db.dart'],
       );
 
-      expect(canImport('lib/app.dart', 'lib/data/db.dart', rule), isFalse);
-      expect(canImport('lib/app.dart', 'lib/data/repo.dart', rule), isTrue);
+      expect(rule.canImport('lib/app.dart', 'lib/data/db.dart'), isFalse);
+      expect(rule.canImport('lib/app.dart', 'lib/data/repo.dart'), isTrue);
     });
   });
 
@@ -184,12 +173,12 @@ void main() {
 
       // Matches disallow but also matches excludeDisallow
       expect(
-        canImport('lib/app.dart', 'lib/data/models/user.dart', rule),
+        rule.canImport('lib/app.dart', 'lib/data/models/user.dart'),
         isTrue,
       );
 
       // Matches disallow but not excludeDisallow
-      expect(canImport('lib/app.dart', 'lib/data/repo.dart', rule), isFalse);
+      expect(rule.canImport('lib/app.dart', 'lib/data/repo.dart'), isFalse);
     });
 
     test('excludeDisallow with multiple patterns', () {
@@ -201,15 +190,15 @@ void main() {
       );
 
       expect(
-        canImport('lib/app.dart', 'lib/internal/models/user.dart', rule),
+        rule.canImport('lib/app.dart', 'lib/internal/models/user.dart'),
         isTrue,
       );
       expect(
-        canImport('lib/app.dart', 'lib/internal/utils/helper.dart', rule),
+        rule.canImport('lib/app.dart', 'lib/internal/utils/helper.dart'),
         isTrue,
       );
       expect(
-        canImport('lib/app.dart', 'lib/internal/private.dart', rule),
+        rule.canImport('lib/app.dart', 'lib/internal/private.dart'),
         isFalse,
       );
     });
@@ -227,13 +216,13 @@ void main() {
       // lib/features/auth.dart has DIR=lib/features
       // Can import lib/features/user.dart (matches lib/features/**)
       expect(
-        canImport('lib/features/auth.dart', 'lib/features/user.dart', rule),
+        rule.canImport('lib/features/auth.dart', 'lib/features/user.dart'),
         isTrue,
       );
 
       // Cannot import lib/core/entity.dart (doesn't match lib/features/**)
       expect(
-        canImport('lib/features/auth.dart', 'lib/core/entity.dart', rule),
+        rule.canImport('lib/features/auth.dart', 'lib/core/entity.dart'),
         isFalse,
       );
     });
@@ -248,18 +237,16 @@ void main() {
 
       // DIR should be lib/features/auth/models
       expect(
-        canImport(
+        rule.canImport(
           'lib/features/auth/models/user.dart',
           'lib/features/auth/models/dto.dart',
-          rule,
         ),
         isTrue,
       );
       expect(
-        canImport(
+        rule.canImport(
           'lib/features/auth/models/user.dart',
           'lib/features/auth/login.dart',
-          rule,
         ),
         isFalse,
       );
@@ -274,11 +261,11 @@ void main() {
       );
 
       expect(
-        canImport('lib/features/auth.dart', 'lib/features/user.dart', rule),
+        rule.canImport('lib/features/auth.dart', 'lib/features/user.dart'),
         isTrue,
       );
       expect(
-        canImport('lib/features/auth.dart', 'lib/features.dart', rule),
+        rule.canImport('lib/features/auth.dart', 'lib/features.dart'),
         isTrue,
       );
     });
@@ -293,18 +280,16 @@ void main() {
 
       // package:my_app/features/auth.dart has DIR=package:my_app/features
       expect(
-        canImport(
+        rule.canImport(
           'package:my_app/features/auth.dart',
           'package:my_app/features/user.dart',
-          rule,
         ),
         isTrue,
       );
       expect(
-        canImport(
+        rule.canImport(
           'package:my_app/features/auth.dart',
           'package:my_app/core/entity.dart',
-          rule,
         ),
         isFalse,
       );
@@ -321,13 +306,13 @@ void main() {
 
       // Matches lib/app.dart
       expect(
-        canImport('lib/app.dart', 'lib/internal/private.dart', rule),
+        rule.canImport('lib/app.dart', 'lib/internal/private.dart'),
         isFalse,
       );
 
       // Does not match lib/features/auth.dart (has /)
       expect(
-        canImport('lib/features/auth.dart', 'lib/internal/private.dart', rule),
+        rule.canImport('lib/features/auth.dart', 'lib/internal/private.dart'),
         isTrue,
       );
     });
@@ -339,9 +324,9 @@ void main() {
         disallow: ['test/**'],
       );
 
-      expect(canImport('lib/app.dart', 'test/helper.dart', rule), isFalse);
+      expect(rule.canImport('lib/app.dart', 'test/helper.dart'), isFalse);
       expect(
-        canImport('lib/features/auth.dart', 'test/fixtures/user.dart', rule),
+        rule.canImport('lib/features/auth.dart', 'test/fixtures/user.dart'),
         isFalse,
       );
     });
@@ -354,10 +339,10 @@ void main() {
       );
 
       // Exact match on target
-      expect(canImport('lib/main.dart', 'lib/internal.dart', rule), isFalse);
+      expect(rule.canImport('lib/main.dart', 'lib/internal.dart'), isFalse);
 
       // No match on target
-      expect(canImport('lib/app.dart', 'lib/internal.dart', rule), isTrue);
+      expect(rule.canImport('lib/app.dart', 'lib/internal.dart'), isTrue);
     });
   });
 
@@ -371,7 +356,7 @@ void main() {
       );
 
       expect(
-        canImport('lib/app.dart', 'package:flutter/material.dart', rule),
+        rule.canImport('lib/app.dart', 'package:flutter/material.dart'),
         isFalse,
       );
     });
@@ -384,7 +369,7 @@ void main() {
         excludeDisallow: [], // Empty
       );
 
-      expect(canImport('lib/app.dart', 'lib/data/repo.dart', rule), isFalse);
+      expect(rule.canImport('lib/app.dart', 'lib/data/repo.dart'), isFalse);
     });
   });
 
@@ -398,7 +383,7 @@ void main() {
 
       // Target doesn't match, so rule doesn't apply even though disallow would match
       expect(
-        canImport('lib/core/entity.dart', 'lib/data/repo.dart', rule),
+        rule.canImport('lib/core/entity.dart', 'lib/data/repo.dart'),
         isTrue,
       );
     });
@@ -413,7 +398,7 @@ void main() {
 
       // Target matches, but excludeTarget also matches
       expect(
-        canImport('lib/core/entity.dart', 'lib/data/repo.dart', rule),
+        rule.canImport('lib/core/entity.dart', 'lib/data/repo.dart'),
         isTrue,
       );
     });
@@ -427,7 +412,7 @@ void main() {
 
       // Target matches, importee doesn't match disallow
       expect(
-        canImport('lib/features/auth.dart', 'lib/core/entity.dart', rule),
+        rule.canImport('lib/features/auth.dart', 'lib/core/entity.dart'),
         isTrue,
       );
     });
@@ -442,7 +427,7 @@ void main() {
 
       // Target matches, disallow matches, excludeDisallow matches
       expect(
-        canImport('lib/app.dart', 'lib/data/models/user.dart', rule),
+        rule.canImport('lib/app.dart', 'lib/data/models/user.dart'),
         isTrue,
       );
     });
@@ -457,13 +442,10 @@ void main() {
       );
 
       expect(
-        canImport('lib/presentation/home.dart', 'lib/data/repo.dart', rule),
+        rule.canImport('lib/presentation/home.dart', 'lib/data/repo.dart'),
         isFalse,
       );
-      expect(
-        canImport('lib/ui/home.dart', 'lib/data/repo.dart', rule),
-        isFalse,
-      );
+      expect(rule.canImport('lib/ui/home.dart', 'lib/data/repo.dart'), isFalse);
     });
 
     test('handles multiple disallow patterns', () {
@@ -474,15 +456,11 @@ void main() {
       );
 
       expect(
-        canImport(
-          'lib/core/entity.dart',
-          'package:flutter/material.dart',
-          rule,
-        ),
+        rule.canImport('lib/core/entity.dart', 'package:flutter/material.dart'),
         isFalse,
       );
       expect(
-        canImport('lib/core/entity.dart', 'lib/ui/widget.dart', rule),
+        rule.canImport('lib/core/entity.dart', 'lib/ui/widget.dart'),
         isFalse,
       );
     });
@@ -499,10 +477,9 @@ void main() {
 
       // We can test this indirectly by checking if $DIR substitution works
       expect(
-        canImport(
+        rule.canImport(
           'lib/features/auth/src/utils.dart',
           'lib/features/auth/src/cache.dart',
-          rule,
         ),
         isTrue, // Should match $DIR/** which is lib/features/auth/src/**
       );
@@ -518,10 +495,9 @@ void main() {
 
       // $DIR should be package:flutter/widgets
       expect(
-        canImport(
+        rule.canImport(
           'package:flutter/widgets/container.dart',
           'package:flutter/widgets/text.dart',
-          rule,
         ),
         isTrue,
       );

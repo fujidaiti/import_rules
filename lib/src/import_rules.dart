@@ -29,49 +29,47 @@ class ImportRule {
     required this.disallow,
     this.excludeDisallow = const [],
   });
-}
 
-/// Checks if a target file can import an importee file according to the given rule.
-///
-/// Returns `true` if the import is allowed, `false` if it's denied.
-///
-/// The evaluation follows this logic:
-/// 1. If targetFile doesn't match any target pattern, the rule doesn't apply (return true)
-/// 2. If targetFile matches any excludeTarget pattern, the rule doesn't apply (return true)
-/// 3. Extract $DIR from targetFile's parent directory
-/// 4. If importeeFile doesn't match any disallow pattern, the import is allowed (return true)
-/// 5. If importeeFile matches any excludeDisallow pattern (with $DIR substituted), the import is allowed (return true)
-/// 6. Otherwise, the import is denied (return false)
-bool canImport(String targetFile, String importeeFile, ImportRule rule) {
-  // Step 1: Check if targetFile matches any target pattern
-  if (!_matchesAnyPattern(targetFile, rule.target)) {
-    return true; // Rule doesn't apply
+  /// Checks if a target file can import an importee file according to this rule.
+  ///
+  /// Returns `true` if the import is allowed, `false` if it's denied.
+  ///
+  /// The evaluation follows this logic:
+  /// 1. If targetFile doesn't match any target pattern, the rule doesn't apply (return true)
+  /// 2. If targetFile matches any excludeTarget pattern, the rule doesn't apply (return true)
+  /// 3. Extract $DIR from targetFile's parent directory
+  /// 4. If importeeFile doesn't match any disallow pattern, the import is allowed (return true)
+  /// 5. If importeeFile matches any excludeDisallow pattern (with $DIR substituted), the import is allowed (return true)
+  /// 6. Otherwise, the import is denied (return false)
+  bool canImport(String targetFile, String importeeFile) {
+    // Step 1: Check if targetFile matches any target pattern
+    if (!_matchesAnyPattern(targetFile, target)) {
+      return true; // Rule doesn't apply
+    }
+
+    // Step 2: Check if targetFile matches any excludeTarget pattern
+    if (_matchesAnyPattern(targetFile, excludeTarget)) {
+      return true; // Rule doesn't apply
+    }
+
+    // Step 3: Extract $DIR from targetFile's parent directory
+    final dir = _extractDir(targetFile);
+
+    // Step 4: Check if importeeFile matches any disallow pattern
+    if (!_matchesAnyPattern(importeeFile, disallow)) {
+      return true; // Import is allowed (not in disallow list)
+    }
+
+    // Step 5: Check if importeeFile matches any excludeDisallow pattern (with $DIR substituted)
+    final excludeDisallowWithDir =
+        excludeDisallow.map((pattern) => _substituteDir(pattern, dir)).toList();
+    if (_matchesAnyPattern(importeeFile, excludeDisallowWithDir)) {
+      return true; // Import is allowed (in exclude list)
+    }
+
+    // Step 6: Import is denied
+    return false;
   }
-
-  // Step 2: Check if targetFile matches any excludeTarget pattern
-  if (_matchesAnyPattern(targetFile, rule.excludeTarget)) {
-    return true; // Rule doesn't apply
-  }
-
-  // Step 3: Extract $DIR from targetFile's parent directory
-  final dir = _extractDir(targetFile);
-
-  // Step 4: Check if importeeFile matches any disallow pattern
-  if (!_matchesAnyPattern(importeeFile, rule.disallow)) {
-    return true; // Import is allowed (not in disallow list)
-  }
-
-  // Step 5: Check if importeeFile matches any excludeDisallow pattern (with $DIR substituted)
-  final excludeDisallowWithDir =
-      rule.excludeDisallow
-          .map((pattern) => _substituteDir(pattern, dir))
-          .toList();
-  if (_matchesAnyPattern(importeeFile, excludeDisallowWithDir)) {
-    return true; // Import is allowed (in exclude list)
-  }
-
-  // Step 6: Import is denied
-  return false;
 }
 
 /// Checks if a path matches any of the given glob patterns.

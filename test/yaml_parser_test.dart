@@ -518,20 +518,18 @@ rules:
 
       // File in lib/features/auth/src can import from same src
       expect(
-        canImport(
+        rules[0].canImport(
           'lib/features/auth/src/cache.dart',
           'lib/features/auth/src/utils.dart',
-          rules[0],
         ),
         isTrue,
       );
 
       // File in lib/features/auth can import from its src
       expect(
-        canImport(
+        rules[0].canImport(
           'lib/features/auth/auth.dart',
           'lib/features/auth/src/utils.dart',
-          rules[0],
         ),
         isTrue,
       );
@@ -554,50 +552,45 @@ rules:
 
       // Auth file can import from auth src
       expect(
-        canImport(
+        rules[0].canImport(
           'lib/features/auth/auth.dart',
           'lib/features/auth/src/utils.dart',
-          rules[0],
         ),
         isTrue,
       );
 
       // Profile file can import from profile src
       expect(
-        canImport(
+        rules[0].canImport(
           'lib/features/profile/profile.dart',
           'lib/features/profile/src/utils.dart',
-          rules[0],
         ),
         isTrue,
       );
 
       // Settings file can import from settings src
       expect(
-        canImport(
+        rules[0].canImport(
           'lib/features/settings/settings.dart',
           'lib/features/settings/src/utils.dart',
-          rules[0],
         ),
         isTrue,
       );
 
       // Auth file cannot import from profile src (different module)
       expect(
-        canImport(
+        rules[0].canImport(
           'lib/features/auth/auth.dart',
           'lib/features/profile/src/utils.dart',
-          rules[0],
         ),
         isFalse,
       );
 
       // Profile file cannot import from settings src (different module)
       expect(
-        canImport(
+        rules[0].canImport(
           'lib/features/profile/profile.dart',
           'lib/features/settings/src/utils.dart',
-          rules[0],
         ),
         isFalse,
       );
@@ -619,32 +612,29 @@ rules:
 
       // Auth file has DIR=lib/features/auth
       expect(
-        canImport(
+        rules[0].canImport(
           'lib/features/auth/login.dart',
           'lib/features/auth/models/user.dart',
-          rules[0],
         ),
         isTrue,
       );
       expect(
-        canImport(
+        rules[0].canImport(
           'lib/features/auth/login.dart',
           'lib/core/entity.dart',
-          rules[0],
         ),
         isFalse,
       );
 
       // Core file has DIR=lib/core
       expect(
-        canImport('lib/core/entity.dart', 'lib/core/value.dart', rules[0]),
+        rules[0].canImport('lib/core/entity.dart', 'lib/core/value.dart'),
         isTrue,
       );
       expect(
-        canImport(
+        rules[0].canImport(
           'lib/core/entity.dart',
           'lib/features/auth/login.dart',
-          rules[0],
         ),
         isFalse,
       );
@@ -667,18 +657,16 @@ rules:
       expect(rules, hasLength(1));
       expect(rules[0].name, equals('Presentation layer isolation'));
       expect(
-        canImport(
+        rules[0].canImport(
           'lib/presentation/pages/home.dart',
           'lib/data/models/user.dart',
-          rules[0],
         ),
         isTrue,
       );
       expect(
-        canImport(
+        rules[0].canImport(
           'lib/presentation/pages/home.dart',
           'lib/data/repositories/user_repository.dart',
-          rules[0],
         ),
         isFalse,
       );
@@ -698,18 +686,16 @@ rules:
 
       expect(rules, hasLength(1));
       expect(
-        canImport(
+        rules[0].canImport(
           'lib/features/auth/auth.dart',
           'lib/features/auth/src/utils.dart',
-          rules[0],
         ),
         isTrue,
       );
       expect(
-        canImport(
+        rules[0].canImport(
           'lib/infrastructure/db.dart',
           'lib/domain/src/entity.dart',
-          rules[0],
         ),
         isFalse,
       );
@@ -731,10 +717,9 @@ rules:
       expect(rules, hasLength(1));
       expect(rules[0].disallow, hasLength(2));
       expect(
-        canImport(
+        rules[0].canImport(
           'lib/core/entities/user.dart',
           'package:flutter/material.dart',
-          rules[0],
         ),
         isFalse,
       );
