@@ -1,19 +1,24 @@
 import 'dart:async';
+import 'dart:math' show min;
 
 import 'package:analysis_server_plugin/plugin.dart';
 import 'package:analysis_server_plugin/registry.dart';
+import 'package:analysis_server_plugin/src/plugin_server.dart';
 import 'package:analyzer/analysis_rule/analysis_rule.dart';
 import 'package:analyzer/analysis_rule/rule_context.dart';
 import 'package:analyzer/analysis_rule/rule_visitor_registry.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/ast/visitor.dart';
 import 'package:analyzer/error/error.dart';
+import 'package:analyzer/utilities/extensions/uri.dart';
 import 'package:import_rules/src/config.dart';
 import 'package:import_rules/src/parser.dart';
 
 import 'src/logger.dart';
 
 final plugin = ImportRulesPlugin();
+
+late final PluginServer a;
 
 class ImportRulesPlugin extends Plugin {
   @override
@@ -66,7 +71,7 @@ class ImportRules extends AnalysisRule {
       config = parser.loadConfigurationFor(package);
       _configs[package.root.path] = config;
     }
-    if (config.rules.isEmpty) return;
+    // if (config.rules.isEmpty) return;
 
     logger.info('Analyzing: $sourceUri');
     var visitor = _Visitor(this, sourceUri, context, config, logger);
@@ -85,8 +90,10 @@ class _Visitor extends SimpleAstVisitor<void> {
 
   @override
   void visitImportDirective(ImportDirective node) {
+    node.libraryImport?.importedLibrary?.uri.isImplementation;
+    min(1, 2);
     logger.info(
-      'ImportDirective: context: ${context.package?.root.path}, uri: ${node.uri}',
+      'ImportDirective: type: ${node.libraryImport?.uri.runtimeType} uri: ${node.uri}',
     );
   }
 }

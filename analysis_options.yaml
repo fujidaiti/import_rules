@@ -30,3 +30,6 @@ include: package:lints/recommended.yaml
 plugins:
   import_rules:
     path: ./
+
+import_rules:
+  rules:
