@@ -1,9 +1,10 @@
 import 'dart:io';
 
-import 'import_rules.dart';
 import 'package:yaml/yaml.dart';
 
-List<Rule>? tryParseRulesFromYaml(String yamlContent) {
+import 'import_rules.dart';
+
+List<ImportRule>? tryParseRulesFromYaml(String yamlContent) {
   try {
     return parseRulesFromYaml(yamlContent);
   } on FormatException catch (error, stackTrace) {
@@ -27,7 +28,7 @@ List<Rule>? tryParseRulesFromYaml(String yamlContent) {
 /// ```
 ///
 /// Throws [FormatException] if the YAML is malformed or required fields are missing.
-List<Rule> parseRulesFromYaml(String yamlContent) {
+List<ImportRule> parseRulesFromYaml(String yamlContent) {
   final doc = loadYaml(yamlContent);
 
   if (doc == null) {
@@ -47,7 +48,7 @@ List<Rule> parseRulesFromYaml(String yamlContent) {
     throw FormatException('"rules" must be a list');
   }
 
-  final rules = <Rule>[];
+  final rules = <ImportRule>[];
   for (var i = 0; i < rulesData.length; i++) {
     final ruleMap = rulesData[i];
     if (ruleMap is! Map) {
@@ -69,14 +70,14 @@ List<Rule> parseRulesFromYaml(String yamlContent) {
 ///
 /// Throws [FormatException] if the YAML is malformed or required fields are missing.
 /// Throws [FileSystemException] if the file cannot be read.
-List<Rule> parseRulesFromYamlFile(String filePath) {
+List<ImportRule> parseRulesFromYamlFile(String filePath) {
   final file = File(filePath);
   final content = file.readAsStringSync();
   return parseRulesFromYaml(content);
 }
 
 /// Parses a single rule from a map.
-Rule _parseRule(Map ruleMap) {
+ImportRule _parseRule(Map ruleMap) {
   // Parse name (optional)
   final name = ruleMap['name'] as String?;
 
@@ -135,7 +136,7 @@ Rule _parseRule(Map ruleMap) {
           ? _normalizeToList(excludeDisallowRaw, 'exclude_disallow')
           : <String>[];
 
-  return Rule(
+  return ImportRule(
     name: name,
     reason: reason,
     target: target,

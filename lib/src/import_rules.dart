@@ -2,7 +2,7 @@ import 'package:glob/glob.dart';
 import 'package:path/path.dart' as p;
 
 /// Represents an import rule that controls which files can import which files.
-class Rule {
+class ImportRule {
   /// Optional name for the rule (used in error messages).
   final String? name;
 
@@ -21,7 +21,7 @@ class Rule {
   /// File patterns to exclude from disallow (making them importable).
   final List<String> excludeDisallow;
 
-  Rule({
+  ImportRule({
     this.name,
     required this.reason,
     required this.target,
@@ -42,7 +42,7 @@ class Rule {
 /// 4. If importeeFile doesn't match any disallow pattern, the import is allowed (return true)
 /// 5. If importeeFile matches any excludeDisallow pattern (with $DIR substituted), the import is allowed (return true)
 /// 6. Otherwise, the import is denied (return false)
-bool canImport(String targetFile, String importeeFile, Rule rule) {
+bool canImport(String targetFile, String importeeFile, ImportRule rule) {
   // Step 1: Check if targetFile matches any target pattern
   if (!_matchesAnyPattern(targetFile, rule.target)) {
     return true; // Rule doesn't apply

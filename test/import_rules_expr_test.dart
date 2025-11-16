@@ -3,7 +3,7 @@ import 'package:test/test.dart';
 
 void main() {
   group('A1: Layer Architecture Enforcement', () {
-    final rule = Rule(
+    final rule = ImportRule(
       name: 'Presentation layer isolation',
       reason: 'Presentation layer should not directly import data layer',
       target: ['lib/presentation/**'],
@@ -46,7 +46,7 @@ void main() {
   });
 
   group('A2: Core Domain Independence', () {
-    final rule = Rule(
+    final rule = ImportRule(
       name: 'Core independence',
       reason: 'Core domain must remain framework-agnostic',
       target: ['lib/core/**'],
@@ -88,7 +88,7 @@ void main() {
   });
 
   group('A3: Feature Module Boundaries', () {
-    final rule = Rule(
+    final rule = ImportRule(
       name: 'Feature module boundaries',
       reason: 'Features should not cross-import each other',
       target: ['lib/features/auth/**'],
@@ -145,7 +145,7 @@ void main() {
   });
 
   group('A4: src Directory Encapsulation', () {
-    final rule = Rule(
+    final rule = ImportRule(
       name: 'src directory encapsulation',
       reason: 'src/ directories are always private to their parent module',
       target: ['**'],
@@ -210,7 +210,7 @@ void main() {
   });
 
   group('A5: Test Isolation', () {
-    final rule = Rule(
+    final rule = ImportRule(
       name: 'Test isolation',
       reason: 'Unit tests cannot import integration test utilities',
       target: ['test/unit/**'],
@@ -257,7 +257,7 @@ void main() {
   });
 
   group('A6: Platform Code Isolation', () {
-    final rule = Rule(
+    final rule = ImportRule(
       name: 'Platform code isolation',
       reason: 'Platform implementations should not cross-import',
       target: ['lib/platform/**'],
@@ -311,7 +311,7 @@ void main() {
   });
 
   group('A7: Barrel File Pattern', () {
-    final rule = Rule(
+    final rule = ImportRule(
       name: 'Use barrel files',
       reason: 'Internal files should be accessed via barrel exports',
       target: ['**'],
@@ -344,7 +344,7 @@ void main() {
   });
 
   group('A8: Deprecated Code Migration', () {
-    final rule = Rule(
+    final rule = ImportRule(
       name: 'Avoid legacy code',
       reason:
           'Legacy modules are deprecated and should not be used in new code',
@@ -378,7 +378,7 @@ void main() {
   });
 
   group('A9: Third-party Package Restriction', () {
-    final rule = Rule(
+    final rule = ImportRule(
       name: 'Use analytics wrapper',
       reason: 'Direct firebase_analytics usage is forbidden, use our wrapper',
       target: ['lib/**'],
@@ -411,7 +411,7 @@ void main() {
   });
 
   group('A10: Generated Code Protection', () {
-    final rule = Rule(
+    final rule = ImportRule(
       name: 'Generated code isolation',
       reason: 'Generated code should not import non-generated code',
       target: ['lib/**.g.dart', 'lib/**.freezed.dart'],
@@ -446,7 +446,7 @@ void main() {
   });
 
   group('A11: Hierarchical Import Restriction', () {
-    final rule = Rule(
+    final rule = ImportRule(
       name: 'Downward dependency only',
       reason: 'Files can only import from same or deeper directory levels',
       target: ['lib/**'],
