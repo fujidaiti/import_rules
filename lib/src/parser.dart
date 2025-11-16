@@ -21,7 +21,13 @@ class ConfigParser {
       final config = tryParseRulesFromYaml(file.readAsStringSync());
       if (config != null) {
         for (final rule in config.rules) {
-          logger?.info('Rule loaded: ${rule.name}');
+          logger?.info('Rule loaded:');
+          logger?.info('  name: ${rule.name}');
+          logger?.info('  reason: ${rule.reason}');
+          logger?.info('  target: ${rule.target}');
+          logger?.info('  disallow: ${rule.disallow}');
+          logger?.info('  exclude_target: ${rule.excludeTarget}');
+          logger?.info('  exclude_disallow: ${rule.excludeDisallow}');
         }
         return config;
       }

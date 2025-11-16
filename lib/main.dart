@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' show min;
 
 import 'package:analysis_server_plugin/plugin.dart';
 import 'package:analysis_server_plugin/registry.dart';
@@ -9,9 +8,10 @@ import 'package:analyzer/analysis_rule/rule_context.dart';
 import 'package:analyzer/analysis_rule/rule_visitor_registry.dart';
 import 'package:analyzer/dart/ast/ast.dart';
 import 'package:analyzer/dart/ast/visitor.dart';
+import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/error/error.dart';
-import 'package:analyzer/utilities/extensions/uri.dart';
 import 'package:import_rules/src/config.dart';
+import 'package:import_rules/src/import_rules.dart';
 import 'package:import_rules/src/parser.dart';
 
 import 'src/logger.dart';
@@ -41,13 +41,14 @@ class ImportRulesPlugin extends Plugin {
 class ImportRules extends AnalysisRule {
   static const LintCode code = LintCode(
     'import_rules',
-    'Import rules',
-    correctionMessage: "Try removing 'await'.",
+    'Import constraint violation.',
+    // `{0}` will be replaced with the reason for an import constraint violation.
+    correctionMessage: '{0}',
   );
 
   static final Map<String, Config> _configs = {};
 
-  ImportRules() : super(name: code.name, description: 'Linting import rules');
+  ImportRules() : super(name: code.name, description: code.problemMessage);
 
   @override
   LintCode get diagnosticCode => code;
@@ -71,7 +72,7 @@ class ImportRules extends AnalysisRule {
       config = parser.loadConfigurationFor(package);
       _configs[package.root.path] = config;
     }
-    // if (config.rules.isEmpty) return;
+    if (config.rules.isEmpty) return;
 
     logger.info('Analyzing: $sourceUri');
     var visitor = _Visitor(this, sourceUri, context, config, logger);
@@ -90,10 +91,24 @@ class _Visitor extends SimpleAstVisitor<void> {
 
   @override
   void visitImportDirective(ImportDirective node) {
-    node.libraryImport?.importedLibrary?.uri.isImplementation;
-    min(1, 2);
-    logger.info(
-      'ImportDirective: type: ${node.libraryImport?.uri.runtimeType} uri: ${node.uri}',
-    );
+    final Import importDirective;
+    if (node.libraryImport?.uri case DirectiveUriWithSource(:final source)) {
+      importDirective = Import(uri: source.uri.toString());
+      logger.info('Analyzing import: $importDirective');
+    } else {
+      logger.info('Skipping unresolved import: ${node.uri}');
+      return;
+    }
+
+    for (final rule in config.rules) {
+      logger.info('Calling ImportRule.canImport($sourceUri, $importDirective)');
+      if (!rule.canImport(sourceUri.toString(), importDirective)) {
+        logger.info('Import denied. Reason: ${rule.reason}');
+        this.rule.reportAtNode(node, arguments: [rule.reason]);
+        return;
+      }
+    }
+
+    logger.info('Import allowed');
   }
 }

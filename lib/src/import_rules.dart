@@ -8,6 +8,11 @@ class Import {
   const Import({required this.uri});
 
   final String uri;
+
+  @override
+  String toString() {
+    return uri;
+  }
 }
 
 /// Represents an import rule that controls which files can import which files.

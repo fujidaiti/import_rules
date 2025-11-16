@@ -88,6 +88,56 @@ void main() {
         isFalse,
       );
     });
+
+    test('target pattern "**" matches any files', () {
+      final rule = ImportRule(
+        reason: 'test',
+        target: ['**'],
+        disallow: ['lib/data/**'],
+      );
+
+      // Matches files in lib/
+      expect(
+        rule.canImport('lib/app.dart', Import(uri: 'lib/data/repo.dart')),
+        isFalse,
+      );
+
+      // Matches files in test/
+      expect(
+        rule.canImport('test/helper.dart', Import(uri: 'lib/data/repo.dart')),
+        isFalse,
+      );
+
+      // Matches files in example/
+      expect(
+        rule.canImport('example/demo.dart', Import(uri: 'lib/data/repo.dart')),
+        isFalse,
+      );
+
+      // Matches nested files
+      expect(
+        rule.canImport(
+          'lib/features/auth/login.dart',
+          Import(uri: 'lib/data/repo.dart'),
+        ),
+        isFalse,
+      );
+
+      // Matches root level files
+      expect(
+        rule.canImport('main.dart', Import(uri: 'lib/data/repo.dart')),
+        isFalse,
+      );
+
+      // Matches package imports
+      expect(
+        rule.canImport(
+          'package:my_app/core.dart',
+          Import(uri: 'lib/data/repo.dart'),
+        ),
+        isFalse,
+      );
+    });
   });
 
   group('excludeTarget behavior', () {
