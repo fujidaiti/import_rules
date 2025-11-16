@@ -1,11 +1,9 @@
-import 'dart:io';
-
 import 'package:import_rules/src/import_rules.dart';
 import 'package:import_rules/src/parser.dart';
 import 'package:test/test.dart';
 
 void main() {
-  group('parseRulesFromYaml', () {
+  group('ConfigParser().parseRulesFromYaml', () {
     test('parses simple rule with single string values', () {
       final yaml = '''
 rules:
@@ -15,7 +13,7 @@ rules:
     disallow: test/**
 ''';
 
-      final rules = parseRulesFromYaml(yaml);
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
       expect(rules, hasLength(1));
       expect(rules[0].name, equals('Test rule'));
@@ -38,7 +36,7 @@ rules:
       - lib/internal/**
 ''';
 
-      final rules = parseRulesFromYaml(yaml);
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
       expect(rules, hasLength(1));
       expect(rules[0].target, equals(['lib/features/**', 'lib/ui/**']));
@@ -56,7 +54,7 @@ rules:
     exclude_disallow: package:flutter/material.dart
 ''';
 
-      final rules = parseRulesFromYaml(yaml);
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
       expect(rules, hasLength(1));
       expect(rules[0].name, equals('Complete rule'));
@@ -84,7 +82,7 @@ rules:
     disallow: lib/internal/**
 ''';
 
-      final rules = parseRulesFromYaml(yaml);
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
       expect(rules, hasLength(3));
       expect(rules[0].name, equals('Rule 1'));
@@ -100,7 +98,7 @@ rules:
     disallow: test/**
 ''';
 
-      final rules = parseRulesFromYaml(yaml);
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
       expect(rules, hasLength(1));
       expect(rules[0].name, isNull);
@@ -119,7 +117,7 @@ rules:
     exclude_disallow: package:flutter/material.dart
 ''';
 
-      final rules = parseRulesFromYaml(yaml);
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
       expect(rules, hasLength(1));
       expect(rules[0].target, equals(['lib/**']));
@@ -140,17 +138,17 @@ rules:
     exclude_disallow: "$DIR/**"
 ''';
 
-      final rules = parseRulesFromYaml(yaml);
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
       expect(rules, hasLength(1));
       expect(rules[0].excludeDisallow, equals([r'$DIR/**']));
     });
   });
 
-  group('parseRulesFromYaml - error handling', () {
+  group('ConfigParser().parseRulesFromYaml - error handling', () {
     test('throws on empty YAML', () {
       expect(
-        () => parseRulesFromYaml(''),
+        () => ConfigParser().parseRulesFromYaml(''),
         throwsA(
           isA<FormatException>().having(
             (e) => e.message,
@@ -168,7 +166,7 @@ some_other_key:
 ''';
 
       expect(
-        () => parseRulesFromYaml(yaml),
+        () => ConfigParser().parseRulesFromYaml(yaml),
         throwsA(
           isA<FormatException>().having(
             (e) => e.message,
@@ -185,7 +183,7 @@ rules: not_a_list
 ''';
 
       expect(
-        () => parseRulesFromYaml(yaml),
+        () => ConfigParser().parseRulesFromYaml(yaml),
         throwsA(
           isA<FormatException>().having(
             (e) => e.message,
@@ -205,7 +203,7 @@ rules:
 ''';
 
       expect(
-        () => parseRulesFromYaml(yaml),
+        () => ConfigParser().parseRulesFromYaml(yaml),
         throwsA(
           isA<FormatException>().having(
             (e) => e.message,
@@ -224,7 +222,7 @@ rules:
 ''';
 
       expect(
-        () => parseRulesFromYaml(yaml),
+        () => ConfigParser().parseRulesFromYaml(yaml),
         throwsA(
           isA<FormatException>().having(
             (e) => e.message,
@@ -243,7 +241,7 @@ rules:
 ''';
 
       expect(
-        () => parseRulesFromYaml(yaml),
+        () => ConfigParser().parseRulesFromYaml(yaml),
         throwsA(
           isA<FormatException>().having(
             (e) => e.message,
@@ -263,7 +261,7 @@ rules:
 ''';
 
       expect(
-        () => parseRulesFromYaml(yaml),
+        () => ConfigParser().parseRulesFromYaml(yaml),
         throwsA(
           isA<FormatException>().having(
             (e) => e.message,
@@ -285,7 +283,7 @@ rules:
 ''';
 
       expect(
-        () => parseRulesFromYaml(yaml),
+        () => ConfigParser().parseRulesFromYaml(yaml),
         throwsA(
           isA<FormatException>().having(
             (e) => e.message,
@@ -305,7 +303,7 @@ rules:
 ''';
 
       expect(
-        () => parseRulesFromYaml(yaml),
+        () => ConfigParser().parseRulesFromYaml(yaml),
         throwsA(
           isA<FormatException>().having(
             (e) => e.message,
@@ -325,7 +323,7 @@ rules:
 ''';
 
       expect(
-        () => parseRulesFromYaml(yaml),
+        () => ConfigParser().parseRulesFromYaml(yaml),
         throwsA(
           isA<FormatException>().having(
             (e) => e.message,
@@ -343,7 +341,7 @@ rules:
 ''';
 
       expect(
-        () => parseRulesFromYaml(yaml),
+        () => ConfigParser().parseRulesFromYaml(yaml),
         throwsA(
           isA<FormatException>().having(
             (e) => e.message,
@@ -369,7 +367,7 @@ rules:
 ''';
 
       expect(
-        () => parseRulesFromYaml(yaml),
+        () => ConfigParser().parseRulesFromYaml(yaml),
         throwsA(
           isA<FormatException>().having(
             (e) => e.message,
@@ -377,57 +375,6 @@ rules:
             contains('index 1'),
           ),
         ),
-      );
-    });
-  });
-
-  group('parseRulesFromYamlFile', () {
-    late Directory tempDir;
-
-    setUp(() {
-      tempDir = Directory.systemTemp.createTempSync('import_rules_test_');
-    });
-
-    tearDown(() {
-      tempDir.deleteSync(recursive: true);
-    });
-
-    test('reads and parses YAML file', () {
-      final file = File('${tempDir.path}/test_rules.yaml');
-      file.writeAsStringSync('''
-rules:
-  - name: File test
-    reason: Testing file parsing
-    target: lib/**
-    disallow: test/**
-''');
-
-      final rules = parseRulesFromYamlFile(file.path);
-
-      expect(rules, hasLength(1));
-      expect(rules[0].name, equals('File test'));
-      expect(rules[0].reason, equals('Testing file parsing'));
-    });
-
-    test('throws when file does not exist', () {
-      expect(
-        () => parseRulesFromYamlFile('${tempDir.path}/nonexistent.yaml'),
-        throwsA(isA<FileSystemException>()),
-      );
-    });
-
-    test('throws when file contains invalid YAML', () {
-      final file = File('${tempDir.path}/invalid.yaml');
-      file.writeAsStringSync('''
-rules:
-  - reason: Test
-    target: lib/**
-    # missing disallow
-''');
-
-      expect(
-        () => parseRulesFromYamlFile(file.path),
-        throwsA(isA<FormatException>()),
       );
     });
   });
@@ -442,7 +389,7 @@ rules:
 ''';
 
       expect(
-        () => parseRulesFromYaml(yaml),
+        () => ConfigParser().parseRulesFromYaml(yaml),
         throwsA(
           isA<FormatException>().having(
             (e) => e.message,
@@ -464,7 +411,7 @@ rules:
 ''';
 
       expect(
-        () => parseRulesFromYaml(yaml),
+        () => ConfigParser().parseRulesFromYaml(yaml),
         throwsA(
           isA<FormatException>().having(
             (e) => e.message,
@@ -487,7 +434,7 @@ rules:
 ''';
 
         expect(
-          () => parseRulesFromYaml(yaml),
+          () => ConfigParser().parseRulesFromYaml(yaml),
           throwsA(
             isA<FormatException>().having(
               (e) => e.message,
@@ -513,7 +460,7 @@ rules:
 ''';
 
       expect(
-        () => parseRulesFromYaml(yaml),
+        () => ConfigParser().parseRulesFromYaml(yaml),
         throwsA(
           isA<FormatException>().having(
             (e) => e.message,
@@ -535,7 +482,7 @@ rules:
 ''';
 
       // Should not throw
-      final rules = parseRulesFromYaml(yaml);
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
       expect(rules, hasLength(1));
       expect(rules[0].disallow, equals([r'$DIR/**']));
     });
@@ -550,7 +497,7 @@ rules:
 ''';
 
       // Should not throw
-      final rules = parseRulesFromYaml(yaml);
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
       expect(rules, hasLength(1));
       expect(rules[0].excludeDisallow, equals([r'$DIR/**']));
     });
@@ -566,7 +513,7 @@ rules:
     exclude_disallow: "$DIR/**"
 ''';
 
-      final rules = parseRulesFromYaml(yaml);
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
       expect(rules, hasLength(1));
 
       // File in lib/features/auth/src can import from same src
@@ -602,7 +549,7 @@ rules:
     exclude_disallow: "$DIR/**"
 ''';
 
-      final rules = parseRulesFromYaml(yaml);
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
       expect(rules, hasLength(1));
 
       // Auth file can import from auth src
@@ -667,7 +614,7 @@ rules:
     exclude_disallow: "$DIR/**"
 ''';
 
-      final rules = parseRulesFromYaml(yaml);
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
       expect(rules, hasLength(1));
 
       // Auth file has DIR=lib/features/auth
@@ -715,7 +662,7 @@ rules:
     exclude_disallow: lib/data/models/**
 ''';
 
-      final rules = parseRulesFromYaml(yaml);
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
       expect(rules, hasLength(1));
       expect(rules[0].name, equals('Presentation layer isolation'));
@@ -747,7 +694,7 @@ rules:
     exclude_disallow: "$DIR/**"
 ''';
 
-      final rules = parseRulesFromYaml(yaml);
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
       expect(rules, hasLength(1));
       expect(
@@ -779,7 +726,7 @@ rules:
       - lib/ui/**
 ''';
 
-      final rules = parseRulesFromYaml(yaml);
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
       expect(rules, hasLength(1));
       expect(rules[0].disallow, hasLength(2));
@@ -818,7 +765,7 @@ rules:
       - lib/features/cart/**
 ''';
 
-      final rules = parseRulesFromYaml(yaml);
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
       expect(rules, hasLength(3));
       expect(rules[0].name, equals('Presentation layer isolation'));

@@ -76,7 +76,7 @@ class Logger {
     _internalLogger.warning(message);
   }
 
-  void severe(String message, {Object? error, StackTrace? stackTrace}) {
+  void severe(String message, [Object? error, StackTrace? stackTrace]) {
     _internalLogger.severe(message, error, stackTrace);
   }
 }
