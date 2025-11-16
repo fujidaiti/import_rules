@@ -5,11 +5,29 @@ import 'package:analyzer/workspace/workspace.dart';
 import 'package:logging/logging.dart' as logging;
 
 class Logger {
+  static Logger of(WorkspacePackage package) {
+    final key = package.root.path;
+    if (_loggers[key] case final logger?) {
+      return logger;
+    } else {
+      final logger = Logger()..setUp(package);
+      _loggers[key] = logger;
+      return logger;
+    }
+  }
+
+  static Future<void> closeAll() async {
+    await Future.wait(_loggers.values.map((logger) => logger.tearDown()));
+    _loggers.clear();
+  }
+
+  static final Map<String, Logger> _loggers = {};
+
   late final StreamSubscription<logging.LogRecord> _onRecordSubscription;
   late final IOSink _logFileStreamSink;
   late final logging.Logger _internalLogger;
 
-  void setUpLogger(WorkspacePackage package) {
+  File setUp(WorkspacePackage package) {
     final timestamp = DateTime.now().toIso8601String();
     logging.Logger.root.level;
     final logFile = File(
@@ -19,13 +37,12 @@ class Logger {
       logFile.createSync(recursive: true);
     }
     _logFileStreamSink = logFile.openWrite();
-    _logFileStreamSink.write('Logger for ${package.root.path}\n');
-
     _onRecordSubscription = logging.Logger.root.onRecord.listen(_writeRecord);
     _internalLogger = logging.Logger(package.root.shortName);
+    return logFile;
   }
 
-  Future<void> tearDownLogger() async {
+  Future<void> tearDown() async {
     _onRecordSubscription.cancel();
     await _logFileStreamSink.flush();
     await _logFileStreamSink.close();
@@ -33,7 +50,8 @@ class Logger {
 
   void _writeRecord(logging.LogRecord record) {
     _logFileStreamSink.write(
-      '${record.time.toIso8601String()} [${record.level.name}] '
+      '${record.time.toIso8601String()} '
+      '[${record.loggerName}:${record.level.name}] '
       '${record.message}${Platform.lineTerminator}',
     );
 

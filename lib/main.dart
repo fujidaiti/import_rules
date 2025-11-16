@@ -27,9 +27,8 @@ class ImportRulesPlugin extends Plugin {
   }
 
   @override
-  FutureOr<void> shutDown() {
-    _rule.dispose();
-    return super.shutDown();
+  FutureOr<void> shutDown() async {
+    await Logger.closeAll();
   }
 }
 
@@ -41,27 +40,8 @@ class ImportRules extends AnalysisRule {
   );
   ImportRules() : super(name: code.name, description: 'Linting import rules');
 
-  final Map<String, Logger> _loggers = {};
-
   @override
   LintCode get diagnosticCode => code;
-
-  Logger _loggerFor(WorkspacePackage package) {
-    final key = package.root.path;
-    if (_loggers[key] case final logger?) {
-      return logger;
-    } else {
-      final logger = Logger()..setUpLogger(package);
-      _loggers[key] = logger;
-      return logger;
-    }
-  }
-
-  Future<void> dispose() async {
-    for (final logger in _loggers.values) {
-      await logger.tearDownLogger();
-    }
-  }
 
   @override
   void registerNodeProcessors(
@@ -73,7 +53,7 @@ class ImportRules extends AnalysisRule {
     if (package == null || sourceUri == null) return;
     _loadRules(package);
 
-    final logger = _loggerFor(package);
+    final logger = Logger.of(package);
     logger.info('Analyzing: $sourceUri');
     var visitor = _Visitor(this, sourceUri, context, logger);
     registry.addImportDirective(this, visitor);
