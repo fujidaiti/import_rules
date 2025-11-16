@@ -15,7 +15,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/presentation/pages/home.dart',
-          'lib/data/models/user.dart',
+          Import(uri: 'lib/data/models/user.dart'),
         ),
         isTrue,
       );
@@ -25,7 +25,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/presentation/pages/home.dart',
-          'lib/data/repositories/user_repository.dart',
+          Import(uri: 'lib/data/repositories/user_repository.dart'),
         ),
         isFalse,
       );
@@ -35,7 +35,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/domain/usecases/login.dart',
-          'lib/data/repositories/user_repository.dart',
+          Import(uri: 'lib/data/repositories/user_repository.dart'),
         ),
         isTrue,
       );
@@ -54,7 +54,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/core/entities/user.dart',
-          'package:flutter/material.dart',
+          Import(uri: 'package:flutter/material.dart'),
         ),
         isFalse,
       );
@@ -64,7 +64,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/core/usecases/login.dart',
-          'lib/ui/widgets/button.dart',
+          Import(uri: 'lib/ui/widgets/button.dart'),
         ),
         isFalse,
       );
@@ -74,7 +74,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/core/usecases/login.dart',
-          'lib/core/entities/user.dart',
+          Import(uri: 'lib/core/entities/user.dart'),
         ),
         isTrue,
       );
@@ -97,7 +97,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/features/auth/login.dart',
-          'lib/features/profile/profile_page.dart',
+          Import(uri: 'lib/features/profile/profile_page.dart'),
         ),
         isFalse,
       );
@@ -107,7 +107,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/features/auth/login.dart',
-          'lib/features/settings/settings.dart',
+          Import(uri: 'lib/features/settings/settings.dart'),
         ),
         isFalse,
       );
@@ -117,7 +117,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/features/auth/login.dart',
-          'lib/features/auth/models/user.dart',
+          Import(uri: 'lib/features/auth/models/user.dart'),
         ),
         isTrue,
       );
@@ -127,7 +127,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/features/settings/settings.dart',
-          'lib/features/profile/profile_page.dart',
+          Import(uri: 'lib/features/profile/profile_page.dart'),
         ),
         isTrue,
       );
@@ -147,7 +147,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/features/auth/auth.dart',
-          'lib/features/auth/src/utils.dart',
+          Import(uri: 'lib/features/auth/src/utils.dart'),
         ),
         isTrue,
       );
@@ -157,7 +157,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/features/auth/src/cache.dart',
-          'lib/features/auth/src/utils.dart',
+          Import(uri: 'lib/features/auth/src/utils.dart'),
         ),
         isTrue,
       );
@@ -167,7 +167,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/core/models/src/entity.dart',
-          'lib/core/models/src/value.dart',
+          Import(uri: 'lib/core/models/src/value.dart'),
         ),
         isTrue,
       );
@@ -177,7 +177,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/infrastructure/db.dart',
-          'lib/domain/src/entity.dart',
+          Import(uri: 'lib/domain/src/entity.dart'),
         ),
         isFalse,
       );
@@ -187,7 +187,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/features/auth/src/cache.dart',
-          'lib/features/profile/src/utils.dart',
+          Import(uri: 'lib/features/profile/src/utils.dart'),
         ),
         isFalse,
       );
@@ -210,14 +210,20 @@ void main() {
 
     test('allows unit tests to import lib/', () {
       expect(
-        rule.canImport('test/unit/user_test.dart', 'lib/models/user.dart'),
+        rule.canImport(
+          'test/unit/user_test.dart',
+          Import(uri: 'lib/models/user.dart'),
+        ),
         isTrue,
       );
     });
 
     test('allows unit tests to import test package', () {
       expect(
-        rule.canImport('test/unit/user_test.dart', 'package:test/test.dart'),
+        rule.canImport(
+          'test/unit/user_test.dart',
+          Import(uri: 'package:test/test.dart'),
+        ),
         isTrue,
       );
     });
@@ -226,7 +232,7 @@ void main() {
       expect(
         rule.canImport(
           'test/unit/user_test.dart',
-          'test/integration/helpers.dart',
+          Import(uri: 'test/integration/helpers.dart'),
         ),
         isFalse,
       );
@@ -234,7 +240,10 @@ void main() {
 
     test('allows unit tests to import other unit tests', () {
       expect(
-        rule.canImport('test/unit/user_test.dart', 'test/unit/fixtures.dart'),
+        rule.canImport(
+          'test/unit/user_test.dart',
+          Import(uri: 'test/unit/fixtures.dart'),
+        ),
         isTrue,
       );
     });
@@ -253,7 +262,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/platform/android/camera.dart',
-          'lib/platform/android/sensor.dart',
+          Import(uri: 'lib/platform/android/sensor.dart'),
         ),
         isTrue,
       );
@@ -263,7 +272,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/platform/ios/camera.dart',
-          'lib/platform/android/camera.dart',
+          Import(uri: 'lib/platform/android/camera.dart'),
         ),
         isFalse,
       );
@@ -273,7 +282,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/platform/web/storage.dart',
-          'lib/platform/common/interface.dart',
+          Import(uri: 'lib/platform/common/interface.dart'),
         ),
         isTrue,
       );
@@ -283,7 +292,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/platform/android/storage.dart',
-          'lib/platform/common/interface.dart',
+          Import(uri: 'lib/platform/common/interface.dart'),
         ),
         isTrue,
       );
@@ -301,7 +310,10 @@ void main() {
 
     test('denies external modules to import internal files', () {
       expect(
-        rule.canImport('lib/app.dart', 'lib/features/auth/internal/cache.dart'),
+        rule.canImport(
+          'lib/app.dart',
+          Import(uri: 'lib/features/auth/internal/cache.dart'),
+        ),
         isFalse,
       );
     });
@@ -311,7 +323,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/features/auth/auth.dart',
-          'lib/features/auth/internal/cache.dart',
+          Import(uri: 'lib/features/auth/internal/cache.dart'),
         ),
         isTrue,
       );
@@ -332,7 +344,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/features/auth/login.dart',
-          'lib/features/legacy/old_auth.dart',
+          Import(uri: 'lib/features/legacy/old_auth.dart'),
         ),
         isFalse,
       );
@@ -343,7 +355,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/features/legacy/old_auth.dart',
-          'lib/features/legacy/utils.dart',
+          Import(uri: 'lib/features/legacy/utils.dart'),
         ),
         isTrue,
       );
@@ -363,7 +375,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/features/home/home.dart',
-          'package:firebase_analytics/firebase_analytics.dart',
+          Import(uri: 'package:firebase_analytics/firebase_analytics.dart'),
         ),
         isFalse,
       );
@@ -374,7 +386,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/core/analytics/analytics_service.dart',
-          'package:firebase_analytics/firebase_analytics.dart',
+          Import(uri: 'package:firebase_analytics/firebase_analytics.dart'),
         ),
         isTrue,
       );
@@ -394,7 +406,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/models/user.g.dart',
-          'package:json_annotation/json_annotation.dart',
+          Import(uri: 'package:json_annotation/json_annotation.dart'),
         ),
         isTrue,
       );
@@ -402,14 +414,20 @@ void main() {
 
     test('allows generated code to import other generated code', () {
       expect(
-        rule.canImport('lib/models/user.g.dart', 'lib/models/address.g.dart'),
+        rule.canImport(
+          'lib/models/user.g.dart',
+          Import(uri: 'lib/models/address.g.dart'),
+        ),
         isTrue,
       );
     });
 
     test('denies generated code to import non-generated code', () {
       expect(
-        rule.canImport('lib/models/user.g.dart', 'lib/utils/helpers.dart'),
+        rule.canImport(
+          'lib/models/user.g.dart',
+          Import(uri: 'lib/utils/helpers.dart'),
+        ),
         isFalse,
       );
     });
@@ -428,7 +446,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/features/auth/auth.dart',
-          'lib/features/auth/models/user.dart',
+          Import(uri: 'lib/features/auth/models/user.dart'),
         ),
         isTrue,
       );
@@ -438,7 +456,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/features/auth/auth.dart',
-          'lib/features/auth/login.dart',
+          Import(uri: 'lib/features/auth/login.dart'),
         ),
         isTrue,
       );
@@ -446,7 +464,10 @@ void main() {
 
     test('denies upward imports (to parent)', () {
       expect(
-        rule.canImport('lib/features/auth/auth.dart', 'lib/main.dart'),
+        rule.canImport(
+          'lib/features/auth/auth.dart',
+          Import(uri: 'lib/main.dart'),
+        ),
         isFalse,
       );
     });
@@ -455,7 +476,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/features/auth/auth.dart',
-          'lib/features/settings/settings.dart',
+          Import(uri: 'lib/features/settings/settings.dart'),
         ),
         isFalse,
       );
@@ -465,7 +486,7 @@ void main() {
       expect(
         rule.canImport(
           'lib/features/auth/auth.dart',
-          'lib/features/auth/src/cache.dart',
+          Import(uri: 'lib/features/auth/src/cache.dart'),
         ),
         isTrue,
       );

@@ -1,5 +1,14 @@
 import 'package:glob/glob.dart';
+import 'package:meta/meta.dart';
 import 'package:path/path.dart' as p;
+
+/// Represents an import directive in a Dart file.
+@immutable
+class Import {
+  const Import({required this.uri});
+
+  final String uri;
+}
 
 /// Represents an import rule that controls which files can import which files.
 class ImportRule {
@@ -41,7 +50,7 @@ class ImportRule {
   /// 4. If importeeFile doesn't match any disallow pattern, the import is allowed (return true)
   /// 5. If importeeFile matches any excludeDisallow pattern (with $DIR substituted), the import is allowed (return true)
   /// 6. Otherwise, the import is denied (return false)
-  bool canImport(String targetFile, String importeeFile) {
+  bool canImport(String targetFile, Import importee) {
     // Step 1: Check if targetFile matches any target pattern
     if (!_matchesAnyPattern(targetFile, target)) {
       return true; // Rule doesn't apply
@@ -56,14 +65,14 @@ class ImportRule {
     final dir = _extractDir(targetFile);
 
     // Step 4: Check if importeeFile matches any disallow pattern
-    if (!_matchesAnyPattern(importeeFile, disallow)) {
+    if (!_matchesAnyPattern(importee.uri, disallow)) {
       return true; // Import is allowed (not in disallow list)
     }
 
     // Step 5: Check if importeeFile matches any excludeDisallow pattern (with $DIR substituted)
     final excludeDisallowWithDir =
         excludeDisallow.map((pattern) => _substituteDir(pattern, dir)).toList();
-    if (_matchesAnyPattern(importeeFile, excludeDisallowWithDir)) {
+    if (_matchesAnyPattern(importee.uri, excludeDisallowWithDir)) {
       return true; // Import is allowed (in exclude list)
     }
 

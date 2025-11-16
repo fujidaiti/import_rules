@@ -520,7 +520,7 @@ rules:
       expect(
         rules[0].canImport(
           'lib/features/auth/src/cache.dart',
-          'lib/features/auth/src/utils.dart',
+          Import(uri: 'lib/features/auth/src/utils.dart'),
         ),
         isTrue,
       );
@@ -529,7 +529,7 @@ rules:
       expect(
         rules[0].canImport(
           'lib/features/auth/auth.dart',
-          'lib/features/auth/src/utils.dart',
+          Import(uri: 'lib/features/auth/src/utils.dart'),
         ),
         isTrue,
       );
@@ -554,7 +554,7 @@ rules:
       expect(
         rules[0].canImport(
           'lib/features/auth/auth.dart',
-          'lib/features/auth/src/utils.dart',
+          Import(uri: 'lib/features/auth/src/utils.dart'),
         ),
         isTrue,
       );
@@ -563,7 +563,7 @@ rules:
       expect(
         rules[0].canImport(
           'lib/features/profile/profile.dart',
-          'lib/features/profile/src/utils.dart',
+          Import(uri: 'lib/features/profile/src/utils.dart'),
         ),
         isTrue,
       );
@@ -572,7 +572,7 @@ rules:
       expect(
         rules[0].canImport(
           'lib/features/settings/settings.dart',
-          'lib/features/settings/src/utils.dart',
+          Import(uri: 'lib/features/settings/src/utils.dart'),
         ),
         isTrue,
       );
@@ -581,7 +581,7 @@ rules:
       expect(
         rules[0].canImport(
           'lib/features/auth/auth.dart',
-          'lib/features/profile/src/utils.dart',
+          Import(uri: 'lib/features/profile/src/utils.dart'),
         ),
         isFalse,
       );
@@ -590,7 +590,7 @@ rules:
       expect(
         rules[0].canImport(
           'lib/features/profile/profile.dart',
-          'lib/features/settings/src/utils.dart',
+          Import(uri: 'lib/features/settings/src/utils.dart'),
         ),
         isFalse,
       );
@@ -614,27 +614,30 @@ rules:
       expect(
         rules[0].canImport(
           'lib/features/auth/login.dart',
-          'lib/features/auth/models/user.dart',
+          Import(uri: 'lib/features/auth/models/user.dart'),
         ),
         isTrue,
       );
       expect(
         rules[0].canImport(
           'lib/features/auth/login.dart',
-          'lib/core/entity.dart',
+          Import(uri: 'lib/core/entity.dart'),
         ),
         isFalse,
       );
 
       // Core file has DIR=lib/core
       expect(
-        rules[0].canImport('lib/core/entity.dart', 'lib/core/value.dart'),
+        rules[0].canImport(
+          'lib/core/entity.dart',
+          Import(uri: 'lib/core/value.dart'),
+        ),
         isTrue,
       );
       expect(
         rules[0].canImport(
           'lib/core/entity.dart',
-          'lib/features/auth/login.dart',
+          Import(uri: 'lib/features/auth/login.dart'),
         ),
         isFalse,
       );
@@ -659,14 +662,14 @@ rules:
       expect(
         rules[0].canImport(
           'lib/presentation/pages/home.dart',
-          'lib/data/models/user.dart',
+          Import(uri: 'lib/data/models/user.dart'),
         ),
         isTrue,
       );
       expect(
         rules[0].canImport(
           'lib/presentation/pages/home.dart',
-          'lib/data/repositories/user_repository.dart',
+          Import(uri: 'lib/data/repositories/user_repository.dart'),
         ),
         isFalse,
       );
@@ -688,14 +691,14 @@ rules:
       expect(
         rules[0].canImport(
           'lib/features/auth/auth.dart',
-          'lib/features/auth/src/utils.dart',
+          Import(uri: 'lib/features/auth/src/utils.dart'),
         ),
         isTrue,
       );
       expect(
         rules[0].canImport(
           'lib/infrastructure/db.dart',
-          'lib/domain/src/entity.dart',
+          Import(uri: 'lib/domain/src/entity.dart'),
         ),
         isFalse,
       );
@@ -719,7 +722,7 @@ rules:
       expect(
         rules[0].canImport(
           'lib/core/entities/user.dart',
-          'package:flutter/material.dart',
+          Import(uri: 'package:flutter/material.dart'),
         ),
         isFalse,
       );
