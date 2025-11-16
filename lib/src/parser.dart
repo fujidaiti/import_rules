@@ -3,7 +3,7 @@ import 'package:analyzer/workspace/workspace.dart';
 import 'package:import_rules/src/config.dart';
 import 'package:yaml/yaml.dart';
 
-import 'import_rules.dart';
+import 'import_rule.dart';
 import 'logger.dart';
 
 class ConfigParser {

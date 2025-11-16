@@ -11,7 +11,7 @@ import 'package:analyzer/dart/ast/visitor.dart';
 import 'package:analyzer/dart/element/element.dart';
 import 'package:analyzer/error/error.dart';
 import 'package:import_rules/src/config.dart';
-import 'package:import_rules/src/import_rules.dart';
+import 'package:import_rules/src/import_rule.dart';
 import 'package:import_rules/src/parser.dart';
 
 import 'src/logger.dart';
@@ -22,13 +22,14 @@ late final PluginServer a;
 
 class ImportRulesPlugin extends Plugin {
   @override
-  String get name => 'ImportRules';
+  String get name => 'ImportRulesPlugin';
 
-  late final ImportRules _rule;
+  late final ImportRuleViolation _rule;
 
   @override
   void register(PluginRegistry registry) {
-    _rule = ImportRules();
+    _rule = ImportRuleViolation();
+    // Enable this rule by default.
     registry.registerWarningRule(_rule);
   }
 
@@ -38,17 +39,18 @@ class ImportRulesPlugin extends Plugin {
   }
 }
 
-class ImportRules extends AnalysisRule {
-  static const LintCode code = LintCode(
-    'import_rules',
-    'Import constraint violation.',
-    // `{0}` will be replaced with the reason for an import constraint violation.
+class ImportRuleViolation extends AnalysisRule {
+  static const code = LintCode(
+    'import_rule_violation',
+    'Import rule violation.',
+    // `{0}` will be replaced with the reason for an import rule violation.
     correctionMessage: '{0}',
   );
 
   static final Map<String, Config> _configs = {};
 
-  ImportRules() : super(name: code.name, description: code.problemMessage);
+  ImportRuleViolation()
+    : super(name: code.name, description: code.problemMessage);
 
   @override
   LintCode get diagnosticCode => code;
