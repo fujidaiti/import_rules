@@ -13,6 +13,8 @@ void main() {
   final projectRoot = Directory.current.path;
   final testEnvRoot = p.join(projectRoot, '.e2e');
   final templateDir = p.join(projectRoot, 'e2e', 'test_project');
+  late String templateCopyPath;
+  late String sharedDartToolPath;
 
   setUpAll(() {
     // Clean and create test environment
@@ -22,8 +24,10 @@ void main() {
     }
     envDir.createSync();
 
-    // Run pub get once on template project
-    runDartPubGet(templateDir);
+    // Copy template to test environment and run pub get once
+    templateCopyPath = copyTestProject(templateDir, testEnvRoot, 'template');
+    runDartPubGet(templateCopyPath);
+    sharedDartToolPath = p.join(templateCopyPath, '.dart_tool');
   });
 
   group('A1: Layer Architecture Enforcement', () {
@@ -31,6 +35,7 @@ void main() {
 
     setUp(() {
       projectPath = copyTestProject(templateDir, testEnvRoot, 'a1');
+      createDartToolSymlink(projectPath, sharedDartToolPath);
 
       // Generate import_rules.yaml for this specific test suite
       generateImportRules(projectPath, '''
@@ -80,6 +85,7 @@ rules:
 
     setUp(() {
       projectPath = copyTestProject(templateDir, testEnvRoot, 'a4');
+      createDartToolSymlink(projectPath, sharedDartToolPath);
 
       // Generate import_rules.yaml for this specific test suite
       generateImportRules(projectPath, '''
@@ -129,6 +135,7 @@ rules:
 
     setUp(() {
       projectPath = copyTestProject(templateDir, testEnvRoot, 'a5');
+      createDartToolSymlink(projectPath, sharedDartToolPath);
 
       // Generate import_rules.yaml for test isolation
       // TDD: This uses file path patterns which aren't supported yet
@@ -181,6 +188,7 @@ rules:
 
     setUp(() {
       projectPath = copyTestProject(templateDir, testEnvRoot, 'file_path');
+      createDartToolSymlink(projectPath, sharedDartToolPath);
 
       // Generate import_rules.yaml using lib/** patterns instead of package:**
       // This currently doesn't work - the plugin needs to be enhanced to support both formats

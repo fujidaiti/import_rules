@@ -13,10 +13,10 @@ List<String> _detectDartCommand() {
 }
 
 /// Copies the test project template to a new location
-/// Note: .dart_tool is copied since pub get runs once on the template
+/// Note: .dart_tool is excluded - use createDartToolSymlink() to link to shared .dart_tool
 String copyTestProject(String src, String destRoot, String name) {
   final dest = p.join(destRoot, 'test_project_$name');
-  _copyDirectory(Directory(src), Directory(dest), excludeDirs: {'build'});
+  _copyDirectory(Directory(src), Directory(dest), excludeDirs: {'build', '.dart_tool'});
   return dest;
 }
 
@@ -40,6 +40,26 @@ void _copyDirectory(
       );
     }
   }
+}
+
+/// Creates a symbolic link from projectPath/.dart_tool to the shared .dart_tool
+void createDartToolSymlink(String projectPath, String sharedDartToolPath) {
+  final linkPath = p.join(projectPath, '.dart_tool');
+  final link = Link(linkPath);
+
+  // Remove existing .dart_tool if it exists (file, directory, or symlink)
+  if (link.existsSync()) {
+    final entity = FileSystemEntity.typeSync(linkPath, followLinks: false);
+    if (entity == FileSystemEntityType.link) {
+      link.deleteSync();
+    } else if (entity == FileSystemEntityType.directory) {
+      Directory(linkPath).deleteSync(recursive: true);
+    } else if (entity == FileSystemEntityType.file) {
+      File(linkPath).deleteSync();
+    }
+  }
+
+  link.createSync(sharedDartToolPath);
 }
 
 /// Generates import_rules.yaml in the specified project
