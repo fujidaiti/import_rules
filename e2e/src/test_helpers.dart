@@ -3,6 +3,15 @@ import 'package:path/path.dart' as p;
 
 import 'analyzer_output.dart';
 
+/// Cached dart command prefix (determined once at module initialization)
+final List<String> _dartCommand = _detectDartCommand();
+
+/// Detects whether to use FVM or plain dart command
+List<String> _detectDartCommand() {
+  final fvmDir = Directory('.fvm');
+  return fvmDir.existsSync() ? ['fvm', 'dart'] : ['dart'];
+}
+
 /// Copies the test project template to a new location
 String copyTestProject(String src, String destRoot, String name) {
   final dest = p.join(destRoot, 'test_project_$name');
@@ -44,8 +53,8 @@ void generateImportRules(String projectPath, String yamlContent) {
 
 /// Runs dart pub get in the specified project
 void runDartPubGet(String projectPath) {
-  final result = Process.runSync('fvm', [
-    'dart',
+  final result = Process.runSync(_dartCommand.first, [
+    ..._dartCommand.skip(1),
     'pub',
     'get',
   ], workingDirectory: projectPath);
@@ -56,8 +65,8 @@ void runDartPubGet(String projectPath) {
 
 /// Runs dart analyze on a specific file and returns parsed output
 AnalyzerOutput runDartAnalyze(String projectPath, String targetFile) {
-  final result = Process.runSync('fvm', [
-    'dart',
+  final result = Process.runSync(_dartCommand.first, [
+    ..._dartCommand.skip(1),
     'analyze',
     targetFile,
   ], workingDirectory: projectPath);
