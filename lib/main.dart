@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:analysis_server_plugin/plugin.dart';
 import 'package:analysis_server_plugin/registry.dart';
-import 'package:analysis_server_plugin/src/plugin_server.dart';
 import 'package:analyzer/analysis_rule/analysis_rule.dart';
 import 'package:analyzer/analysis_rule/rule_context.dart';
 import 'package:analyzer/analysis_rule/rule_visitor_registry.dart';
@@ -17,8 +16,6 @@ import 'package:import_rules/src/parser.dart';
 import 'src/logger.dart';
 
 final plugin = ImportRulesPlugin();
-
-late final PluginServer a;
 
 class ImportRulesPlugin extends Plugin {
   @override

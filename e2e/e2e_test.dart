@@ -1,10 +1,13 @@
 @Timeout(Duration(minutes: 2))
-import 'package:test/test.dart';
-import 'package:path/path.dart' as p;
+library;
+
 import 'dart:io';
 
-import 'src/test_helpers.dart';
+import 'package:path/path.dart' as p;
+import 'package:test/test.dart';
+
 import 'src/matchers.dart';
+import 'src/test_helpers.dart';
 
 void main() {
   final projectRoot = Directory.current.path;
