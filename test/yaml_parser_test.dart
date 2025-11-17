@@ -644,6 +644,138 @@ rules:
     });
   });
 
+  group('ConfigParser().parseRulesFromYaml - analysis_options.yaml format', () {
+    test('parses rules under import_rules section', () {
+      final yaml = '''
+import_rules:
+  rules:
+    - name: Test rule
+      reason: Testing
+      target: lib/**
+      disallow: test/**
+''';
+
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+
+      expect(rules, hasLength(1));
+      expect(rules[0].name, equals('Test rule'));
+      expect(rules[0].reason, equals('Testing'));
+      expect(rules[0].target, equals(['lib/**']));
+      expect(rules[0].disallow, equals(['test/**']));
+    });
+
+    test('parses multiple rules under import_rules section', () {
+      final yaml = '''
+import_rules:
+  rules:
+    - name: Rule 1
+      reason: First rule
+      target: lib/features/**
+      disallow: lib/data/**
+    - name: Rule 2
+      reason: Second rule
+      target: lib/core/**
+      disallow: package:flutter/**
+''';
+
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+
+      expect(rules, hasLength(2));
+      expect(rules[0].name, equals('Rule 1'));
+      expect(rules[1].name, equals('Rule 2'));
+    });
+
+    test('parses rules with all fields under import_rules section', () {
+      final yaml = '''
+import_rules:
+  rules:
+    - name: Complete rule
+      reason: Testing all fields
+      target: lib/**
+      exclude_target: lib/core/**
+      disallow: package:flutter/**
+      exclude_disallow: package:flutter/material.dart
+''';
+
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+
+      expect(rules, hasLength(1));
+      expect(rules[0].name, equals('Complete rule'));
+      expect(rules[0].excludeTarget, equals(['lib/core/**']));
+      expect(
+        rules[0].excludeDisallow,
+        equals(['package:flutter/material.dart']),
+      );
+    });
+
+    test('parses rules with \$DIR under import_rules section', () {
+      final yaml = r'''
+import_rules:
+  rules:
+    - reason: DIR test
+      target: "**"
+      disallow: "**/src/**"
+      exclude_disallow: "$DIR/**"
+''';
+
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+
+      expect(rules, hasLength(1));
+      expect(rules[0].excludeDisallow, equals([r'$DIR/**']));
+    });
+
+    test(
+      'parses analysis_options.yaml with other sections alongside import_rules',
+      () {
+        final yaml = '''
+analyzer:
+  strong-mode:
+    implicit-casts: false
+
+linter:
+  rules:
+    - avoid_print
+    - prefer_const_constructors
+
+import_rules:
+  rules:
+    - name: Test rule
+      reason: Testing
+      target: lib/**
+      disallow: test/**
+''';
+
+        final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+
+        expect(rules, hasLength(1));
+        expect(rules[0].name, equals('Test rule'));
+        expect(rules[0].target, equals(['lib/**']));
+        expect(rules[0].disallow, equals(['test/**']));
+      },
+    );
+
+    test(
+      'throws when import_rules section exists but rules key is missing',
+      () {
+        final yaml = '''
+import_rules:
+  other_config: value
+''';
+
+        expect(
+          () => ConfigParser().parseRulesFromYaml(yaml),
+          throwsA(
+            isA<FormatException>().having(
+              (e) => e.message,
+              'message',
+              contains('rules'),
+            ),
+          ),
+        );
+      },
+    );
+  });
+
   group('Real-world examples from spec', () {
     test('parses Layer Architecture Enforcement example', () {
       final yaml = '''

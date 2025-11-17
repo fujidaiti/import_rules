@@ -51,7 +51,9 @@ class ConfigParser {
 
   /// Parses import rules from a YAML string.
   ///
-  /// The YAML should follow this structure:
+  /// The YAML should follow one of these structures:
+  ///
+  /// For import_rules.yaml:
   /// ```yaml
   /// rules:
   ///   - name: Rule name (optional)
@@ -60,6 +62,18 @@ class ConfigParser {
   ///     exclude_target: exception_pattern (optional, can be string or array)
   ///     disallow: disallowed_pattern (required, can be string or array)
   ///     exclude_disallow: exception_pattern (optional, can be string or array)
+  /// ```
+  ///
+  /// For analysis_options.yaml:
+  /// ```yaml
+  /// import_rules:
+  ///   rules:
+  ///     - name: Rule name (optional)
+  ///       reason: Why this rule exists (required)
+  ///       target: pattern (required, can be string or array)
+  ///       exclude_target: exception_pattern (optional, can be string or array)
+  ///       disallow: disallowed_pattern (required, can be string or array)
+  ///       exclude_disallow: exception_pattern (optional, can be string or array)
   /// ```
   ///
   /// Throws [FormatException] if the YAML is malformed or required fields are missing.
@@ -74,7 +88,11 @@ class ConfigParser {
       throw FormatException('YAML document must be a map');
     }
 
-    final rulesData = doc['rules'];
+    // Check if this is an analysis_options.yaml format with import_rules section
+    final importRulesSection = doc['import_rules'];
+    final rulesData =
+        importRulesSection is Map ? importRulesSection['rules'] : doc['rules'];
+
     if (rulesData == null) {
       throw FormatException('Missing "rules" key in YAML');
     }
