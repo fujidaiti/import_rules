@@ -26,6 +26,15 @@ class AnalyzerOutput {
 
     return AnalyzerOutput(errors);
   }
+
+  @override
+  String toString() {
+    if (errors.isEmpty) {
+      return 'AnalyzerOutput(no errors)';
+    }
+    final errorList = errors.map((e) => '  - $e').join('\n');
+    return 'AnalyzerOutput(${errors.length} error${errors.length == 1 ? '' : 's'}):\n$errorList';
+  }
 }
 
 /// Represents a single lint error from analyzer output

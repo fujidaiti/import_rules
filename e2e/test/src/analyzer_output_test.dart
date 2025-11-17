@@ -117,4 +117,56 @@ Another line of output
       );
     });
   });
+
+  group('AnalyzerOutput.toString', () {
+    test('formats output with no errors', () {
+      final output = AnalyzerOutput([]);
+
+      expect(output.toString(), 'AnalyzerOutput(no errors)');
+    });
+
+    test('formats output with single error', () {
+      final output = AnalyzerOutput([
+        LintError(
+          file: 'lib/main.dart',
+          line: 5,
+          col: 1,
+          message: 'Import rule violation.',
+          code: 'import_rule_violation',
+        ),
+      ]);
+
+      expect(
+        output.toString(),
+        'AnalyzerOutput(1 error):\n'
+        '  - lib/main.dart:5:1 - Import rule violation. (import_rule_violation)',
+      );
+    });
+
+    test('formats output with multiple errors', () {
+      final output = AnalyzerOutput([
+        LintError(
+          file: 'lib/main.dart',
+          line: 5,
+          col: 1,
+          message: 'First error.',
+          code: 'import_rule_violation',
+        ),
+        LintError(
+          file: 'lib/other.dart',
+          line: 10,
+          col: 8,
+          message: 'Second error.',
+          code: 'import_rule_violation',
+        ),
+      ]);
+
+      expect(
+        output.toString(),
+        'AnalyzerOutput(2 errors):\n'
+        '  - lib/main.dart:5:1 - First error. (import_rule_violation)\n'
+        '  - lib/other.dart:10:8 - Second error. (import_rule_violation)',
+      );
+    });
+  });
 }

@@ -93,6 +93,8 @@ Ensure these files have minimal content to avoid unrelated lint errors.
 Main test file that imports helpers and defines test suites:
 
 ```dart
+@Timeout(Duration(minutes: 2))
+
 import 'package:test/test.dart';
 import 'package:path/path.dart' as p;
 import 'dart:io';
@@ -720,3 +722,39 @@ For each use case (A1-A11):
 - Parse analyzer output format: `level - file:line:col - message - code`
 - Filter for `import_rule_violation` code specifically
 - Handle multi-line messages if needed
+
+### Timeout Configuration
+- E2E tests use `@Timeout(Duration(minutes: 2))` annotation
+- Default test timeout is 30 seconds, but e2e tests need more time for:
+  - Copying test project files
+  - Running `dart pub get` (dependency resolution)
+  - Running `dart analyze` (full project analysis)
+- Per-test timeouts can be added using the `timeout` parameter if needed
+
+### TDD Approach: Failing Tests Document Future Features
+The e2e test suite follows **Test-Driven Development (TDD)** principles:
+
+**Red-Green-Refactor Cycle:**
+- 🔴 **Red**: Write failing tests first (current state for file path patterns)
+- 🟢 **Green**: Implement features to make tests pass (future work)
+- ♻️ **Refactor**: Clean up implementation (future work)
+
+**File Path Patterns (3 failing tests):**
+- ❌ `lib/**` patterns are not currently supported - only `package:**` patterns work
+- ❌ Specific file path targets (e.g., `lib/data/specific_file.dart`) are not supported
+- ❌ Mixed pattern formats (e.g., `package:**` in target, `lib/**` in disallow) are not supported
+
+**Current Test Results:**
+```
+✅ 4 passed - Working features (package:** patterns)
+❌ 3 failed - Future features (lib/** patterns)
+📊 Total: 7 tests (5 + 3)
+```
+
+**Benefits of failing tests:**
+- **Specification**: Tests define the desired behavior
+- **TODO List**: Each failing test is a clear task to implement
+- **Regression Prevention**: Tests will automatically verify the fix works
+- **Living Documentation**: Code documents what should work
+
+When implementing file path pattern support, the failing tests will turn green automatically!
