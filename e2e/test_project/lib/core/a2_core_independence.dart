@@ -8,3 +8,36 @@ import 'package:test_project/core/models.dart'; // Allowed
 void useCore() {
   CoreModel();
 }
+
+final project = {
+  'lib': {
+    'utils': {
+      'utils.dart': '''
+        import 'package:test_project/core/models.dart';
+        import 'dart:math';
+        import 'models.dart';
+        
+        class CoreUtils {
+          CoreUtils();
+        }
+      ''',
+    },
+    'core': {
+      'models.dart': '''
+        class CoreModel {
+          CoreModel();
+        }
+      ''',
+      'utils.dart': '''
+        import 'package:test_project/core/models.dart';
+        import 'dart:math';
+        import 'models.dart';
+        import '../utils/utils.dart';
+        
+        class CoreUtils {
+          CoreUtils();
+        }
+      ''',
+    },
+  },
+};

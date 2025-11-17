@@ -367,25 +367,7 @@ rules:
     disallow: package:firebase_analytics/**
 ```
 
-### A10. Generated Code Protection
-
-**Purpose:** Restrict imports to prevent direct editing of generated code
-
-```yaml
-rules:
-  - name: Generated code isolation
-    reason: Generated code should not import non-generated code
-    target:
-      - lib/**.g.dart
-      - lib/**.freezed.dart
-    disallow: lib/**
-    exclude_disallow:
-      - lib/**.g.dart
-      - lib/**.freezed.dart
-      - package:**
-```
-
-### A11. Hierarchical Import Restriction
+### A10. Hierarchical Import Restriction
 
 **Purpose:** Files can only import from same or deeper directory levels (prohibit upward dependencies)
 
