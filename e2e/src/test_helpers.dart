@@ -13,13 +13,10 @@ List<String> _detectDartCommand() {
 }
 
 /// Copies the test project template to a new location
+/// Note: .dart_tool is copied since pub get runs once on the template
 String copyTestProject(String src, String destRoot, String name) {
   final dest = p.join(destRoot, 'test_project_$name');
-  _copyDirectory(
-    Directory(src),
-    Directory(dest),
-    excludeDirs: {'.dart_tool', 'build'},
-  );
+  _copyDirectory(Directory(src), Directory(dest), excludeDirs: {'build'});
   return dest;
 }
 

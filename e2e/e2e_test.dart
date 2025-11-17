@@ -18,6 +18,9 @@ void main() {
       envDir.deleteSync(recursive: true);
     }
     envDir.createSync();
+
+    // Run pub get once on template project
+    runDartPubGet(templateDir);
   });
 
   group('A1: Layer Architecture Enforcement', () {
@@ -35,8 +38,6 @@ rules:
     disallow: package:test_project/data/**
     exclude_disallow: package:test_project/data/models/**
 ''');
-
-      runDartPubGet(projectPath);
     });
 
     test('should disallow presentation → data layer imports', () {
@@ -86,8 +87,6 @@ rules:
     disallow: package:test_project/**/src/**
     exclude_disallow: "\$DIR/**"
 ''');
-
-      runDartPubGet(projectPath);
     });
 
     test('should allow importing from same module src/', () {
@@ -137,8 +136,6 @@ rules:
     target: test/unit/**
     disallow: test/integration/**
 ''');
-
-      runDartPubGet(projectPath);
     });
 
     test('should disallow unit tests → integration test imports', () {
@@ -191,8 +188,6 @@ rules:
     target: lib/data/**
     disallow: lib/presentation/**
 ''');
-
-      runDartPubGet(projectPath);
     });
 
     test('should disallow data → presentation imports with lib/** pattern', () {
