@@ -42,9 +42,9 @@ void main() {
 rules:
   - name: Presentation layer isolation
     reason: Presentation layer should not directly import data layer
-    target: package:test_project/presentation/**
-    disallow: package:test_project/data/**
-    exclude_disallow: package:test_project/data/models/**
+    target: lib/presentation/**
+    disallow: lib/data/**
+    exclude_disallow: lib/data/models/**
 ''');
     });
 
@@ -92,8 +92,8 @@ rules:
 rules:
   - name: src directory encapsulation
     reason: src/ directories are always private to their parent module
-    target: package:test_project/**
-    disallow: package:test_project/**/src/**
+    target: lib/**
+    disallow: lib/**/src/**
     exclude_disallow: "\$DIR/**"
 ''');
     });
@@ -158,7 +158,7 @@ rules:
         result,
         containsLintError(
           file: 'a5_test_isolation.dart',
-          line: 7,
+          line: 8,
           col: 1,
           message: contains(
             'Unit tests cannot import integration test utilities',

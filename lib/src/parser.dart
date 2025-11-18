@@ -157,6 +157,15 @@ class ConfigParser {
       }
     }
 
+    // Validate that package: URIs are not used in target
+    for (var i = 0; i < target.length; i++) {
+      if (target[i].startsWith('package:')) {
+        throw FormatException(
+          '"target" must use relative file paths (e.g., lib/**, test/**), not package: URIs. Found: ${target[i]}',
+        );
+      }
+    }
+
     // Parse exclude_target (optional)
     final excludeTargetRaw = ruleMap['exclude_target'];
     final excludeTarget =
@@ -169,6 +178,15 @@ class ConfigParser {
       if (excludeTarget[i].contains(r'$DIR')) {
         throw FormatException(
           r'$DIR placeholder cannot be used in "exclude_target" field',
+        );
+      }
+    }
+
+    // Validate that package: URIs are not used in exclude_target
+    for (var i = 0; i < excludeTarget.length; i++) {
+      if (excludeTarget[i].startsWith('package:')) {
+        throw FormatException(
+          '"exclude_target" must use relative file paths (e.g., lib/**, test/**), not package: URIs. Found: ${excludeTarget[i]}',
         );
       }
     }
