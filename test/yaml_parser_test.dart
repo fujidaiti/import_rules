@@ -19,15 +19,18 @@ rules:
       expect(rules[0].name, equals('Test rule'));
       expect(rules[0].reason, equals('Testing'));
       expect(
-        rules[0].targets.map((t) => t.pattern).toList(),
+        rules[0].targetPatterns.map((t) => t.pattern).toList(),
         equals(['lib/**']),
       );
       expect(
-        rules[0].disallows.map((d) => d.pattern).toList(),
+        rules[0].disallowPatterns.map((d) => d.pattern).toList(),
         equals(['test/**']),
       );
-      expect(rules[0].excludeTargets.map((t) => t.pattern).toList(), isEmpty);
-      expect(rules[0].excludeDisallows.map((d) => d.pattern).toList(), isEmpty);
+      expect(
+        rules[0].excludeTargetPatterns.map((t) => t.pattern).toList(),
+        isEmpty,
+      );
+      expect(rules[0].excludeDisallowPatterns.map((d) => d.pattern).toList(), isEmpty);
     });
 
     test('parses rule with array values', () {
@@ -46,11 +49,11 @@ rules:
 
       expect(rules, hasLength(1));
       expect(
-        rules[0].targets.map((t) => t.pattern).toList(),
+        rules[0].targetPatterns.map((t) => t.pattern).toList(),
         equals(['lib/features/**', 'lib/ui/**']),
       );
       expect(
-        rules[0].disallows.map((d) => d.pattern).toList(),
+        rules[0].disallowPatterns.map((d) => d.pattern).toList(),
         equals(['lib/data/**', 'lib/internal/**']),
       );
     });
@@ -71,11 +74,11 @@ rules:
       expect(rules, hasLength(1));
       expect(rules[0].name, equals('Complete rule'));
       expect(
-        rules[0].excludeTargets.map((t) => t.pattern).toList(),
+        rules[0].excludeTargetPatterns.map((t) => t.pattern).toList(),
         equals(['lib/core/**']),
       );
       expect(
-        rules[0].excludeDisallows.map((d) => d.pattern).toList(),
+        rules[0].excludeDisallowPatterns.map((d) => d.pattern).toList(),
         equals(['package:flutter/material.dart']),
       );
     });
@@ -136,19 +139,19 @@ rules:
 
       expect(rules, hasLength(1));
       expect(
-        rules[0].targets.map((t) => t.pattern).toList(),
+        rules[0].targetPatterns.map((t) => t.pattern).toList(),
         equals(['lib/**']),
       );
       expect(
-        rules[0].excludeTargets.map((t) => t.pattern).toList(),
+        rules[0].excludeTargetPatterns.map((t) => t.pattern).toList(),
         equals(['lib/core/**', 'lib/shared/**']),
       );
       expect(
-        rules[0].disallows.map((d) => d.pattern).toList(),
+        rules[0].disallowPatterns.map((d) => d.pattern).toList(),
         equals(['package:flutter/**']),
       );
       expect(
-        rules[0].excludeDisallows.map((d) => d.pattern).toList(),
+        rules[0].excludeDisallowPatterns.map((d) => d.pattern).toList(),
         equals(['package:flutter/material.dart']),
       );
     });
@@ -166,7 +169,7 @@ rules:
 
       expect(rules, hasLength(1));
       expect(
-        rules[0].excludeDisallows.map((d) => d.pattern).toList(),
+        rules[0].excludeDisallowPatterns.map((d) => d.pattern).toList(),
         equals([r'$DIR/**']),
       );
     });
@@ -512,7 +515,7 @@ rules:
       final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
       expect(rules, hasLength(1));
       expect(
-        rules[0].disallows.map((d) => d.pattern).toList(),
+        rules[0].disallowPatterns.map((d) => d.pattern).toList(),
         equals([r'$DIR/**']),
       );
     });
@@ -530,7 +533,7 @@ rules:
       final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
       expect(rules, hasLength(1));
       expect(
-        rules[0].excludeDisallows.map((d) => d.pattern).toList(),
+        rules[0].excludeDisallowPatterns.map((d) => d.pattern).toList(),
         equals([r'$DIR/**']),
       );
     });
@@ -694,11 +697,11 @@ import_rules:
       expect(rules[0].name, equals('Test rule'));
       expect(rules[0].reason, equals('Testing'));
       expect(
-        rules[0].targets.map((t) => t.pattern).toList(),
+        rules[0].targetPatterns.map((t) => t.pattern).toList(),
         equals(['lib/**']),
       );
       expect(
-        rules[0].disallows.map((d) => d.pattern).toList(),
+        rules[0].disallowPatterns.map((d) => d.pattern).toList(),
         equals(['test/**']),
       );
     });
@@ -741,11 +744,11 @@ import_rules:
       expect(rules, hasLength(1));
       expect(rules[0].name, equals('Complete rule'));
       expect(
-        rules[0].excludeTargets.map((t) => t.pattern).toList(),
+        rules[0].excludeTargetPatterns.map((t) => t.pattern).toList(),
         equals(['lib/core/**']),
       );
       expect(
-        rules[0].excludeDisallows.map((d) => d.pattern).toList(),
+        rules[0].excludeDisallowPatterns.map((d) => d.pattern).toList(),
         equals(['package:flutter/material.dart']),
       );
     });
@@ -764,7 +767,7 @@ import_rules:
 
       expect(rules, hasLength(1));
       expect(
-        rules[0].excludeDisallows.map((d) => d.pattern).toList(),
+        rules[0].excludeDisallowPatterns.map((d) => d.pattern).toList(),
         equals([r'$DIR/**']),
       );
     });
@@ -795,11 +798,11 @@ import_rules:
         expect(rules, hasLength(1));
         expect(rules[0].name, equals('Test rule'));
         expect(
-          rules[0].targets.map((t) => t.pattern).toList(),
+          rules[0].targetPatterns.map((t) => t.pattern).toList(),
           equals(['lib/**']),
         );
         expect(
-          rules[0].disallows.map((d) => d.pattern).toList(),
+          rules[0].disallowPatterns.map((d) => d.pattern).toList(),
           equals(['test/**']),
         );
       },
@@ -901,7 +904,10 @@ rules:
       final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
       expect(rules, hasLength(1));
-      expect(rules[0].disallows.map((d) => d.pattern).toList(), hasLength(2));
+      expect(
+        rules[0].disallowPatterns.map((d) => d.pattern).toList(),
+        hasLength(2),
+      );
       expect(
         rules[0].canImport(
           'lib/core/entities/user.dart',

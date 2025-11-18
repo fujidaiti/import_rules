@@ -17,8 +17,8 @@ class Import {
 
 /// Represents a single target pattern that can match against file paths.
 @immutable
-class Target {
-  const Target({required this.pattern});
+class TargetPattern {
+  const TargetPattern({required this.pattern});
 
   final String pattern;
 
@@ -34,8 +34,8 @@ class Target {
 
 /// Represents a single disallow pattern that can match against import URIs.
 @immutable
-class Disallow {
-  const Disallow({required this.pattern});
+class DisallowPattern {
+  const DisallowPattern({required this.pattern});
 
   final String pattern;
 
@@ -61,24 +61,24 @@ class ImportRule {
   final String reason;
 
   /// Target patterns to which this rule applies.
-  final List<Target> targets;
+  final List<TargetPattern> targetPatterns;
 
   /// Target patterns to exclude from targets.
-  final List<Target> excludeTargets;
+  final List<TargetPattern> excludeTargetPatterns;
 
   /// Disallow patterns that files matching targets cannot import.
-  final List<Disallow> disallows;
+  final List<DisallowPattern> disallowPatterns;
 
   /// Disallow patterns to exclude from disallows (making them importable).
-  final List<Disallow> excludeDisallows;
+  final List<DisallowPattern> excludeDisallowPatterns;
 
   ImportRule({
     this.name,
     required this.reason,
-    required this.targets,
-    this.excludeTargets = const [],
-    required this.disallows,
-    this.excludeDisallows = const [],
+    required this.targetPatterns,
+    this.excludeTargetPatterns = const [],
+    required this.disallowPatterns,
+    this.excludeDisallowPatterns = const [],
   });
 
   /// Checks if a target file can import an importee file according to this rule.
@@ -94,12 +94,12 @@ class ImportRule {
   /// 6. Otherwise, the import is denied (return false)
   bool canImport(String targetFile, Import importee) {
     // Step 1: Check if targetFile matches any target pattern
-    if (!targets.any((target) => target.matches(targetFile))) {
+    if (!targetPatterns.any((target) => target.matches(targetFile))) {
       return true; // Rule doesn't apply
     }
 
     // Step 2: Check if targetFile matches any excludeTarget pattern
-    if (excludeTargets.any((target) => target.matches(targetFile))) {
+    if (excludeTargetPatterns.any((target) => target.matches(targetFile))) {
       return true; // Rule doesn't apply
     }
 
@@ -107,12 +107,14 @@ class ImportRule {
     final dir = _extractDir(targetFile);
 
     // Step 4: Check if importeeFile matches any disallow pattern
-    if (!disallows.any((disallow) => disallow.matches(importee.uri, dir))) {
+    if (!disallowPatterns.any(
+      (disallow) => disallow.matches(importee.uri, dir),
+    )) {
       return true; // Import is allowed (not in disallow list)
     }
 
     // Step 5: Check if importeeFile matches any excludeDisallow pattern (with $DIR substituted)
-    if (excludeDisallows.any(
+    if (excludeDisallowPatterns.any(
       (disallow) => disallow.matches(importee.uri, dir),
     )) {
       return true; // Import is allowed (in exclude list)

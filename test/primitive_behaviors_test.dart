@@ -2,19 +2,19 @@ import 'package:import_rules/src/import_rule.dart';
 import 'package:test/test.dart';
 
 // Helper functions to convert string lists to Target/Disallow lists
-List<Target> _targets(List<String> patterns) =>
-    patterns.map((p) => Target(pattern: p)).toList();
+List<TargetPattern> _targets(List<String> patterns) =>
+    patterns.map((p) => TargetPattern(pattern: p)).toList();
 
-List<Disallow> _disallows(List<String> patterns) =>
-    patterns.map((p) => Disallow(pattern: p)).toList();
+List<DisallowPattern> _disallows(List<String> patterns) =>
+    patterns.map((p) => DisallowPattern(pattern: p)).toList();
 
 void main() {
   group('Target matching', () {
     test('rule does not apply when target does not match', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['lib/features/**']),
-        disallows: _disallows(['lib/data/**']),
+        targetPatterns: _targets(['lib/features/**']),
+        disallowPatterns: _disallows(['lib/data/**']),
       );
 
       // Rule doesn't apply to lib/core, so import is allowed
@@ -30,8 +30,8 @@ void main() {
     test('rule applies when target matches', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['lib/features/**']),
-        disallows: _disallows(['lib/data/**']),
+        targetPatterns: _targets(['lib/features/**']),
+        disallowPatterns: _disallows(['lib/data/**']),
       );
 
       // Rule applies to lib/features
@@ -47,8 +47,8 @@ void main() {
     test('target pattern with single wildcard matches single level', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['lib/*/service.dart']),
-        disallows: _disallows(['lib/data/**']),
+        targetPatterns: _targets(['lib/*/service.dart']),
+        disallowPatterns: _disallows(['lib/data/**']),
       );
 
       // Matches lib/core/service.dart
@@ -73,8 +73,8 @@ void main() {
     test('target pattern with double wildcard matches multiple levels', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['lib/**/service.dart']),
-        disallows: _disallows(['lib/data/**']),
+        targetPatterns: _targets(['lib/**/service.dart']),
+        disallowPatterns: _disallows(['lib/data/**']),
       );
 
       // Matches lib/core/service.dart
@@ -99,8 +99,8 @@ void main() {
     test('target pattern "**" matches any files', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['**']),
-        disallows: _disallows(['lib/data/**']),
+        targetPatterns: _targets(['**']),
+        disallowPatterns: _disallows(['lib/data/**']),
       );
 
       // Matches files in lib/
@@ -151,9 +151,9 @@ void main() {
     test('rule does not apply when excludeTarget matches', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['lib/**']),
-        excludeTargets: _targets(['lib/core/**']),
-        disallows: _disallows(['package:flutter/**']),
+        targetPatterns: _targets(['lib/**']),
+        excludeTargetPatterns: _targets(['lib/core/**']),
+        disallowPatterns: _disallows(['package:flutter/**']),
       );
 
       // Rule applies to lib/features
@@ -178,9 +178,9 @@ void main() {
     test('excludeTarget with multiple patterns', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['lib/**']),
-        excludeTargets: _targets(['lib/core/**', 'lib/shared/**']),
-        disallows: _disallows(['package:flutter/**']),
+        targetPatterns: _targets(['lib/**']),
+        excludeTargetPatterns: _targets(['lib/core/**', 'lib/shared/**']),
+        disallowPatterns: _disallows(['package:flutter/**']),
       );
 
       expect(
@@ -211,8 +211,8 @@ void main() {
     test('import allowed when importee does not match disallow', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['lib/**']),
-        disallows: _disallows(['package:flutter/**']),
+        targetPatterns: _targets(['lib/**']),
+        disallowPatterns: _disallows(['package:flutter/**']),
       );
 
       expect(
@@ -224,8 +224,8 @@ void main() {
     test('import denied when importee matches disallow', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['lib/**']),
-        disallows: _disallows(['package:flutter/**']),
+        targetPatterns: _targets(['lib/**']),
+        disallowPatterns: _disallows(['package:flutter/**']),
       );
 
       expect(
@@ -240,8 +240,8 @@ void main() {
     test('disallow with exact path match', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['lib/**']),
-        disallows: _disallows(['lib/data/db.dart']),
+        targetPatterns: _targets(['lib/**']),
+        disallowPatterns: _disallows(['lib/data/db.dart']),
       );
 
       expect(
@@ -259,9 +259,9 @@ void main() {
     test('import allowed when importee matches excludeDisallow', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['lib/**']),
-        disallows: _disallows(['lib/data/**']),
-        excludeDisallows: _disallows(['lib/data/models/**']),
+        targetPatterns: _targets(['lib/**']),
+        disallowPatterns: _disallows(['lib/data/**']),
+        excludeDisallowPatterns: _disallows(['lib/data/models/**']),
       );
 
       // Matches disallow but also matches excludeDisallow
@@ -283,9 +283,9 @@ void main() {
     test('excludeDisallow with multiple patterns', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['lib/**']),
-        disallows: _disallows(['lib/internal/**']),
-        excludeDisallows: _disallows([
+        targetPatterns: _targets(['lib/**']),
+        disallowPatterns: _disallows(['lib/internal/**']),
+        excludeDisallowPatterns: _disallows([
           'lib/internal/models/**',
           'lib/internal/utils/**',
         ]),
@@ -319,9 +319,9 @@ void main() {
     test('substitutes DIR in excludeDisallow patterns', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['**']),
-        disallows: _disallows(['**']),
-        excludeDisallows: _disallows([r'$DIR/**']),
+        targetPatterns: _targets(['**']),
+        disallowPatterns: _disallows(['**']),
+        excludeDisallowPatterns: _disallows([r'$DIR/**']),
       );
 
       // lib/features/auth.dart has DIR=lib/features
@@ -347,9 +347,9 @@ void main() {
     test('DIR is extracted from parent directory of target file', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['lib/features/auth/models/user.dart']),
-        disallows: _disallows(['**']),
-        excludeDisallows: _disallows([r'$DIR/**']),
+        targetPatterns: _targets(['lib/features/auth/models/user.dart']),
+        disallowPatterns: _disallows(['**']),
+        excludeDisallowPatterns: _disallows([r'$DIR/**']),
       );
 
       // DIR should be lib/features/auth/models
@@ -372,9 +372,9 @@ void main() {
     test('DIR substitution works with multiple occurrences', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['**']),
-        disallows: _disallows(['**']),
-        excludeDisallows: _disallows([r'$DIR/**', r'$DIR.dart']),
+        targetPatterns: _targets(['**']),
+        disallowPatterns: _disallows(['**']),
+        excludeDisallowPatterns: _disallows([r'$DIR/**', r'$DIR.dart']),
       );
 
       expect(
@@ -396,9 +396,9 @@ void main() {
     test('DIR works with package imports', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['package:my_app/**']),
-        disallows: _disallows(['**']),
-        excludeDisallows: _disallows([r'$DIR/**']),
+        targetPatterns: _targets(['package:my_app/**']),
+        disallowPatterns: _disallows(['**']),
+        excludeDisallowPatterns: _disallows([r'$DIR/**']),
       );
 
       // package:my_app/features/auth.dart has DIR=package:my_app/features
@@ -423,8 +423,8 @@ void main() {
     test('* matches any characters except /', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['lib/*.dart']),
-        disallows: _disallows(['lib/internal/**']),
+        targetPatterns: _targets(['lib/*.dart']),
+        disallowPatterns: _disallows(['lib/internal/**']),
       );
 
       // Matches lib/app.dart
@@ -449,8 +449,8 @@ void main() {
     test('** matches across directory levels', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['lib/**']),
-        disallows: _disallows(['test/**']),
+        targetPatterns: _targets(['lib/**']),
+        disallowPatterns: _disallows(['test/**']),
       );
 
       expect(
@@ -469,8 +469,8 @@ void main() {
     test('exact path matching', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['lib/main.dart']),
-        disallows: _disallows(['lib/internal.dart']),
+        targetPatterns: _targets(['lib/main.dart']),
+        disallowPatterns: _disallows(['lib/internal.dart']),
       );
 
       // Exact match on target
@@ -491,9 +491,9 @@ void main() {
     test('empty excludeTarget list behaves correctly', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['lib/**']),
-        excludeTargets: _targets([]), // Empty
-        disallows: _disallows(['package:flutter/**']),
+        targetPatterns: _targets(['lib/**']),
+        excludeTargetPatterns: _targets([]), // Empty
+        disallowPatterns: _disallows(['package:flutter/**']),
       );
 
       expect(
@@ -508,9 +508,9 @@ void main() {
     test('empty excludeDisallow list behaves correctly', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['lib/**']),
-        disallows: _disallows(['lib/data/**']),
-        excludeDisallows: _disallows([]), // Empty
+        targetPatterns: _targets(['lib/**']),
+        disallowPatterns: _disallows(['lib/data/**']),
+        excludeDisallowPatterns: _disallows([]), // Empty
       );
 
       expect(
@@ -524,8 +524,8 @@ void main() {
     test('target must match first', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['lib/features/**']),
-        disallows: _disallows(['lib/data/**']),
+        targetPatterns: _targets(['lib/features/**']),
+        disallowPatterns: _disallows(['lib/data/**']),
       );
 
       // Target doesn't match, so rule doesn't apply even though disallow would match
@@ -541,9 +541,9 @@ void main() {
     test('excludeTarget checked after target', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['lib/**']),
-        excludeTargets: _targets(['lib/core/**']),
-        disallows: _disallows(['lib/data/**']),
+        targetPatterns: _targets(['lib/**']),
+        excludeTargetPatterns: _targets(['lib/core/**']),
+        disallowPatterns: _disallows(['lib/data/**']),
       );
 
       // Target matches, but excludeTarget also matches
@@ -559,8 +559,8 @@ void main() {
     test('disallow checked after target matching', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['lib/features/**']),
-        disallows: _disallows(['lib/data/**']),
+        targetPatterns: _targets(['lib/features/**']),
+        disallowPatterns: _disallows(['lib/data/**']),
       );
 
       // Target matches, importee doesn't match disallow
@@ -576,9 +576,9 @@ void main() {
     test('excludeDisallow checked last', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['lib/**']),
-        disallows: _disallows(['lib/data/**']),
-        excludeDisallows: _disallows(['lib/data/models/**']),
+        targetPatterns: _targets(['lib/**']),
+        disallowPatterns: _disallows(['lib/data/**']),
+        excludeDisallowPatterns: _disallows(['lib/data/models/**']),
       );
 
       // Target matches, disallow matches, excludeDisallow matches
@@ -596,8 +596,8 @@ void main() {
     test('handles multiple target patterns', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['lib/presentation/**', 'lib/ui/**']),
-        disallows: _disallows(['lib/data/**']),
+        targetPatterns: _targets(['lib/presentation/**', 'lib/ui/**']),
+        disallowPatterns: _disallows(['lib/data/**']),
       );
 
       expect(
@@ -616,8 +616,8 @@ void main() {
     test('handles multiple disallow patterns', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['lib/core/**']),
-        disallows: _disallows(['package:flutter/**', 'lib/ui/**']),
+        targetPatterns: _targets(['lib/core/**']),
+        disallowPatterns: _disallows(['package:flutter/**', 'lib/ui/**']),
       );
 
       expect(
@@ -641,9 +641,9 @@ void main() {
     test('extracts directory from nested file path', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['lib/features/auth/src/utils.dart']),
-        disallows: _disallows(['**/src/**']),
-        excludeDisallows: _disallows([r'$DIR/**']),
+        targetPatterns: _targets(['lib/features/auth/src/utils.dart']),
+        disallowPatterns: _disallows(['**/src/**']),
+        excludeDisallowPatterns: _disallows([r'$DIR/**']),
       );
 
       // We can test this indirectly by checking if $DIR substitution works
@@ -659,9 +659,9 @@ void main() {
     test('handles package imports', () {
       final rule = ImportRule(
         reason: 'test',
-        targets: _targets(['package:flutter/widgets/container.dart']),
-        disallows: _disallows(['**']),
-        excludeDisallows: _disallows([r'$DIR/**']),
+        targetPatterns: _targets(['package:flutter/widgets/container.dart']),
+        disallowPatterns: _disallows(['**']),
+        excludeDisallowPatterns: _disallows([r'$DIR/**']),
       );
 
       // $DIR should be package:flutter/widgets

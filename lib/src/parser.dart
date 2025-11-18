@@ -25,16 +25,16 @@ class ConfigParser {
           logger?.info('  name: ${rule.name}');
           logger?.info('  reason: ${rule.reason}');
           logger?.info(
-            '  target: ${rule.targets.map((t) => t.pattern).toList()}',
+            '  target: ${rule.targetPatterns.map((t) => t.pattern).toList()}',
           );
           logger?.info(
-            '  disallow: ${rule.disallows.map((d) => d.pattern).toList()}',
+            '  disallow: ${rule.disallowPatterns.map((d) => d.pattern).toList()}',
           );
           logger?.info(
-            '  exclude_target: ${rule.excludeTargets.map((t) => t.pattern).toList()}',
+            '  exclude_target: ${rule.excludeTargetPatterns.map((t) => t.pattern).toList()}',
           );
           logger?.info(
-            '  exclude_disallow: ${rule.excludeDisallows.map((d) => d.pattern).toList()}',
+            '  exclude_disallow: ${rule.excludeDisallowPatterns.map((d) => d.pattern).toList()}',
           );
         }
         return config;
@@ -190,12 +190,18 @@ class ConfigParser {
     return ImportRule(
       name: name,
       reason: reason,
-      targets: target.map((pattern) => Target(pattern: pattern)).toList(),
-      excludeTargets:
-          excludeTarget.map((pattern) => Target(pattern: pattern)).toList(),
-      disallows: disallow.map((pattern) => Disallow(pattern: pattern)).toList(),
-      excludeDisallows:
-          excludeDisallow.map((pattern) => Disallow(pattern: pattern)).toList(),
+      targetPatterns:
+          target.map((pattern) => TargetPattern(pattern: pattern)).toList(),
+      excludeTargetPatterns:
+          excludeTarget
+              .map((pattern) => TargetPattern(pattern: pattern))
+              .toList(),
+      disallowPatterns:
+          disallow.map((pattern) => DisallowPattern(pattern: pattern)).toList(),
+      excludeDisallowPatterns:
+          excludeDisallow
+              .map((pattern) => DisallowPattern(pattern: pattern))
+              .toList(),
     );
   }
 
