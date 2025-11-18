@@ -16,7 +16,11 @@ List<String> _detectDartCommand() {
 /// Note: .dart_tool is excluded - use createDartToolSymlink() to link to shared .dart_tool
 String copyTestProject(String src, String destRoot, String name) {
   final dest = p.join(destRoot, 'test_project_$name');
-  _copyDirectory(Directory(src), Directory(dest), excludeDirs: {'build', '.dart_tool'});
+  _copyDirectory(
+    Directory(src),
+    Directory(dest),
+    excludeDirs: {'build', '.dart_tool'},
+  );
   return dest;
 }
 

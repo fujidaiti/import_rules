@@ -1,14 +1,21 @@
 import 'package:import_rules/src/import_rule.dart';
 import 'package:test/test.dart';
 
+// Helper functions to convert string lists to Target/Disallow lists
+List<Target> _targets(List<String> patterns) =>
+    patterns.map((p) => Target(pattern: p)).toList();
+
+List<Disallow> _disallows(List<String> patterns) =>
+    patterns.map((p) => Disallow(pattern: p)).toList();
+
 void main() {
   group('A1: Layer Architecture Enforcement', () {
     final rule = ImportRule(
       name: 'Presentation layer isolation',
       reason: 'Presentation layer should not directly import data layer',
-      target: ['lib/presentation/**'],
-      disallow: ['lib/data/**'],
-      excludeDisallow: ['lib/data/models/**'],
+      targets: _targets(['lib/presentation/**']),
+      disallows: _disallows(['lib/data/**']),
+      excludeDisallows: _disallows(['lib/data/models/**']),
     );
 
     test('allows presentation to import domain models', () {
@@ -46,8 +53,8 @@ void main() {
     final rule = ImportRule(
       name: 'Core independence',
       reason: 'Core domain must remain framework-agnostic',
-      target: ['lib/core/**'],
-      disallow: ['package:flutter/**', 'lib/ui/**'],
+      targets: _targets(['lib/core/**']),
+      disallows: _disallows(['package:flutter/**', 'lib/ui/**']),
     );
 
     test('denies core to import Flutter packages', () {
@@ -85,12 +92,12 @@ void main() {
     final rule = ImportRule(
       name: 'Feature module boundaries',
       reason: 'Features should not cross-import each other',
-      target: ['lib/features/auth/**'],
-      disallow: [
+      targets: _targets(['lib/features/auth/**']),
+      disallows: _disallows([
         'lib/features/profile/**',
         'lib/features/settings/**',
         'lib/features/cart/**',
-      ],
+      ]),
     );
 
     test('denies auth to import profile', () {
@@ -138,9 +145,9 @@ void main() {
     final rule = ImportRule(
       name: 'src directory encapsulation',
       reason: 'src/ directories are always private to their parent module',
-      target: ['**'],
-      disallow: ['**/src/**'],
-      excludeDisallow: [r'$DIR/**'],
+      targets: _targets(['**']),
+      disallows: _disallows(['**/src/**']),
+      excludeDisallows: _disallows([r'$DIR/**']),
     );
 
     test('allows same module to import from its own src/', () {
@@ -198,14 +205,14 @@ void main() {
     final rule = ImportRule(
       name: 'Test isolation',
       reason: 'Unit tests cannot import integration test utilities',
-      target: ['test/unit/**'],
-      disallow: ['**'],
-      excludeDisallow: [
+      targets: _targets(['test/unit/**']),
+      disallows: _disallows(['**']),
+      excludeDisallows: _disallows([
         'test/unit/**',
         'lib/**',
         'package:test/**',
         'package:mockito/**',
-      ],
+      ]),
     );
 
     test('allows unit tests to import lib/', () {
@@ -253,9 +260,9 @@ void main() {
     final rule = ImportRule(
       name: 'Platform code isolation',
       reason: 'Platform implementations should not cross-import',
-      target: ['lib/platform/**'],
-      disallow: ['lib/platform/**'],
-      excludeDisallow: [r'$DIR/**', 'lib/platform/common/**'],
+      targets: _targets(['lib/platform/**']),
+      disallows: _disallows(['lib/platform/**']),
+      excludeDisallows: _disallows([r'$DIR/**', 'lib/platform/common/**']),
     );
 
     test('allows android to import within android', () {
@@ -303,9 +310,9 @@ void main() {
     final rule = ImportRule(
       name: 'Use barrel files',
       reason: 'Internal files should be accessed via barrel exports',
-      target: ['**'],
-      excludeTarget: ['lib/features/**'],
-      disallow: ['lib/features/*/internal/**'],
+      targets: _targets(['**']),
+      excludeTargets: _targets(['lib/features/**']),
+      disallows: _disallows(['lib/features/*/internal/**']),
     );
 
     test('denies external modules to import internal files', () {
@@ -335,9 +342,9 @@ void main() {
       name: 'Avoid legacy code',
       reason:
           'Legacy modules are deprecated and should not be used in new code',
-      target: ['lib/features/**'],
-      excludeTarget: ['lib/features/legacy/**'],
-      disallow: ['lib/features/legacy/**'],
+      targets: _targets(['lib/features/**']),
+      excludeTargets: _targets(['lib/features/legacy/**']),
+      disallows: _disallows(['lib/features/legacy/**']),
     );
 
     test('denies new features to import legacy', () {
@@ -366,9 +373,9 @@ void main() {
     final rule = ImportRule(
       name: 'Use analytics wrapper',
       reason: 'Direct firebase_analytics usage is forbidden, use our wrapper',
-      target: ['lib/**'],
-      excludeTarget: ['lib/core/analytics/**'],
-      disallow: ['package:firebase_analytics/**'],
+      targets: _targets(['lib/**']),
+      excludeTargets: _targets(['lib/core/analytics/**']),
+      disallows: _disallows(['package:firebase_analytics/**']),
     );
 
     test('denies direct firebase_analytics import', () {
@@ -397,9 +404,13 @@ void main() {
     final rule = ImportRule(
       name: 'Generated code isolation',
       reason: 'Generated code should not import non-generated code',
-      target: ['lib/**.g.dart', 'lib/**.freezed.dart'],
-      disallow: ['lib/**'],
-      excludeDisallow: ['lib/**.g.dart', 'lib/**.freezed.dart', 'package:**'],
+      targets: _targets(['lib/**.g.dart', 'lib/**.freezed.dart']),
+      disallows: _disallows(['lib/**']),
+      excludeDisallows: _disallows([
+        'lib/**.g.dart',
+        'lib/**.freezed.dart',
+        'package:**',
+      ]),
     );
 
     test('allows generated code to import packages', () {
@@ -437,9 +448,9 @@ void main() {
     final rule = ImportRule(
       name: 'Downward dependency only',
       reason: 'Files can only import from same or deeper directory levels',
-      target: ['lib/**'],
-      disallow: ['**'],
-      excludeDisallow: [r'$DIR/**'],
+      targets: _targets(['lib/**']),
+      disallows: _disallows(['**']),
+      excludeDisallows: _disallows([r'$DIR/**']),
     );
 
     test('allows downward imports (same directory, deeper level)', () {

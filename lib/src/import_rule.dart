@@ -15,6 +15,43 @@ class Import {
   }
 }
 
+/// Represents a single target pattern that can match against file paths.
+@immutable
+class Target {
+  const Target({required this.pattern});
+
+  final String pattern;
+
+  /// Checks if the given file path matches this target pattern.
+  bool matches(String file) {
+    final glob = Glob(pattern);
+    return glob.matches(file);
+  }
+
+  @override
+  String toString() => pattern;
+}
+
+/// Represents a single disallow pattern that can match against import URIs.
+@immutable
+class Disallow {
+  const Disallow({required this.pattern});
+
+  final String pattern;
+
+  /// Checks if the given import URI matches this disallow pattern.
+  ///
+  /// The [dirValue] parameter is used to substitute $DIR placeholders in the pattern.
+  bool matches(String importUri, String dirValue) {
+    final substitutedPattern = pattern.replaceAll(r'$DIR', dirValue);
+    final glob = Glob(substitutedPattern);
+    return glob.matches(importUri);
+  }
+
+  @override
+  String toString() => pattern;
+}
+
 /// Represents an import rule that controls which files can import which files.
 class ImportRule {
   /// Optional name for the rule (used in error messages).
@@ -23,25 +60,25 @@ class ImportRule {
   /// Required reason explaining why this rule exists.
   final String reason;
 
-  /// File patterns to which this rule applies.
-  final List<String> target;
+  /// Target patterns to which this rule applies.
+  final List<Target> targets;
 
-  /// File patterns to exclude from target.
-  final List<String> excludeTarget;
+  /// Target patterns to exclude from targets.
+  final List<Target> excludeTargets;
 
-  /// File patterns that files matching target cannot import.
-  final List<String> disallow;
+  /// Disallow patterns that files matching targets cannot import.
+  final List<Disallow> disallows;
 
-  /// File patterns to exclude from disallow (making them importable).
-  final List<String> excludeDisallow;
+  /// Disallow patterns to exclude from disallows (making them importable).
+  final List<Disallow> excludeDisallows;
 
   ImportRule({
     this.name,
     required this.reason,
-    required this.target,
-    this.excludeTarget = const [],
-    required this.disallow,
-    this.excludeDisallow = const [],
+    required this.targets,
+    this.excludeTargets = const [],
+    required this.disallows,
+    this.excludeDisallows = const [],
   });
 
   /// Checks if a target file can import an importee file according to this rule.
@@ -57,12 +94,12 @@ class ImportRule {
   /// 6. Otherwise, the import is denied (return false)
   bool canImport(String targetFile, Import importee) {
     // Step 1: Check if targetFile matches any target pattern
-    if (!_matchesAnyPattern(targetFile, target)) {
+    if (!targets.any((target) => target.matches(targetFile))) {
       return true; // Rule doesn't apply
     }
 
     // Step 2: Check if targetFile matches any excludeTarget pattern
-    if (_matchesAnyPattern(targetFile, excludeTarget)) {
+    if (excludeTargets.any((target) => target.matches(targetFile))) {
       return true; // Rule doesn't apply
     }
 
@@ -70,36 +107,20 @@ class ImportRule {
     final dir = _extractDir(targetFile);
 
     // Step 4: Check if importeeFile matches any disallow pattern
-    if (!_matchesAnyPattern(importee.uri, disallow)) {
+    if (!disallows.any((disallow) => disallow.matches(importee.uri, dir))) {
       return true; // Import is allowed (not in disallow list)
     }
 
     // Step 5: Check if importeeFile matches any excludeDisallow pattern (with $DIR substituted)
-    final excludeDisallowWithDir =
-        excludeDisallow.map((pattern) => _substituteDir(pattern, dir)).toList();
-    if (_matchesAnyPattern(importee.uri, excludeDisallowWithDir)) {
+    if (excludeDisallows.any(
+      (disallow) => disallow.matches(importee.uri, dir),
+    )) {
       return true; // Import is allowed (in exclude list)
     }
 
     // Step 6: Import is denied
     return false;
   }
-}
-
-/// Checks if a path matches any of the given glob patterns.
-bool _matchesAnyPattern(String path, List<String> patterns) {
-  if (patterns.isEmpty) {
-    return false;
-  }
-
-  for (final pattern in patterns) {
-    final glob = Glob(pattern);
-    if (glob.matches(path)) {
-      return true;
-    }
-  }
-
-  return false;
 }
 
 /// Extracts the parent directory from a file path.
@@ -120,15 +141,6 @@ String _extractDir(String filePath) {
 
   // For file paths, use the path package
   return p.dirname(filePath);
-}
-
-/// Replaces $DIR placeholder in a pattern with the actual directory value.
-///
-/// For example:
-/// - pattern: "$DIR/**", dirValue: "lib/features/auth/src" -> "lib/features/auth/src/**"
-/// - pattern: "lib/**", dirValue: "lib/features/auth/src" -> "lib/**" (no change)
-String _substituteDir(String pattern, String dirValue) {
-  return pattern.replaceAll(r'$DIR', dirValue);
 }
 
 // Parser functions moved to parser.dart (part of this library).

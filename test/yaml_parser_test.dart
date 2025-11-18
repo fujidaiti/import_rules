@@ -18,10 +18,16 @@ rules:
       expect(rules, hasLength(1));
       expect(rules[0].name, equals('Test rule'));
       expect(rules[0].reason, equals('Testing'));
-      expect(rules[0].target, equals(['lib/**']));
-      expect(rules[0].disallow, equals(['test/**']));
-      expect(rules[0].excludeTarget, isEmpty);
-      expect(rules[0].excludeDisallow, isEmpty);
+      expect(
+        rules[0].targets.map((t) => t.pattern).toList(),
+        equals(['lib/**']),
+      );
+      expect(
+        rules[0].disallows.map((d) => d.pattern).toList(),
+        equals(['test/**']),
+      );
+      expect(rules[0].excludeTargets.map((t) => t.pattern).toList(), isEmpty);
+      expect(rules[0].excludeDisallows.map((d) => d.pattern).toList(), isEmpty);
     });
 
     test('parses rule with array values', () {
@@ -39,8 +45,14 @@ rules:
       final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
       expect(rules, hasLength(1));
-      expect(rules[0].target, equals(['lib/features/**', 'lib/ui/**']));
-      expect(rules[0].disallow, equals(['lib/data/**', 'lib/internal/**']));
+      expect(
+        rules[0].targets.map((t) => t.pattern).toList(),
+        equals(['lib/features/**', 'lib/ui/**']),
+      );
+      expect(
+        rules[0].disallows.map((d) => d.pattern).toList(),
+        equals(['lib/data/**', 'lib/internal/**']),
+      );
     });
 
     test('parses rule with all optional fields', () {
@@ -58,9 +70,12 @@ rules:
 
       expect(rules, hasLength(1));
       expect(rules[0].name, equals('Complete rule'));
-      expect(rules[0].excludeTarget, equals(['lib/core/**']));
       expect(
-        rules[0].excludeDisallow,
+        rules[0].excludeTargets.map((t) => t.pattern).toList(),
+        equals(['lib/core/**']),
+      );
+      expect(
+        rules[0].excludeDisallows.map((d) => d.pattern).toList(),
         equals(['package:flutter/material.dart']),
       );
     });
@@ -120,11 +135,20 @@ rules:
       final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
       expect(rules, hasLength(1));
-      expect(rules[0].target, equals(['lib/**']));
-      expect(rules[0].excludeTarget, equals(['lib/core/**', 'lib/shared/**']));
-      expect(rules[0].disallow, equals(['package:flutter/**']));
       expect(
-        rules[0].excludeDisallow,
+        rules[0].targets.map((t) => t.pattern).toList(),
+        equals(['lib/**']),
+      );
+      expect(
+        rules[0].excludeTargets.map((t) => t.pattern).toList(),
+        equals(['lib/core/**', 'lib/shared/**']),
+      );
+      expect(
+        rules[0].disallows.map((d) => d.pattern).toList(),
+        equals(['package:flutter/**']),
+      );
+      expect(
+        rules[0].excludeDisallows.map((d) => d.pattern).toList(),
         equals(['package:flutter/material.dart']),
       );
     });
@@ -141,7 +165,10 @@ rules:
       final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
       expect(rules, hasLength(1));
-      expect(rules[0].excludeDisallow, equals([r'$DIR/**']));
+      expect(
+        rules[0].excludeDisallows.map((d) => d.pattern).toList(),
+        equals([r'$DIR/**']),
+      );
     });
   });
 
@@ -484,7 +511,10 @@ rules:
       // Should not throw
       final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
       expect(rules, hasLength(1));
-      expect(rules[0].disallow, equals([r'$DIR/**']));
+      expect(
+        rules[0].disallows.map((d) => d.pattern).toList(),
+        equals([r'$DIR/**']),
+      );
     });
 
     test('allows \$DIR in exclude_disallow field', () {
@@ -499,7 +529,10 @@ rules:
       // Should not throw
       final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
       expect(rules, hasLength(1));
-      expect(rules[0].excludeDisallow, equals([r'$DIR/**']));
+      expect(
+        rules[0].excludeDisallows.map((d) => d.pattern).toList(),
+        equals([r'$DIR/**']),
+      );
     });
   });
 
@@ -660,8 +693,14 @@ import_rules:
       expect(rules, hasLength(1));
       expect(rules[0].name, equals('Test rule'));
       expect(rules[0].reason, equals('Testing'));
-      expect(rules[0].target, equals(['lib/**']));
-      expect(rules[0].disallow, equals(['test/**']));
+      expect(
+        rules[0].targets.map((t) => t.pattern).toList(),
+        equals(['lib/**']),
+      );
+      expect(
+        rules[0].disallows.map((d) => d.pattern).toList(),
+        equals(['test/**']),
+      );
     });
 
     test('parses multiple rules under import_rules section', () {
@@ -701,9 +740,12 @@ import_rules:
 
       expect(rules, hasLength(1));
       expect(rules[0].name, equals('Complete rule'));
-      expect(rules[0].excludeTarget, equals(['lib/core/**']));
       expect(
-        rules[0].excludeDisallow,
+        rules[0].excludeTargets.map((t) => t.pattern).toList(),
+        equals(['lib/core/**']),
+      );
+      expect(
+        rules[0].excludeDisallows.map((d) => d.pattern).toList(),
         equals(['package:flutter/material.dart']),
       );
     });
@@ -721,7 +763,10 @@ import_rules:
       final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
       expect(rules, hasLength(1));
-      expect(rules[0].excludeDisallow, equals([r'$DIR/**']));
+      expect(
+        rules[0].excludeDisallows.map((d) => d.pattern).toList(),
+        equals([r'$DIR/**']),
+      );
     });
 
     test(
@@ -749,8 +794,14 @@ import_rules:
 
         expect(rules, hasLength(1));
         expect(rules[0].name, equals('Test rule'));
-        expect(rules[0].target, equals(['lib/**']));
-        expect(rules[0].disallow, equals(['test/**']));
+        expect(
+          rules[0].targets.map((t) => t.pattern).toList(),
+          equals(['lib/**']),
+        );
+        expect(
+          rules[0].disallows.map((d) => d.pattern).toList(),
+          equals(['test/**']),
+        );
       },
     );
 
@@ -850,7 +901,7 @@ rules:
       final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
       expect(rules, hasLength(1));
-      expect(rules[0].disallow, hasLength(2));
+      expect(rules[0].disallows.map((d) => d.pattern).toList(), hasLength(2));
       expect(
         rules[0].canImport(
           'lib/core/entities/user.dart',
