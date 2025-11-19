@@ -4,11 +4,12 @@ import 'package:path/path.dart' as p;
 import 'package:yaml/yaml.dart';
 
 import 'src/analyzer_output.dart';
+import 'src/io_extension.dart';
 
 class TestEnvironment {
-  TestEnvironment({required this.rootDir});
+  TestEnvironment({required this.root});
 
-  final Directory rootDir;
+  final Directory root;
 
   var _isSetUp = false;
   var _isTornDown = false;
@@ -19,10 +20,10 @@ class TestEnvironment {
     _isSetUp = true;
     _dartCommand = _DartCommand.prepare();
 
-    if (rootDir.existsSync()) {
-      rootDir.deleteSync(recursive: true);
+    if (root.existsSync()) {
+      root.deleteSync(recursive: true);
     }
-    rootDir.createSync();
+    root.createSync();
   }
 
   void tearDown() {
@@ -30,24 +31,24 @@ class TestEnvironment {
     assert(!_isTornDown, 'Test environment already torn down');
     _isTornDown = true;
 
-    if (rootDir.existsSync()) {
-      rootDir.deleteSync(recursive: true);
+    if (root.existsSync()) {
+      root.deleteSync(recursive: true);
     }
   }
 
   DartPackage createPackage({
     required String name,
-    Directory? root,
+    Directory? parent,
     required String sdkVersionConstraint,
     String? resolution,
     Map<String, String> dependencies = const {},
   }) {
-    final effectiveRoot = root ?? Directory(p.join(rootDir.path, name));
+    final packageRoot = (parent ?? root).childDirectory(name);
     assert(
-      !effectiveRoot.existsSync(),
-      'Package "$name" already exists in test environment',
+      !packageRoot.existsSync(),
+      '${packageRoot.path} already exists in the test environment',
     );
-    effectiveRoot.createSync();
+    packageRoot.createSync(recursive: true);
 
     _PubspecYamlBuffer()
       ..name = name
@@ -55,16 +56,16 @@ class TestEnvironment {
       ..sdkVersionConstraint = sdkVersionConstraint
       ..resolution = resolution
       ..dependencies = dependencies
-      ..flushTo(File(p.join(effectiveRoot.path, 'pubspec.yaml')));
+      ..flushTo(File(p.join(packageRoot.path, 'pubspec.yaml')));
 
-    return DartPackage._(name: name, root: effectiveRoot, environment: this);
+    return DartPackage._(name: name, root: packageRoot, environment: this);
   }
 
   DartWorkspace createWorkspace({
     required String name,
     required String sdkVersionConstraint,
   }) {
-    final workspaceRoot = Directory(p.join(rootDir.path, name));
+    final workspaceRoot = Directory(p.join(root.path, name));
     if (workspaceRoot.existsSync()) {
       throw AssertionError(
         'Workspace "$name" already exists in test environment',
@@ -103,38 +104,8 @@ class DartPackage {
   final File pubspecLock;
   final Directory dartTool;
 
-  File createFile(String relativePath, String content) {
-    return File(p.join(root.path, relativePath))
-      ..createSync(recursive: true, exclusive: true)
-      ..writeAsStringSync(content);
-  }
-
-  void createFiles(Map<String, Object> fileTree) {
-    void visitor(Directory parentDir, Map<String, Object> fileTree) {
-      for (final entry in fileTree.entries) {
-        if (entry.value case final String content) {
-          File(p.join(parentDir.path, entry.key))
-            ..createSync(exclusive: true)
-            ..writeAsStringSync(content);
-        } else if (entry.value case final Map<String, Object> subSources) {
-          final subDir = Directory(p.join(parentDir.path, entry.key))
-            ..createSync();
-          visitor(subDir, subSources);
-        } else {
-          throw AssertionError(
-            'Invalid entry type ${entry.value.runtimeType} '
-            'for ${parentDir.path}/${entry.key}',
-          );
-        }
-      }
-    }
-
-    // Recursively create subdirectories and files.
-    visitor(root, fileTree);
-  }
-
-  bool pubGet() {
-    return environment._dartCommand.pubGet(root);
+  void pubGet() {
+    environment._dartCommand.pubGet(root);
   }
 
   AnalyzerOutput analyze() {
@@ -163,7 +134,7 @@ class DartWorkspace extends DartPackage {
     }
     final package = environment.createPackage(
       name: name,
-      root: Directory(p.join(packages.path, name)),
+      parent: packages,
       sdkVersionConstraint: sdkVersionConstraint,
       resolution: 'workspace',
     );
@@ -205,18 +176,22 @@ class _DartCommand {
 
   final String _dartExecutable;
 
-  bool pubGet(Directory package) {
+  void pubGet(Directory package) {
     final result = Process.runSync(_dartExecutable, [
       'pub',
       'get',
-    ], workingDirectory: package.path);
-    return result.exitCode == 0;
+    ], workingDirectory: package.absolute.path);
+    if (result.exitCode != 0) {
+      throw Exception(
+        'Failed to pub get package ${package.path}: ${result.stderr}',
+      );
+    }
   }
 
   AnalyzerOutput analyze(Directory package) {
     final result = Process.runSync(_dartExecutable, [
       'analyze',
-    ], workingDirectory: package.path);
+    ], workingDirectory: package.absolute.path);
     return AnalyzerOutput.parse(result.stdout.toString());
   }
 }
