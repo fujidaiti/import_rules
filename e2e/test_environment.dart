@@ -5,15 +5,13 @@ import 'package:path/path.dart' as p;
 import 'src/analyzer_output.dart';
 
 class TestEnvironment {
-  TestEnvironment({required this.rootDir, this.sharedDependencies = const {}});
+  TestEnvironment({required this.rootDir});
 
   final Directory rootDir;
-  final Map<String, String> sharedDependencies;
 
   var _isSetUp = false;
   var _isTornDown = false;
   late final _DartCommand _dartCommand;
-  late final List<FileSystemEntity> _sharedAssets;
 
   void setUp() {
     assert(!_isSetUp, 'Test environment already set up');
@@ -25,30 +23,24 @@ class TestEnvironment {
     }
     rootDir.createSync();
 
-    final templateProject = Directory(p.join(rootDir.path, 'template'));
-    templateProject.createSync();
+    //     final templateProject = Directory(p.join(rootDir.path, 'template'));
+    //     templateProject.createSync();
 
-    final pubspecYamlContent = StringBuffer('''
-name: test_project
-version: 0.0.0
+    //     final pubspecYamlContent = StringBuffer('''
+    // name: test_project
+    // version: 0.0.0
 
-environment:
-  sdk: ^3.10.0
-''');
-    if (sharedDependencies.isNotEmpty) {
-      pubspecYamlContent.writeln('dependencies:');
-      for (final dependency in sharedDependencies.entries) {
-        pubspecYamlContent.writeln('  ${dependency.key}: ${dependency.value}');
-      }
-    }
+    // environment:
+    //   sdk: ^3.10.0
+    // ''');
 
-    final pubspecYamlFile = File(p.join(templateProject.path, 'pubspec.yaml'));
-    pubspecYamlFile.writeAsStringSync(pubspecYamlContent.toString());
-    _dartCommand.pubGet(templateProject);
-    final dartToolDir = Directory(p.join(templateProject.path, '.dart_tool'));
-    assert(dartToolDir.existsSync());
+    //     final pubspecYamlFile = File(p.join(templateProject.path, 'pubspec.yaml'));
+    //     pubspecYamlFile.writeAsStringSync(pubspecYamlContent.toString());
+    //     _dartCommand.pubGet(templateProject);
+    //     final dartToolDir = Directory(p.join(templateProject.path, '.dart_tool'));
+    //     assert(dartToolDir.existsSync());
 
-    _sharedAssets = [pubspecYamlFile, dartToolDir];
+    //     _sharedAssets = [pubspecYamlFile, dartToolDir];
   }
 
   void tearDown() {
@@ -61,7 +53,7 @@ environment:
     }
   }
 
-  Directory createTestProject({
+  Directory createPackage({
     required String uniqueName,
     required Map<String, Object> sources,
   }) {
@@ -71,13 +63,6 @@ environment:
       'Test project "$uniqueName" already exists',
     );
     projectDir.createSync();
-
-    // Copy sahred assets to the project as symlinks.
-    for (final asset in _sharedAssets) {
-      Link(
-        p.join(projectDir.path, p.basename(asset.path)),
-      ).createSync(asset.absolute.path);
-    }
 
     void createSourceFiles(Directory parentDir, Map<String, Object> sources) {
       for (final entry in sources.entries) {
@@ -104,9 +89,30 @@ environment:
 
     return projectDir;
   }
+}
 
-  AnalyzerOutput analyze(Directory project) {
-    return _dartCommand.analyze(project);
+class DartPackage {
+  DartPackage._({
+    required this.name,
+    required this.root,
+    required this.environment,
+  }) : pubspec = File(p.join(root.path, 'pubspec.yaml')),
+       pubspecLock = File(p.join(root.path, 'pubspec.lock')),
+       dartTool = Directory(p.join(root.path, '.dart_tool'));
+
+  final String name;
+  final Directory root;
+  final TestEnvironment environment;
+  final File pubspec;
+  final File pubspecLock;
+  final Directory dartTool;
+
+  void pubGet() {
+    environment._dartCommand.pubGet(root);
+  }
+
+  AnalyzerOutput analyze() {
+    return environment._dartCommand.analyze(root);
   }
 }
 

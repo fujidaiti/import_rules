@@ -9,7 +9,7 @@ void main() {
   );
 
   testEnv.setUp();
-  final project = testEnv.createTestProject(
+  final project = testEnv.createPackage(
     uniqueName: 'test_project',
     sources: {
       'analysis_options.yaml': '''
