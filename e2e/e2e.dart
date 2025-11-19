@@ -3,25 +3,18 @@ import 'dart:io';
 import 'test_environment.dart';
 
 void main() {
-  final testEnv = TestEnvironment(
-    rootDir: Directory('.testenv'),
-    sharedDependencies: {'path': '^1.9.0'},
-  );
+  final testEnv = TestEnvironment(rootDir: Directory('.testenv'));
 
   testEnv.setUp();
-  final project = testEnv.createPackage(
-    uniqueName: 'test_project',
+  final package = testEnv.createPackage(
+    name: 'test_project',
+    sdkVersionConstraint: '^3.10.0',
     sources: {
-      'analysis_options.yaml': '''
-plugins:
-  import_rules:
-    path: ../../
-
-import_rules:
-  rules:
-    - target: "**"
-      disallow: "**/src/**"
-      reason: Implementations should not be imported directly.
+      'import_rules.yaml': '''
+rules:
+  - target: "**"
+    disallow: "**/src/**"
+    reason: Implementations should not be imported directly.
 ''',
       'lib': {
         'main.dart': '''
@@ -44,6 +37,9 @@ class Calculator {
     },
   );
 
-  final result = testEnv.analyze(project);
+  if (!package.pubGet()) {
+    throw Exception('Failed to pub get package');
+  }
+  final result = package.analyze();
   print(result);
 }

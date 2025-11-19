@@ -22,25 +22,6 @@ class TestEnvironment {
       rootDir.deleteSync(recursive: true);
     }
     rootDir.createSync();
-
-    //     final templateProject = Directory(p.join(rootDir.path, 'template'));
-    //     templateProject.createSync();
-
-    //     final pubspecYamlContent = StringBuffer('''
-    // name: test_project
-    // version: 0.0.0
-
-    // environment:
-    //   sdk: ^3.10.0
-    // ''');
-
-    //     final pubspecYamlFile = File(p.join(templateProject.path, 'pubspec.yaml'));
-    //     pubspecYamlFile.writeAsStringSync(pubspecYamlContent.toString());
-    //     _dartCommand.pubGet(templateProject);
-    //     final dartToolDir = Directory(p.join(templateProject.path, '.dart_tool'));
-    //     assert(dartToolDir.existsSync());
-
-    //     _sharedAssets = [pubspecYamlFile, dartToolDir];
   }
 
   void tearDown() {
@@ -53,17 +34,48 @@ class TestEnvironment {
     }
   }
 
-  Directory createPackage({
-    required String uniqueName,
+  DartPackage createPackage({
+    required String name,
+    required String sdkVersionConstraint,
+    Map<String, String> dependencies = const {},
     required Map<String, Object> sources,
   }) {
-    final projectDir = Directory(p.join(rootDir.path, uniqueName));
+    final projectDir = Directory(p.join(rootDir.path, name));
     assert(
       !projectDir.existsSync(),
-      'Test project "$uniqueName" already exists',
+      'Package "$name" already exists in test environment',
     );
     projectDir.createSync();
 
+    // Create pubspec.yaml
+    final pubspecYaml = StringBuffer('''
+name: $name
+version: 0.0.0
+
+environment:
+  sdk: $sdkVersionConstraint
+''');
+    if (dependencies.isNotEmpty) {
+      pubspecYaml.write('dependencies:\n');
+      for (final entry in dependencies.entries) {
+        pubspecYaml.write('  ${entry.key}: ${entry.value}\n');
+      }
+    }
+    File(
+      p.join(projectDir.path, 'pubspec.yaml'),
+    ).writeAsStringSync(pubspecYaml.toString());
+
+    // Create analysis_options.yaml
+    final analysisOptionsYaml = StringBuffer('''
+plugins:
+  import_rules:
+    path: ${Directory.current.absolute.path}
+''');
+    File(
+      p.join(projectDir.path, 'analysis_options.yaml'),
+    ).writeAsStringSync(analysisOptionsYaml.toString());
+
+    // Recursively create subdirectories and source files.
     void createSourceFiles(Directory parentDir, Map<String, Object> sources) {
       for (final entry in sources.entries) {
         if (entry.value case final String content) {
@@ -84,10 +96,9 @@ class TestEnvironment {
       }
     }
 
-    // Recursively create subdirectories and source files.
     createSourceFiles(projectDir, sources);
 
-    return projectDir;
+    return DartPackage._(name: name, root: projectDir, environment: this);
   }
 }
 
@@ -98,6 +109,7 @@ class DartPackage {
     required this.environment,
   }) : pubspec = File(p.join(root.path, 'pubspec.yaml')),
        pubspecLock = File(p.join(root.path, 'pubspec.lock')),
+       analysisOptions = File(p.join(root.path, 'analysis_options.yaml')),
        dartTool = Directory(p.join(root.path, '.dart_tool'));
 
   final String name;
@@ -105,10 +117,11 @@ class DartPackage {
   final TestEnvironment environment;
   final File pubspec;
   final File pubspecLock;
+  final File analysisOptions;
   final Directory dartTool;
 
-  void pubGet() {
-    environment._dartCommand.pubGet(root);
+  bool pubGet() {
+    return environment._dartCommand.pubGet(root);
   }
 
   AnalyzerOutput analyze() {
@@ -140,14 +153,12 @@ class _DartCommand {
 
   final String _dartExecutable;
 
-  void pubGet(Directory package) {
+  bool pubGet(Directory package) {
     final result = Process.runSync(_dartExecutable, [
       'pub',
       'get',
     ], workingDirectory: package.path);
-    if (result.exitCode != 0) {
-      throw Exception('dart pub get failed: ${result.stderr}');
-    }
+    return result.exitCode == 0;
   }
 
   AnalyzerOutput analyze(Directory package) {
