@@ -6,6 +6,60 @@ import 'package:yaml/yaml.dart';
 import 'import_rule.dart';
 import 'logger.dart';
 
+/// Extracts the package name from pubspec.yaml in the given package.
+String? _getPackageName(WorkspacePackage package) {
+  final pubspecFile = package.root.getChild('pubspec.yaml');
+  if (pubspecFile is! File || !pubspecFile.exists) {
+    return null;
+  }
+
+  try {
+    final content = pubspecFile.readAsStringSync();
+    final yaml = loadYaml(content);
+    if (yaml is Map && yaml['name'] is String) {
+      return yaml['name'] as String;
+    }
+  } catch (_) {
+    return null;
+  }
+
+  return null;
+}
+
+/// Normalizes a disallow pattern to use relative paths from the package root.
+///
+/// This makes patterns format-agnostic, allowing a single pattern like `lib/main.dart`
+/// to match both `import "lib/main.dart"` and `import "package:my_pkg/main.dart"`.
+///
+/// Normalization rules:
+/// - `package:<current_package>/foo.dart` → `lib/foo.dart`
+/// - `dart:*` → unchanged (standard library)
+/// - `package:<other_package>/**` → unchanged (external package)
+/// - `lib/foo.dart` → unchanged (already normalized)
+///
+/// If packageName is null, patterns are returned unchanged.
+String _normalizeDisallowPattern(String pattern, String? packageName) {
+  // If no package name, cannot normalize
+  if (packageName == null) {
+    return pattern;
+  }
+
+  // Keep dart:* and external package:* as-is
+  if (pattern.startsWith('dart:')) {
+    return pattern;
+  }
+
+  // Normalize package:<current_package>/foo.dart → lib/foo.dart
+  final packagePrefix = 'package:$packageName/';
+  if (pattern.startsWith(packagePrefix)) {
+    final pathAfterPackage = pattern.substring(packagePrefix.length);
+    return 'lib/$pathAfterPackage';
+  }
+
+  // Keep external packages (package:other/**) and relative paths as-is
+  return pattern;
+}
+
 class ConfigParser {
   ConfigParser([this.logger]);
 
@@ -14,11 +68,20 @@ class ConfigParser {
   Config loadConfigurationFor(WorkspacePackage package) {
     const searchPaths = ['import_rules.yaml', 'analysis_options.yaml'];
 
+    // Get package name from pubspec.yaml
+    final packageName = _getPackageName(package);
+    if (packageName == null) {
+      logger?.warning(
+        'Could not determine package name from pubspec.yaml. Pattern normalization will be disabled.',
+      );
+    }
+
     for (final searchPath in searchPaths) {
       logger?.info('Searching for configuration in $searchPath');
       final file = package.root.getChild(searchPath);
       if (file is! File || !file.exists) continue;
-      final config = tryParseRulesFromYaml(file.readAsStringSync());
+      final config =
+          tryParseRulesFromYaml(file.readAsStringSync(), packageName);
       if (config != null) {
         for (final rule in config.rules) {
           logger?.info('Rule loaded:');
@@ -44,9 +107,9 @@ class ConfigParser {
     return const Config.empty();
   }
 
-  Config? tryParseRulesFromYaml(String yamlContent) {
+  Config? tryParseRulesFromYaml(String yamlContent, String? packageName) {
     try {
-      return parseRulesFromYaml(yamlContent);
+      return parseRulesFromYaml(yamlContent, packageName);
     } on FormatException catch (error, stackTrace) {
       logger?.severe(
         'Error parsing rules from YAML: $error',
@@ -85,7 +148,7 @@ class ConfigParser {
   /// ```
   ///
   /// Throws [FormatException] if the YAML is malformed or required fields are missing.
-  Config parseRulesFromYaml(String yamlContent) {
+  Config parseRulesFromYaml(String yamlContent, [String? packageName]) {
     final doc = loadYaml(yamlContent);
 
     if (doc == null) {
@@ -117,7 +180,7 @@ class ConfigParser {
       }
 
       try {
-        final rule = _parseRule(ruleMap);
+        final rule = _parseRule(ruleMap, packageName);
         rules.add(rule);
       } catch (e) {
         throw FormatException('Error parsing rule at index $i: $e');
@@ -128,7 +191,7 @@ class ConfigParser {
   }
 
   /// Parses a single rule from a map.
-  ImportRule _parseRule(Map ruleMap) {
+  ImportRule _parseRule(Map ruleMap, String? packageName) {
     // Parse name (optional)
     final name = ruleMap['name'] as String?;
 
@@ -215,11 +278,23 @@ class ConfigParser {
               .map((pattern) => TargetPattern(pattern: pattern))
               .toList(),
       disallowPatterns:
-          disallow.map((pattern) => DisallowPattern(pattern: pattern)).toList(),
+          disallow.map((originalPattern) {
+        final normalizedPattern =
+            _normalizeDisallowPattern(originalPattern, packageName);
+        return DisallowPattern(
+          pattern: normalizedPattern,
+          originalPattern: originalPattern,
+        );
+      }).toList(),
       excludeDisallowPatterns:
-          excludeDisallow
-              .map((pattern) => DisallowPattern(pattern: pattern))
-              .toList(),
+          excludeDisallow.map((originalPattern) {
+        final normalizedPattern =
+            _normalizeDisallowPattern(originalPattern, packageName);
+        return DisallowPattern(
+          pattern: normalizedPattern,
+          originalPattern: originalPattern,
+        );
+      }).toList(),
     );
   }
 

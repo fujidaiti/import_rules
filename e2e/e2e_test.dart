@@ -240,4 +240,164 @@ rules:
       expect(result, isNotNull);
     });
   });
+
+  group('Format-Agnostic Pattern Matching', () {
+    late String projectPath;
+
+    setUp(() {
+      projectPath =
+          copyTestProject(templateDir, testEnvRoot, 'format_agnostic');
+      createDartToolSymlink(projectPath, sharedDartToolPath);
+
+      // Generate import_rules.yaml with package: URI patterns
+      // These patterns should match imports in ANY format (package:, relative, etc.)
+      generateImportRules(projectPath, '''
+rules:
+  - name: Format-agnostic blocking with package URI pattern
+    reason: Patterns should match regardless of import format
+    target: lib/**
+    disallow: package:test_project/data/repository.dart
+''');
+    });
+
+    test(
+      'package: URI pattern should match package: import',
+      () {
+        final result =
+            runDartAnalyze(projectPath, 'lib/format_agnostic_test.dart');
+
+        // The pattern "package:test_project/data/repository.dart" is normalized to
+        // "lib/data/repository.dart" at parse time, which matches the normalized
+        // import "lib/data/repository.dart"
+        expect(
+          result,
+          containsLintError(
+            file: 'format_agnostic_test.dart',
+            line: 9,
+            col: 1,
+            message: contains(
+              'Patterns should match regardless of import format',
+            ),
+          ),
+        );
+      },
+    );
+
+    test(
+      'package: URI pattern should also match relative import',
+      () {
+        final result =
+            runDartAnalyze(projectPath, 'lib/format_agnostic_test.dart');
+
+        // The same normalized pattern also matches the relative import
+        // Both imports resolve to "lib/data/repository.dart"
+        expect(
+          result,
+          containsLintError(
+            file: 'format_agnostic_test.dart',
+            line: 13,
+            col: 1,
+            message: contains(
+              'Patterns should match regardless of import format',
+            ),
+          ),
+        );
+      },
+    );
+
+    test(
+      'should not block imports outside the disallow pattern',
+      () {
+        final result =
+            runDartAnalyze(projectPath, 'lib/format_agnostic_test.dart');
+
+        // Line 17 imports models/user.dart, which is not in the disallow list
+        expect(
+          result,
+          isNot(containsLintError(file: 'format_agnostic_test.dart', line: 17)),
+        );
+      },
+    );
+
+    test(
+      'relative path pattern works equivalently to package pattern',
+      () {
+        // Now test with a relative path pattern instead
+        generateImportRules(projectPath, '''
+rules:
+  - name: Format-agnostic blocking with relative path pattern
+    reason: Relative path patterns should also be format-agnostic
+    target: lib/**
+    disallow: lib/data/repository.dart
+''');
+
+        final result =
+            runDartAnalyze(projectPath, 'lib/format_agnostic_test.dart');
+
+        // Both lines 10 and 14 should be blocked by the relative path pattern
+        // because all imports are normalized to the same format
+        expect(
+          result,
+          containsLintError(
+            file: 'format_agnostic_test.dart',
+            line: 9,
+            message: contains(
+              'Relative path patterns should also be format-agnostic',
+            ),
+          ),
+        );
+
+        expect(
+          result,
+          containsLintError(
+            file: 'format_agnostic_test.dart',
+            line: 13,
+            message: contains(
+              'Relative path patterns should also be format-agnostic',
+            ),
+          ),
+        );
+      },
+    );
+
+    test(
+      'single pattern eliminates need for redundant rules',
+      () {
+        // Demonstrate that we no longer need redundant patterns
+        generateImportRules(projectPath, '''
+rules:
+  - name: Single pattern matches all import forms
+    reason: No need for redundant patterns anymore
+    target: lib/**
+    disallow: lib/data/**
+    # Before this feature, developers needed BOTH:
+    # - lib/data/**
+    # - package:test_project/data/**
+    # Now, just ONE pattern works for everything!
+''');
+
+        final result =
+            runDartAnalyze(projectPath, 'lib/format_agnostic_test.dart');
+
+        // Both package: and relative imports should be blocked by the single pattern
+        expect(
+          result,
+          containsLintError(
+            file: 'format_agnostic_test.dart',
+            line: 9,
+            message: contains('No need for redundant patterns anymore'),
+          ),
+        );
+
+        expect(
+          result,
+          containsLintError(
+            file: 'format_agnostic_test.dart',
+            line: 13,
+            message: contains('No need for redundant patterns anymore'),
+          ),
+        );
+      },
+    );
+  });
 }

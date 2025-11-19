@@ -35,9 +35,18 @@ class TargetPattern {
 /// Represents a single disallow pattern that can match against import URIs.
 @immutable
 class DisallowPattern {
-  const DisallowPattern({required this.pattern});
+  const DisallowPattern({
+    required this.pattern,
+    String? originalPattern,
+  }) : originalPattern = originalPattern ?? pattern;
 
+  /// The normalized pattern used for matching (e.g., "lib/main.dart").
   final String pattern;
+
+  /// The original pattern from the configuration file (for debugging/logging).
+  /// May be different from [pattern] if normalization was applied.
+  /// For example: "package:my_pkg/main.dart" → normalized to "lib/main.dart"
+  final String originalPattern;
 
   /// Checks if the given import URI matches this disallow pattern.
   ///
