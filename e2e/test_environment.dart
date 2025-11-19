@@ -36,16 +36,18 @@ class TestEnvironment {
 
   DartPackage createPackage({
     required String name,
+    Directory? root,
     required String sdkVersionConstraint,
+    String? resolution,
     Map<String, String> dependencies = const {},
     required Map<String, Object> sources,
   }) {
-    final projectDir = Directory(p.join(rootDir.path, name));
+    final effectiveRoot = root ?? Directory(p.join(rootDir.path, name));
     assert(
-      !projectDir.existsSync(),
+      !effectiveRoot.existsSync(),
       'Package "$name" already exists in test environment',
     );
-    projectDir.createSync();
+    effectiveRoot.createSync();
 
     // Create pubspec.yaml
     final pubspecYaml = StringBuffer('''
@@ -55,25 +57,18 @@ version: 0.0.0
 environment:
   sdk: $sdkVersionConstraint
 ''');
+    if (resolution != null) {
+      pubspecYaml.writeln('resolution: $resolution');
+    }
     if (dependencies.isNotEmpty) {
-      pubspecYaml.write('dependencies:\n');
+      pubspecYaml.writeln('dependencies:');
       for (final entry in dependencies.entries) {
-        pubspecYaml.write('  ${entry.key}: ${entry.value}\n');
+        pubspecYaml.writeln('  ${entry.key}: ${entry.value}');
       }
     }
     File(
-      p.join(projectDir.path, 'pubspec.yaml'),
+      p.join(effectiveRoot.path, 'pubspec.yaml'),
     ).writeAsStringSync(pubspecYaml.toString());
-
-    // Create analysis_options.yaml
-    final analysisOptionsYaml = StringBuffer('''
-plugins:
-  import_rules:
-    path: ${Directory.current.absolute.path}
-''');
-    File(
-      p.join(projectDir.path, 'analysis_options.yaml'),
-    ).writeAsStringSync(analysisOptionsYaml.toString());
 
     // Recursively create subdirectories and source files.
     void createSourceFiles(Directory parentDir, Map<String, Object> sources) {
@@ -87,8 +82,7 @@ plugins:
             ..createSync();
           createSourceFiles(subDir, subSources);
         } else {
-          assert(
-            false,
+          throw AssertionError(
             'Invalid source type ${entry.value.runtimeType} '
             'for ${parentDir.path}/${entry.key}',
           );
@@ -96,9 +90,40 @@ plugins:
       }
     }
 
-    createSourceFiles(projectDir, sources);
+    createSourceFiles(effectiveRoot, sources);
 
-    return DartPackage._(name: name, root: projectDir, environment: this);
+    return DartPackage._(name: name, root: effectiveRoot, environment: this);
+  }
+
+  DartWorkspace createWorkspace({
+    required String name,
+    required String sdkVersionConstraint,
+  }) {
+    final workspaceRoot = Directory(p.join(rootDir.path, name));
+    if (workspaceRoot.existsSync()) {
+      throw AssertionError(
+        'Workspace "$name" already exists in test environment',
+      );
+    }
+    workspaceRoot.createSync();
+
+    // Create pubspec.yaml
+    final pubspecYaml = StringBuffer('''
+name: $name 
+version: 0.0.0
+environment:
+  sdk: $sdkVersionConstraint
+''');
+    File(
+      p.join(workspaceRoot.path, 'pubspec.yaml'),
+    ).writeAsStringSync(pubspecYaml.toString());
+
+    return DartWorkspace._(
+      name: name,
+      root: workspaceRoot,
+      sdkVersionConstraint: sdkVersionConstraint,
+      environment: this,
+    );
   }
 }
 
@@ -109,7 +134,6 @@ class DartPackage {
     required this.environment,
   }) : pubspec = File(p.join(root.path, 'pubspec.yaml')),
        pubspecLock = File(p.join(root.path, 'pubspec.lock')),
-       analysisOptions = File(p.join(root.path, 'analysis_options.yaml')),
        dartTool = Directory(p.join(root.path, '.dart_tool'));
 
   final String name;
@@ -117,8 +141,13 @@ class DartPackage {
   final TestEnvironment environment;
   final File pubspec;
   final File pubspecLock;
-  final File analysisOptions;
   final Directory dartTool;
+
+  File createFile(String relativePath, String content) {
+    return File(p.join(root.path, relativePath))
+      ..createSync(exclusive: true)
+      ..writeAsStringSync(content);
+  }
 
   bool pubGet() {
     return environment._dartCommand.pubGet(root);
@@ -126,6 +155,36 @@ class DartPackage {
 
   AnalyzerOutput analyze() {
     return environment._dartCommand.analyze(root);
+  }
+}
+
+class DartWorkspace extends DartPackage {
+  DartWorkspace._({
+    required super.name,
+    required super.root,
+    required super.environment,
+    required this.sdkVersionConstraint,
+  }) : packages = Directory(p.join(root.path, 'packages')),
+       super._();
+
+  final String sdkVersionConstraint;
+  final Directory packages;
+
+  DartPackage createPackage({
+    required String name,
+    Map<String, String> dependencies = const {},
+    required Map<String, Object> sources,
+  }) {
+    if (!packages.existsSync()) {
+      packages.createSync();
+    }
+    return environment.createPackage(
+      name: name,
+      root: Directory(p.join(packages.path, name)),
+      sdkVersionConstraint: sdkVersionConstraint,
+      resolution: 'workspace',
+      sources: sources,
+    );
   }
 }
 

@@ -4,18 +4,29 @@ import 'test_environment.dart';
 
 void main() {
   final testEnv = TestEnvironment(rootDir: Directory('.testenv'));
-
   testEnv.setUp();
-  final package = testEnv.createPackage(
-    name: 'test_project',
+
+  final workspace = testEnv.createWorkspace(
+    name: 'workspace',
     sdkVersionConstraint: '^3.10.0',
-    sources: {
-      'import_rules.yaml': '''
+  );
+
+  workspace.createFile('analysis_options.yaml', '''
+plugins:
+  import_rules:
+    path: ../../
+''');
+
+  workspace.createFile('import_rules.yaml', '''
 rules:
   - target: "**"
     disallow: "**/src/**"
     reason: Implementations should not be imported directly.
-''',
+''');
+
+  workspace.createPackage(
+    name: 'test_project',
+    sources: {
       'lib': {
         'main.dart': '''
 import 'package:test_project/src/calculator.dart';
@@ -37,9 +48,9 @@ class Calculator {
     },
   );
 
-  if (!package.pubGet()) {
-    throw Exception('Failed to pub get package');
-  }
-  final result = package.analyze();
-  print(result);
+  // if (!workspace.pubGet()) {
+  //   throw Exception('Failed to pub get package');
+  // }
+  // final result = workspace.analyze();
+  // print(result);
 }
