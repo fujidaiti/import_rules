@@ -40,7 +40,6 @@ class TestEnvironment {
     required String sdkVersionConstraint,
     String? resolution,
     Map<String, String> dependencies = const {},
-    required Map<String, Object> sources,
   }) {
     final effectiveRoot = root ?? Directory(p.join(rootDir.path, name));
     assert(
@@ -69,28 +68,6 @@ environment:
     File(
       p.join(effectiveRoot.path, 'pubspec.yaml'),
     ).writeAsStringSync(pubspecYaml.toString());
-
-    // Recursively create subdirectories and source files.
-    void createSourceFiles(Directory parentDir, Map<String, Object> sources) {
-      for (final entry in sources.entries) {
-        if (entry.value case final String content) {
-          File(p.join(parentDir.path, entry.key))
-            ..createSync(exclusive: true)
-            ..writeAsStringSync(content);
-        } else if (entry.value case final Map<String, Object> subSources) {
-          final subDir = Directory(p.join(parentDir.path, entry.key))
-            ..createSync();
-          createSourceFiles(subDir, subSources);
-        } else {
-          throw AssertionError(
-            'Invalid source type ${entry.value.runtimeType} '
-            'for ${parentDir.path}/${entry.key}',
-          );
-        }
-      }
-    }
-
-    createSourceFiles(effectiveRoot, sources);
 
     return DartPackage._(name: name, root: effectiveRoot, environment: this);
   }
@@ -145,8 +122,32 @@ class DartPackage {
 
   File createFile(String relativePath, String content) {
     return File(p.join(root.path, relativePath))
-      ..createSync(exclusive: true)
+      ..createSync(recursive: true, exclusive: true)
       ..writeAsStringSync(content);
+  }
+
+  void createFiles(Map<String, Object> fileTree) {
+    void visitor(Directory parentDir, Map<String, Object> fileTree) {
+      for (final entry in fileTree.entries) {
+        if (entry.value case final String content) {
+          File(p.join(parentDir.path, entry.key))
+            ..createSync(exclusive: true)
+            ..writeAsStringSync(content);
+        } else if (entry.value case final Map<String, Object> subSources) {
+          final subDir = Directory(p.join(parentDir.path, entry.key))
+            ..createSync();
+          visitor(subDir, subSources);
+        } else {
+          throw AssertionError(
+            'Invalid entry type ${entry.value.runtimeType} '
+            'for ${parentDir.path}/${entry.key}',
+          );
+        }
+      }
+    }
+
+    // Recursively create subdirectories and files.
+    visitor(root, fileTree);
   }
 
   bool pubGet() {
@@ -173,7 +174,6 @@ class DartWorkspace extends DartPackage {
   DartPackage createPackage({
     required String name,
     Map<String, String> dependencies = const {},
-    required Map<String, Object> sources,
   }) {
     if (!packages.existsSync()) {
       packages.createSync();
@@ -183,7 +183,6 @@ class DartWorkspace extends DartPackage {
       root: Directory(p.join(packages.path, name)),
       sdkVersionConstraint: sdkVersionConstraint,
       resolution: 'workspace',
-      sources: sources,
     );
   }
 }
