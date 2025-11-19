@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:path/path.dart' as p;
+import 'package:yaml/yaml.dart';
 
 import 'src/analyzer_output.dart';
 
@@ -48,26 +49,13 @@ class TestEnvironment {
     );
     effectiveRoot.createSync();
 
-    // Create pubspec.yaml
-    final pubspecYaml = StringBuffer('''
-name: $name
-version: 0.0.0
-
-environment:
-  sdk: $sdkVersionConstraint
-''');
-    if (resolution != null) {
-      pubspecYaml.writeln('resolution: $resolution');
-    }
-    if (dependencies.isNotEmpty) {
-      pubspecYaml.writeln('dependencies:');
-      for (final entry in dependencies.entries) {
-        pubspecYaml.writeln('  ${entry.key}: ${entry.value}');
-      }
-    }
-    File(
-      p.join(effectiveRoot.path, 'pubspec.yaml'),
-    ).writeAsStringSync(pubspecYaml.toString());
+    PubspecYamlBuffer()
+      ..name = name
+      ..version = '0.0.0'
+      ..sdkVersionConstraint = sdkVersionConstraint
+      ..resolution = resolution
+      ..dependencies = dependencies
+      ..flushTo(File(p.join(effectiveRoot.path, 'pubspec.yaml')));
 
     return DartPackage._(name: name, root: effectiveRoot, environment: this);
   }
@@ -84,16 +72,11 @@ environment:
     }
     workspaceRoot.createSync();
 
-    // Create pubspec.yaml
-    final pubspecYaml = StringBuffer('''
-name: $name 
-version: 0.0.0
-environment:
-  sdk: $sdkVersionConstraint
-''');
-    File(
-      p.join(workspaceRoot.path, 'pubspec.yaml'),
-    ).writeAsStringSync(pubspecYaml.toString());
+    PubspecYamlBuffer()
+      ..name = name
+      ..version = '0.0.0'
+      ..sdkVersionConstraint = sdkVersionConstraint
+      ..flushTo(File(p.join(workspaceRoot.path, 'pubspec.yaml')));
 
     return DartWorkspace._(
       name: name,
@@ -178,12 +161,23 @@ class DartWorkspace extends DartPackage {
     if (!packages.existsSync()) {
       packages.createSync();
     }
-    return environment.createPackage(
+    final package = environment.createPackage(
       name: name,
       root: Directory(p.join(packages.path, name)),
       sdkVersionConstraint: sdkVersionConstraint,
       resolution: 'workspace',
     );
+
+    final relativePackagePath = p.relative(
+      package.root.absolute.path,
+      from: root.absolute.path,
+    );
+
+    PubspecYamlBuffer.open(pubspec)
+      ..workspacePackages.add(relativePackagePath)
+      ..flushTo(pubspec);
+
+    return package;
   }
 }
 
@@ -224,5 +218,86 @@ class _DartCommand {
       'analyze',
     ], workingDirectory: package.path);
     return AnalyzerOutput.parse(result.stdout.toString());
+  }
+}
+
+class PubspecYamlBuffer {
+  PubspecYamlBuffer();
+
+  factory PubspecYamlBuffer.open(File file) {
+    final yaml = loadYaml(file.readAsStringSync());
+    if (yaml is! Map) {
+      throw StateError('Invalid pubspec.yaml: ${file.absolute.path}');
+    }
+
+    final buffer = PubspecYamlBuffer();
+    buffer.name = yaml['name'];
+    buffer.version = yaml['version'];
+    buffer.sdkVersionConstraint = yaml['environment']?['sdk'];
+    buffer.resolution = yaml['resolution'];
+
+    if (yaml['dependencies'] case final Map dependencies) {
+      for (final entry in dependencies.entries) {
+        buffer.dependencies[entry.key] = entry.value;
+      }
+    }
+
+    if (yaml['dev_dependencies'] case final Map devDependencies) {
+      for (final entry in devDependencies.entries) {
+        buffer.devDependencies[entry.key] = entry.value;
+      }
+    }
+
+    if (yaml['workspace'] case final List workspace) {
+      buffer.workspacePackages = [...workspace.cast<String>()];
+    }
+
+    return buffer;
+  }
+
+  String? name;
+  String? version;
+  String? sdkVersionConstraint;
+  String? resolution;
+  Map<String, String> dependencies = {};
+  Map<String, String> devDependencies = {};
+  List<String> workspacePackages = [];
+
+  void flushTo(File file) {
+    final pubspecBuffer = StringBuffer();
+
+    if (name != null) {
+      pubspecBuffer.writeln('name: $name');
+    }
+    if (version != null) {
+      pubspecBuffer.writeln('version: $version');
+    }
+    if (sdkVersionConstraint != null) {
+      pubspecBuffer.writeln('environment:');
+      pubspecBuffer.writeln('  sdk: $sdkVersionConstraint');
+    }
+    if (resolution != null) {
+      pubspecBuffer.writeln('resolution: $resolution');
+    }
+    if (dependencies.isNotEmpty) {
+      pubspecBuffer.writeln('dependencies:');
+      for (final entry in dependencies.entries) {
+        pubspecBuffer.writeln('  ${entry.key}: ${entry.value}');
+      }
+    }
+    if (devDependencies.isNotEmpty) {
+      pubspecBuffer.writeln('dev_dependencies:');
+      for (final entry in devDependencies.entries) {
+        pubspecBuffer.writeln('  ${entry.key}: ${entry.value}');
+      }
+    }
+    if (workspacePackages.isNotEmpty) {
+      pubspecBuffer.writeln('workspace:');
+      for (final package in workspacePackages) {
+        pubspecBuffer.writeln('  - $package');
+      }
+    }
+
+    file.writeAsStringSync(pubspecBuffer.toString(), mode: FileMode.write);
   }
 }
