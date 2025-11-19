@@ -38,12 +38,12 @@ class TestEnvironment {
 
   DartPackage createPackage({
     required String name,
-    Directory? parent,
+    Directory? root,
     required String sdkVersionConstraint,
     String? resolution,
     Map<String, String> dependencies = const {},
   }) {
-    final packageRoot = (parent ?? root).childDirectory(name);
+    final packageRoot = root ?? this.root.childDirectory(name);
     assert(
       !packageRoot.existsSync(),
       '${packageRoot.path} already exists in the test environment',
@@ -134,7 +134,7 @@ class DartWorkspace extends DartPackage {
     }
     final package = environment.createPackage(
       name: name,
-      parent: packages,
+      root: packages.childDirectory(name),
       sdkVersionConstraint: sdkVersionConstraint,
       resolution: 'workspace',
     );

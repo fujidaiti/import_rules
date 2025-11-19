@@ -17,45 +17,48 @@ void main() {
   });
 
   tearDownAll(() {
-    // env.tearDown();
+    env.tearDown();
   });
 
-  group('No dependency packages tests:', () {
+  group('Package tests with no dependencies:', () {
     // We're going to share .dart_tool and pubspec.lock from the template package
     // across all test packages in this group to avoid running "dart pub get" multiple times.
-    late final DartPackage templatePackage;
+    late final DartPackage packageTemplate;
     late final Directory testGroupRoot;
+    late DartPackage packageUnderTest;
 
     setUpAll(() {
       testGroupRoot = env.root.childDirectory('no-dependency-packages-tests');
-      templatePackage = env.createPackage(
-        name: 'template',
-        parent: testGroupRoot,
+      packageTemplate = env.createPackage(
+        name: 'test_package',
+        root: testGroupRoot.childDirectory('template'),
         sdkVersionConstraint: sdkVersionConstraint,
       );
-      templatePackage.pubGet();
-      assert(templatePackage.dartTool.existsSync());
-      assert(templatePackage.pubspecLock.existsSync());
+      packageTemplate.pubGet();
+      assert(packageTemplate.dartTool.existsSync());
+      assert(packageTemplate.pubspecLock.existsSync());
     });
 
-    DartPackage createTestPackage(String name) {
-      final package = env.createPackage(
-        name: name,
-        parent: testGroupRoot,
+    setUp(() {
+      packageUnderTest = env.createPackage(
+        name: packageTemplate.name,
+        root: testGroupRoot.childDirectory('test_package'),
         sdkVersionConstraint: sdkVersionConstraint,
       );
 
-      package.pubspec.deleteSync();
-      package.root
+      packageUnderTest.pubspec.deleteSync();
+      packageUnderTest.root
           .childSymlink('pubspec.yaml')
-          .createSync(templatePackage.pubspec.absolute.path);
-      package.root
+          .createSync(packageTemplate.pubspec.absolute.path);
+      packageUnderTest.root
           .childSymlink('pubspec.lock')
-          .createSync(templatePackage.pubspecLock.absolute.path);
-      package.root
+          .createSync(packageTemplate.pubspecLock.absolute.path);
+      packageUnderTest.root
           .childSymlink('.dart_tool')
-          .createSync(templatePackage.dartTool.absolute.path);
-      package.root.childFile('analysis_options.yaml').writeAsStringSync('''
+          .createSync(packageTemplate.dartTool.absolute.path);
+      packageUnderTest.root
+          .childFile('analysis_options.yaml')
+          .writeAsStringSync('''
 analyzer:
   errors:
     unused_import: ignore
@@ -64,19 +67,20 @@ plugins:
   import_rules:
     path: ${pluginRoot.absolute.path} 
 ''');
+    });
 
-      return package;
-    }
+    tearDown(() {
+      packageUnderTest.root.deleteSync(recursive: true);
+    });
 
     test('Downward dependency only', () {
-      final package = createTestPackage('downward_dependency_only');
-      package.root.childFile('import_rules.yaml').writeAsStringSync(r'''
+      const importRulesYaml = r'''
 rules:
   - target: "**"
     disallow: "**"
     exclude_disallow: "$DIR/**"
     reason: Files can only import from same or deeper directory levels.
-''');
+''';
 
       const mainDartFile = '''
 import 'features/features.dart';
@@ -100,19 +104,20 @@ import '../cart/cart.dart';
 import '../auth/auth.dart';
 ''';
 
-      package.root.createFiles({
-        'lib': {
-          'main.dart': mainDartFile,
-          'features': {
-            'features.dart': featuresDartFile,
-            'auth': {'auth.dart': authDartFile, 'auth_utils.dart': ''},
-            'cart': {'cart.dart': cartDartFile},
+      packageUnderTest.root
+        ..childFile('import_rules.yaml').writeAsStringSync(importRulesYaml)
+        ..createFiles({
+          'lib': {
+            'main.dart': mainDartFile,
+            'features': {
+              'features.dart': featuresDartFile,
+              'auth': {'auth.dart': authDartFile, 'auth_utils.dart': ''},
+              'cart': {'cart.dart': cartDartFile},
+            },
           },
-        },
-      });
+        });
 
-      package.pubGet();
-      final analyzerOutput = package.analyze();
+      final analyzerOutput = packageUnderTest.analyze();
       expect(
         analyzerOutput,
         isNot(containsLintError(file: 'lib/main.dart', line: 1)),
