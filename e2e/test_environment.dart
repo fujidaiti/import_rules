@@ -49,7 +49,7 @@ class TestEnvironment {
     );
     effectiveRoot.createSync();
 
-    PubspecYamlBuffer()
+    _PubspecYamlBuffer()
       ..name = name
       ..version = '0.0.0'
       ..sdkVersionConstraint = sdkVersionConstraint
@@ -72,7 +72,7 @@ class TestEnvironment {
     }
     workspaceRoot.createSync();
 
-    PubspecYamlBuffer()
+    _PubspecYamlBuffer()
       ..name = name
       ..version = '0.0.0'
       ..sdkVersionConstraint = sdkVersionConstraint
@@ -173,7 +173,7 @@ class DartWorkspace extends DartPackage {
       from: root.absolute.path,
     );
 
-    PubspecYamlBuffer.open(pubspec)
+    _PubspecYamlBuffer.open(pubspec)
       ..workspacePackages.add(relativePackagePath)
       ..flushTo(pubspec);
 
@@ -221,16 +221,16 @@ class _DartCommand {
   }
 }
 
-class PubspecYamlBuffer {
-  PubspecYamlBuffer();
+class _PubspecYamlBuffer {
+  _PubspecYamlBuffer();
 
-  factory PubspecYamlBuffer.open(File file) {
+  factory _PubspecYamlBuffer.open(File file) {
     final yaml = loadYaml(file.readAsStringSync());
     if (yaml is! Map) {
       throw StateError('Invalid pubspec.yaml: ${file.absolute.path}');
     }
 
-    final buffer = PubspecYamlBuffer();
+    final buffer = _PubspecYamlBuffer();
     buffer.name = yaml['name'];
     buffer.version = yaml['version'];
     buffer.sdkVersionConstraint = yaml['environment']?['sdk'];
@@ -264,40 +264,40 @@ class PubspecYamlBuffer {
   List<String> workspacePackages = [];
 
   void flushTo(File file) {
-    final pubspecBuffer = StringBuffer();
+    final buffer = StringBuffer();
 
     if (name != null) {
-      pubspecBuffer.writeln('name: $name');
+      buffer.writeln('name: $name');
     }
     if (version != null) {
-      pubspecBuffer.writeln('version: $version');
+      buffer.writeln('version: $version');
     }
     if (sdkVersionConstraint != null) {
-      pubspecBuffer.writeln('environment:');
-      pubspecBuffer.writeln('  sdk: $sdkVersionConstraint');
+      buffer.writeln('environment:');
+      buffer.writeln('  sdk: $sdkVersionConstraint');
     }
     if (resolution != null) {
-      pubspecBuffer.writeln('resolution: $resolution');
+      buffer.writeln('resolution: $resolution');
     }
     if (dependencies.isNotEmpty) {
-      pubspecBuffer.writeln('dependencies:');
+      buffer.writeln('dependencies:');
       for (final entry in dependencies.entries) {
-        pubspecBuffer.writeln('  ${entry.key}: ${entry.value}');
+        buffer.writeln('  ${entry.key}: ${entry.value}');
       }
     }
     if (devDependencies.isNotEmpty) {
-      pubspecBuffer.writeln('dev_dependencies:');
+      buffer.writeln('dev_dependencies:');
       for (final entry in devDependencies.entries) {
-        pubspecBuffer.writeln('  ${entry.key}: ${entry.value}');
+        buffer.writeln('  ${entry.key}: ${entry.value}');
       }
     }
     if (workspacePackages.isNotEmpty) {
-      pubspecBuffer.writeln('workspace:');
+      buffer.writeln('workspace:');
       for (final package in workspacePackages) {
-        pubspecBuffer.writeln('  - $package');
+        buffer.writeln('  - $package');
       }
     }
 
-    file.writeAsStringSync(pubspecBuffer.toString(), mode: FileMode.write);
+    file.writeAsStringSync(buffer.toString(), mode: FileMode.write);
   }
 }

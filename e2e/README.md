@@ -55,11 +55,13 @@ rules:
 ## Pattern Support
 
 **Currently Working:**
+
 - `package:test_project/**` - Package URI patterns
 - `test/**` - File path patterns for test directory
 - `$DIR/**` - In `exclude_disallow` only
 
 **Not Yet Supported (TDD - tests fail intentionally):**
+
 - `lib/**` - File path patterns for lib directory
 
 ## Key Points
