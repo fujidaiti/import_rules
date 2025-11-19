@@ -1,6 +1,6 @@
 import 'package:test/test.dart';
-import '../../src/analyzer_output.dart';
-import '../../src/matchers.dart';
+import 'analyzer_output.dart';
+import 'matchers.dart';
 
 void main() {
   group('containsLintError matcher', () {

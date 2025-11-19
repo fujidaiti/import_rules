@@ -1,5 +1,5 @@
 import 'package:test/test.dart';
-import '../../src/analyzer_output.dart';
+import 'analyzer_output.dart';
 
 void main() {
   group('AnalyzerOutput.parse', () {
