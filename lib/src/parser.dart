@@ -80,8 +80,10 @@ class ConfigParser {
       logger?.info('Searching for configuration in $searchPath');
       final file = package.root.getChild(searchPath);
       if (file is! File || !file.exists) continue;
-      final config =
-          tryParseRulesFromYaml(file.readAsStringSync(), packageName);
+      final config = tryParseRulesFromYaml(
+        file.readAsStringSync(),
+        packageName,
+      );
       if (config != null) {
         for (final rule in config.rules) {
           logger?.info('Rule loaded:');
@@ -161,8 +163,9 @@ class ConfigParser {
 
     // Check if this is an analysis_options.yaml format with import_rules section
     final importRulesSection = doc['import_rules'];
-    final rulesData =
-        importRulesSection is Map ? importRulesSection['rules'] : doc['rules'];
+    final rulesData = importRulesSection is Map
+        ? importRulesSection['rules']
+        : doc['rules'];
 
     if (rulesData == null) {
       throw FormatException('Missing "rules" key in YAML');
@@ -231,10 +234,9 @@ class ConfigParser {
 
     // Parse exclude_target (optional)
     final excludeTargetRaw = ruleMap['exclude_target'];
-    final excludeTarget =
-        excludeTargetRaw != null
-            ? _normalizeToList(excludeTargetRaw, 'exclude_target')
-            : <String>[];
+    final excludeTarget = excludeTargetRaw != null
+        ? _normalizeToList(excludeTargetRaw, 'exclude_target')
+        : <String>[];
 
     // Validate that $DIR is not used in exclude_target
     for (var i = 0; i < excludeTarget.length; i++) {
@@ -263,33 +265,34 @@ class ConfigParser {
 
     // Parse exclude_disallow (optional)
     final excludeDisallowRaw = ruleMap['exclude_disallow'];
-    final excludeDisallow =
-        excludeDisallowRaw != null
-            ? _normalizeToList(excludeDisallowRaw, 'exclude_disallow')
-            : <String>[];
+    final excludeDisallow = excludeDisallowRaw != null
+        ? _normalizeToList(excludeDisallowRaw, 'exclude_disallow')
+        : <String>[];
 
     return ImportRule(
       name: name,
       reason: reason,
-      targetPatterns:
-          target.map((pattern) => TargetPattern(pattern: pattern)).toList(),
-      excludeTargetPatterns:
-          excludeTarget
-              .map((pattern) => TargetPattern(pattern: pattern))
-              .toList(),
-      disallowPatterns:
-          disallow.map((originalPattern) {
-        final normalizedPattern =
-            _normalizeDisallowPattern(originalPattern, packageName);
+      targetPatterns: target
+          .map((pattern) => TargetPattern(pattern: pattern))
+          .toList(),
+      excludeTargetPatterns: excludeTarget
+          .map((pattern) => TargetPattern(pattern: pattern))
+          .toList(),
+      disallowPatterns: disallow.map((originalPattern) {
+        final normalizedPattern = _normalizeDisallowPattern(
+          originalPattern,
+          packageName,
+        );
         return DisallowPattern(
           pattern: normalizedPattern,
           originalPattern: originalPattern,
         );
       }).toList(),
-      excludeDisallowPatterns:
-          excludeDisallow.map((originalPattern) {
-        final normalizedPattern =
-            _normalizeDisallowPattern(originalPattern, packageName);
+      excludeDisallowPatterns: excludeDisallow.map((originalPattern) {
+        final normalizedPattern = _normalizeDisallowPattern(
+          originalPattern,
+          packageName,
+        );
         return DisallowPattern(
           pattern: normalizedPattern,
           originalPattern: originalPattern,

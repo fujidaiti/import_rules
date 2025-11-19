@@ -146,7 +146,14 @@ class ImportRuleViolation extends AnalysisRule {
       packageName,
     );
     logger.info('Normalized to: $normalizedSourceUri');
-    var visitor = _Visitor(this, normalizedSourceUri, context, config, logger, packageName);
+    var visitor = _Visitor(
+      this,
+      normalizedSourceUri,
+      context,
+      config,
+      logger,
+      packageName,
+    );
     registry.addImportDirective(this, visitor);
   }
 }

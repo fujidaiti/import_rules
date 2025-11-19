@@ -74,7 +74,12 @@ void main() {
       });
 
       test('normalizes test/ file to relative path', () {
-        final filePath = p.join(packageRoot, 'test', 'unit', 'config_test.dart');
+        final filePath = p.join(
+          packageRoot,
+          'test',
+          'unit',
+          'config_test.dart',
+        );
         final uri = Uri.file(filePath);
 
         final result = normalizeUri(uri, packageRoot, 'my_project');
@@ -129,7 +134,9 @@ void main() {
       });
 
       test('normalizes deeply nested package URI', () {
-        final uri = Uri.parse('package:my_project/features/auth/src/utils.dart');
+        final uri = Uri.parse(
+          'package:my_project/features/auth/src/utils.dart',
+        );
 
         final result = normalizeUri(uri, packageRoot, 'my_project');
 
@@ -240,10 +247,7 @@ void main() {
         expect(fileResult, equals(p.join('lib', 'src', 'config.dart')));
         expect(packageResult, equals('lib/src/config.dart'));
         // Note: Path separators may differ (/ vs \), but logical path is same
-        expect(
-          p.normalize(fileResult),
-          equals(p.normalize(packageResult)),
-        );
+        expect(p.normalize(fileResult), equals(p.normalize(packageResult)));
       });
     });
   });

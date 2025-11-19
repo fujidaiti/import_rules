@@ -35,10 +35,8 @@ class TargetPattern {
 /// Represents a single disallow pattern that can match against import URIs.
 @immutable
 class DisallowPattern {
-  const DisallowPattern({
-    required this.pattern,
-    String? originalPattern,
-  }) : originalPattern = originalPattern ?? pattern;
+  const DisallowPattern({required this.pattern, String? originalPattern})
+    : originalPattern = originalPattern ?? pattern;
 
   /// The normalized pattern used for matching (e.g., "lib/main.dart").
   final String pattern;

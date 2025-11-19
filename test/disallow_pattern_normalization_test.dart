@@ -50,8 +50,7 @@ rules:
     disallow: package:import_rules/features/auth/src/utils.dart
 ''';
 
-        final config =
-            ConfigParser().parseRulesFromYaml(yaml, 'import_rules');
+        final config = ConfigParser().parseRulesFromYaml(yaml, 'import_rules');
         final rule = config.rules.first;
         final pattern = rule.disallowPatterns.first;
 
@@ -299,10 +298,7 @@ rules:
         final pattern = rule.disallowPatterns.first;
 
         expect(pattern.pattern, equals(r'lib/$DIR/**'));
-        expect(
-          pattern.originalPattern,
-          equals(r'package:my_project/$DIR/**'),
-        );
+        expect(pattern.originalPattern, equals(r'package:my_project/$DIR/**'));
       });
 
       test(r'keeps $DIR in relative path as-is', () {

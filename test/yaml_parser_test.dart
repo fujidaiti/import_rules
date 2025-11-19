@@ -30,7 +30,10 @@ rules:
         rules[0].excludeTargetPatterns.map((t) => t.pattern).toList(),
         isEmpty,
       );
-      expect(rules[0].excludeDisallowPatterns.map((d) => d.pattern).toList(), isEmpty);
+      expect(
+        rules[0].excludeDisallowPatterns.map((d) => d.pattern).toList(),
+        isEmpty,
+      );
     });
 
     test('parses rule with array values', () {
