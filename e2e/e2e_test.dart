@@ -130,15 +130,12 @@ import 'dart:io';
       final analyzerOutput = packageUnderTest.analyze();
       expect(
         analyzerOutput,
-        isNot(containsLintError(file: 'lib/domain/domain.dart', line: 2)),
-      );
-      expect(
-        analyzerOutput,
-        isNot(containsLintError(file: 'lib/domain/domain.dart', line: 3)),
-      );
-      expect(
-        analyzerOutput,
-        isNot(containsLintError(file: 'lib/domain/domain.dart', line: 4)),
+        isNot(
+          containsAnyLintErrors(
+            file: 'lib/domain/domain.dart',
+            lines: [2, 3, 4],
+          ),
+        ),
       );
       expect(
         analyzerOutput,
@@ -187,39 +184,7 @@ import 'dart:io';
 
       expect(
         analyzerOutput,
-        isNot(
-          containsLintError(file: 'lib/repository/repository.dart', line: 1),
-        ),
-      );
-      expect(
-        analyzerOutput,
-        isNot(
-          containsLintError(file: 'lib/repository/repository.dart', line: 2),
-        ),
-      );
-      expect(
-        analyzerOutput,
-        isNot(
-          containsLintError(file: 'lib/repository/repository.dart', line: 3),
-        ),
-      );
-      expect(
-        analyzerOutput,
-        isNot(
-          containsLintError(file: 'lib/repository/repository.dart', line: 4),
-        ),
-      );
-      expect(
-        analyzerOutput,
-        isNot(
-          containsLintError(file: 'lib/repository/repository.dart', line: 5),
-        ),
-      );
-      expect(
-        analyzerOutput,
-        isNot(
-          containsLintError(file: 'lib/repository/repository.dart', line: 6),
-        ),
+        isNot(containsAnyLintErrors(file: 'lib/repository/repository.dart')),
       );
     });
 
@@ -270,15 +235,7 @@ import '../auth/auth.dart';
       final analyzerOutput = packageUnderTest.analyze();
       expect(
         analyzerOutput,
-        isNot(containsLintError(file: 'lib/main.dart', line: 1)),
-      );
-      expect(
-        analyzerOutput,
-        isNot(containsLintError(file: 'lib/main.dart', line: 2)),
-      );
-      expect(
-        analyzerOutput,
-        isNot(containsLintError(file: 'lib/main.dart', line: 3)),
+        isNot(containsAnyLintErrors(file: 'lib/main.dart')),
       );
       expect(
         analyzerOutput,
@@ -292,11 +249,12 @@ import '../auth/auth.dart';
       );
       expect(
         analyzerOutput,
-        isNot(containsLintError(file: 'lib/features/features.dart', line: 2)),
-      );
-      expect(
-        analyzerOutput,
-        isNot(containsLintError(file: 'lib/features/features.dart', line: 3)),
+        isNot(
+          containsAnyLintErrors(
+            file: 'lib/features/features.dart',
+            lines: [2, 3],
+          ),
+        ),
       );
       expect(
         analyzerOutput,
