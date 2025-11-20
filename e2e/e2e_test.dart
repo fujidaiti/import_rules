@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:test/test.dart';
 
+import 'src/analyzer_output.dart';
 import 'src/io_extension.dart';
 import 'src/matchers.dart';
 import 'test_environment.dart';
@@ -130,55 +131,39 @@ import 'dart:io';
       final analyzerOutput = packageUnderTest.analyze();
       expect(
         analyzerOutput,
-        isNot(
-          containsAnyLintErrors(
-            file: 'lib/domain/domain.dart',
-            lines: [2, 3, 4],
-          ),
-        ),
-      );
-      expect(
-        analyzerOutput,
-        containsLintError(
+        containsLintErrors(
+          exclusive: true,
           file: 'lib/domain/domain.dart',
-          line: 7,
-          message: contains(
-            'The domain layer should not depend on other layers '
-            'and external packages with a few exceptions.',
-          ),
-        ),
-      );
-      expect(
-        analyzerOutput,
-        containsLintError(
-          file: 'lib/domain/domain.dart',
-          line: 8,
-          message: contains(
-            'The domain layer should not depend on other layers '
-            'and external packages with a few exceptions.',
-          ),
-        ),
-      );
-      expect(
-        analyzerOutput,
-        containsLintError(
-          file: 'lib/domain/domain.dart',
-          line: 9,
-          message: contains(
-            'The domain layer should not depend on other layers '
-            'and external packages with a few exceptions.',
-          ),
-        ),
-      );
-      expect(
-        analyzerOutput,
-        containsLintError(
-          file: 'lib/domain/domain.dart',
-          line: 10,
-          message: contains(
-            'The domain layer should not depend on other layers '
-            'and external packages with a few exceptions.',
-          ),
+          diagnostics: [
+            LintDiagnostic(
+              line: 7,
+              col: 1,
+              message:
+                  'Import rule violation. The domain layer should not depend on other layers and external packages with a few exceptions.',
+              code: 'import_rule_violation',
+            ),
+            LintDiagnostic(
+              line: 8,
+              col: 1,
+              message:
+                  'Import rule violation. The domain layer should not depend on other layers and external packages with a few exceptions.',
+              code: 'import_rule_violation',
+            ),
+            LintDiagnostic(
+              line: 9,
+              col: 1,
+              message:
+                  'Import rule violation. The domain layer should not depend on other layers and external packages with a few exceptions.',
+              code: 'import_rule_violation',
+            ),
+            LintDiagnostic(
+              line: 10,
+              col: 1,
+              message:
+                  'Import rule violation. The domain layer should not depend on other layers and external packages with a few exceptions.',
+              code: 'import_rule_violation',
+            ),
+          ],
         ),
       );
 
@@ -239,55 +224,57 @@ import '../auth/auth.dart';
       );
       expect(
         analyzerOutput,
-        containsLintError(
+        containsLintErrors(
+          exclusive: true,
           file: 'lib/features/features.dart',
-          line: 1,
-          message: contains(
-            'Files can only import from same or deeper directory levels.',
-          ),
+          diagnostics: [
+            LintDiagnostic(
+              line: 1,
+              col: 1,
+              message:
+                  'Import rule violation. Files can only import from same or deeper directory levels.',
+              code: 'import_rule_violation',
+            ),
+          ],
         ),
       );
       expect(
         analyzerOutput,
-        isNot(
-          containsAnyLintErrors(
-            file: 'lib/features/features.dart',
-            lines: [2, 3],
-          ),
-        ),
-      );
-      expect(
-        analyzerOutput,
-        isNot(containsLintError(file: 'lib/features/auth/auth.dart', line: 1)),
-      );
-      expect(
-        analyzerOutput,
-        containsLintError(
+        containsLintErrors(
+          exclusive: true,
           file: 'lib/features/auth/auth.dart',
-          line: 2,
-          message: contains(
-            'Files can only import from same or deeper directory levels.',
-          ),
+          diagnostics: [
+            LintDiagnostic(
+              line: 2,
+              col: 1,
+              message:
+                  'Import rule violation. Files can only import from same or deeper directory levels.',
+              code: 'import_rule_violation',
+            ),
+            LintDiagnostic(
+              line: 3,
+              col: 1,
+              message:
+                  'Import rule violation. Files can only import from same or deeper directory levels.',
+              code: 'import_rule_violation',
+            ),
+          ],
         ),
       );
       expect(
         analyzerOutput,
-        containsLintError(
-          file: 'lib/features/auth/auth.dart',
-          line: 3,
-          message: contains(
-            'Files can only import from same or deeper directory levels.',
-          ),
-        ),
-      );
-      expect(
-        analyzerOutput,
-        containsLintError(
+        containsLintErrors(
+          exclusive: true,
           file: 'lib/features/cart/cart.dart',
-          line: 1,
-          message: contains(
-            'Files can only import from same or deeper directory levels.',
-          ),
+          diagnostics: [
+            LintDiagnostic(
+              line: 1,
+              col: 1,
+              message:
+                  'Import rule violation. Files can only import from same or deeper directory levels.',
+              code: 'import_rule_violation',
+            ),
+          ],
         ),
       );
     });
