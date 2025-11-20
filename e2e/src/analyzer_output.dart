@@ -22,7 +22,7 @@ class AnalyzerOutput {
       errors.add(LintError(file: match.group(1)!, diagnostic: diagnostic));
     }
 
-    return AnalyzerOutput(errors);
+    return AnalyzerOutput(List.unmodifiable(errors));
   }
 
   @override

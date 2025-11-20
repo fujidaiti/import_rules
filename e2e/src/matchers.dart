@@ -63,3 +63,42 @@ Matcher containsAnyLintErrors({
         : ' at all of lines ${lines.join(', ')}'}',
   );
 }
+
+/// Matcher that checks if analyzer output contains all specified lint diagnostics
+///
+/// - Matches only when the given [file] has every diagnostic in [diagnostics]
+///   present. A diagnostic is identified by equality of `line`, `col`,
+///   `message`, and `code`. Duplicate diagnostics are respected; the matcher
+///   requires the same multiplicity to be present.
+/// - When [exclusive] is true, the file must contain exactly the specified
+///   diagnostics and no additional diagnostics for that file.
+Matcher containsLintErrors({
+  required String file,
+  required List<LintDiagnostic> diagnostics,
+  bool exclusive = false,
+}) {
+  return predicate<AnalyzerOutput>(
+    (output) {
+      final remaining = output.errors
+          .where((e) => e.file == file)
+          .map((e) => e.diagnostic)
+          .toList();
+      for (final expected in diagnostics) {
+        final index = remaining.indexWhere(
+          (d) =>
+              d.line == expected.line &&
+              d.col == expected.col &&
+              d.message == expected.message &&
+              d.code == expected.code,
+        );
+        if (index == -1) return false;
+        remaining.removeAt(index);
+      }
+      if (exclusive) {
+        return remaining.isEmpty;
+      }
+      return true;
+    },
+    'contains specified lint errors in $file${exclusive ? ' exclusively' : ''}',
+  );
+}
