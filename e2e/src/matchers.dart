@@ -28,7 +28,16 @@ Matcher containsLintError({
 /// If [lines] is null or empty, it matches when any error exists for [file].
 /// If [lines] is provided, it matches when errors exist for [file] at all of
 /// the specified line numbers.
-Matcher containsAnyLintErrors({required String file, List<int>? lines}) {
+///
+/// If [exclusive] is true (effective only when [lines] is provided), it matches
+/// only when errors exist at all of the specified [lines] and there are no
+/// additional errors for [file] at other line numbers.
+Matcher containsAnyLintErrors({
+  required String file,
+  List<int>? lines,
+  bool exclusive = false,
+}) {
+  assert(!exclusive || (lines != null && lines.isNotEmpty));
   return predicate<AnalyzerOutput>(
     (output) {
       if (lines == null || lines.isEmpty) {
@@ -39,8 +48,18 @@ Matcher containsAnyLintErrors({required String file, List<int>? lines}) {
           .where((error) => error.file == file)
           .map((e) => e.line)
           .toSet();
-      return expectedLines.every(presentLinesForFile.contains);
+      final hasAllSpecified = expectedLines.every(presentLinesForFile.contains);
+      if (!hasAllSpecified) return false;
+      if (exclusive) {
+        return presentLinesForFile.difference(expectedLines).isEmpty;
+      }
+      return true;
     },
-    'contains any lint errors in $file${lines == null || lines.isEmpty ? '' : ' at all of lines ${lines.join(', ')}'}',
+    'contains any lint errors in $file'
+    '${lines == null || lines.isEmpty
+        ? ''
+        : exclusive
+        ? ' exactly at lines ${lines.join(', ')}'
+        : ' at all of lines ${lines.join(', ')}'}',
   );
 }

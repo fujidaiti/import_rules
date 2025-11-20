@@ -316,5 +316,98 @@ void main() {
         ),
       );
     });
+    test('non-exclusive matches even if extra error lines exist', () {
+      final output = AnalyzerOutput([
+        LintError(
+          file: 'lib/domain/domain.dart',
+          line: 2,
+          col: 1,
+          message: 'Err at line 2',
+          code: 'import_rule_violation',
+        ),
+        LintError(
+          file: 'lib/domain/domain.dart',
+          line: 3,
+          col: 1,
+          message: 'Err at line 3',
+          code: 'import_rule_violation',
+        ),
+        LintError(
+          file: 'lib/domain/domain.dart',
+          line: 4,
+          col: 1,
+          message: 'Extra err at line 4',
+          code: 'import_rule_violation',
+        ),
+      ]);
+
+      expect(
+        output,
+        containsAnyLintErrors(file: 'lib/domain/domain.dart', lines: [2, 3]),
+      );
+    });
+    test('exclusive matches only when exactly specified lines have errors', () {
+      final output = AnalyzerOutput([
+        LintError(
+          file: 'lib/domain/domain.dart',
+          line: 2,
+          col: 1,
+          message: 'Err at line 2',
+          code: 'import_rule_violation',
+        ),
+        LintError(
+          file: 'lib/domain/domain.dart',
+          line: 3,
+          col: 1,
+          message: 'Err at line 3',
+          code: 'import_rule_violation',
+        ),
+      ]);
+
+      expect(
+        output,
+        containsAnyLintErrors(
+          file: 'lib/domain/domain.dart',
+          lines: [2, 3],
+          exclusive: true,
+        ),
+      );
+    });
+    test('exclusive does not match when extra error lines exist', () {
+      final output = AnalyzerOutput([
+        LintError(
+          file: 'lib/domain/domain.dart',
+          line: 2,
+          col: 1,
+          message: 'Err at line 2',
+          code: 'import_rule_violation',
+        ),
+        LintError(
+          file: 'lib/domain/domain.dart',
+          line: 3,
+          col: 1,
+          message: 'Err at line 3',
+          code: 'import_rule_violation',
+        ),
+        LintError(
+          file: 'lib/domain/domain.dart',
+          line: 4,
+          col: 1,
+          message: 'Extra err at line 4',
+          code: 'import_rule_violation',
+        ),
+      ]);
+
+      expect(
+        output,
+        isNot(
+          containsAnyLintErrors(
+            file: 'lib/domain/domain.dart',
+            lines: [2, 3],
+            exclusive: true,
+          ),
+        ),
+      );
+    });
   });
 }
