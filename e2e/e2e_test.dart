@@ -278,5 +278,646 @@ import '../auth/auth.dart';
         ),
       );
     });
+
+    test('Force uni-directional layer dependencies', () {
+      const importRulesYaml = r'''
+rules:
+  - target: lib/domain/**
+    disallow: lib/**
+    exclude_disallow: lib/domain/**
+    reason: Domain layer should not depend on other layers.
+
+  - target: lib/persistence/**
+    disallow:
+      - lib/application/**
+      - lib/presentation/**
+    reason: Persistence layer can not depend on application and presentation layers.
+
+  - target: lib/application/**
+    disallow: lib/presentation/**
+    reason: Application layer can not depend on presentation layer.
+
+  - target: lib/presentation/**
+    disallow:
+      - lib/persistence/**
+      - lib/domain/**
+    reason: Presentation layer should depend only on application layer.
+''';
+
+      const domainDart = '''
+import 'entity.dart';
+''';
+
+      const persistenceDart = '''
+import '../domain/entity.dart';
+import '../application/use_case.dart';
+''';
+
+      const applicationDart = '''
+import '../domain/entity.dart';
+import '../persistence/repository.dart';
+import '../presentation/view.dart';
+''';
+
+      const presentationDart = '''
+import '../application/use_case.dart';
+import '../domain/entity.dart';
+import '../persistence/repository.dart';
+''';
+
+      packageUnderTest.root
+        ..childFile('import_rules.yaml').writeAsStringSync(importRulesYaml)
+        ..createFiles({
+          'lib': {
+            'domain': {'entity.dart': ''},
+            'persistence': {'repository.dart': persistenceDart},
+            'application': {'use_case.dart': applicationDart},
+            'presentation': {'view.dart': presentationDart},
+          },
+        });
+
+      final analyzerOutput = packageUnderTest.analyze();
+
+      // Domain layer should have no violations (only imports from itself)
+      expect(
+        analyzerOutput,
+        isNot(containsAnyLintErrors(file: 'lib/domain/entity.dart')),
+      );
+
+      // Persistence layer violates: imports from application
+      expect(
+        analyzerOutput,
+        containsLintErrors(
+          exclusive: true,
+          file: 'lib/persistence/repository.dart',
+          diagnostics: [
+            LintDiagnostic(
+              line: 2,
+              col: 1,
+              message:
+                  'Import rule violation. Persistence layer can not depend on application and presentation layers.',
+              code: 'import_rule_violation',
+            ),
+          ],
+        ),
+      );
+
+      // Application layer violates: imports from presentation
+      expect(
+        analyzerOutput,
+        containsLintErrors(
+          exclusive: true,
+          file: 'lib/application/use_case.dart',
+          diagnostics: [
+            LintDiagnostic(
+              line: 3,
+              col: 1,
+              message:
+                  'Import rule violation. Application layer can not depend on presentation layer.',
+              code: 'import_rule_violation',
+            ),
+          ],
+        ),
+      );
+
+      // Presentation layer violates: imports from domain and persistence
+      expect(
+        analyzerOutput,
+        containsLintErrors(
+          exclusive: true,
+          file: 'lib/presentation/view.dart',
+          diagnostics: [
+            LintDiagnostic(
+              line: 2,
+              col: 1,
+              message:
+                  'Import rule violation. Presentation layer should depend only on application layer.',
+              code: 'import_rule_violation',
+            ),
+            LintDiagnostic(
+              line: 3,
+              col: 1,
+              message:
+                  'Import rule violation. Presentation layer should depend only on application layer.',
+              code: 'import_rule_violation',
+            ),
+          ],
+        ),
+      );
+    });
+
+    test('Feature module isolation', () {
+      const importRulesYaml = r'''
+rules:
+  - target: lib/features/**
+    disallow: lib/features/**
+    exclude_disallow:
+      - $DIR/**
+      - lib/features/core/**
+    reason: Features should be isolated from each other except the core module.
+''';
+
+      const coreDart = '''
+import 'utils.dart';
+''';
+
+      const authDart = '''
+import 'auth_service.dart';
+import '../core/utils.dart';
+import '../profile/profile_service.dart';
+''';
+
+      const profileDart = '''
+import 'profile_service.dart';
+import '../core/utils.dart';
+import '../auth/auth_service.dart';
+''';
+
+      packageUnderTest.root
+        ..childFile('import_rules.yaml').writeAsStringSync(importRulesYaml)
+        ..createFiles({
+          'lib': {
+            'features': {
+              'core': {'utils.dart': coreDart},
+              'auth': {'auth_service.dart': authDart},
+              'profile': {'profile_service.dart': profileDart},
+            },
+          },
+        });
+
+      final analyzerOutput = packageUnderTest.analyze();
+
+      // Core module should have no violations
+      expect(
+        analyzerOutput,
+        isNot(containsAnyLintErrors(file: 'lib/features/core/utils.dart')),
+      );
+
+      // Auth module violates: imports from profile
+      expect(
+        analyzerOutput,
+        containsLintErrors(
+          exclusive: true,
+          file: 'lib/features/auth/auth_service.dart',
+          diagnostics: [
+            LintDiagnostic(
+              line: 3,
+              col: 1,
+              message:
+                  'Import rule violation. Features should be isolated from each other except the core module.',
+              code: 'import_rule_violation',
+            ),
+          ],
+        ),
+      );
+
+      // Profile module violates: imports from auth
+      expect(
+        analyzerOutput,
+        containsLintErrors(
+          exclusive: true,
+          file: 'lib/features/profile/profile_service.dart',
+          diagnostics: [
+            LintDiagnostic(
+              line: 3,
+              col: 1,
+              message:
+                  'Import rule violation. Features should be isolated from each other except the core module.',
+              code: 'import_rule_violation',
+            ),
+          ],
+        ),
+      );
+    });
+
+    test('Third package wrapper enforcement', () {
+      const importRulesYaml = r'''
+rules:
+  - target: lib/**
+    exclude_target: lib/core/http_wrapper.dart
+    disallow: package:http/**
+    reason: Use lib/core/http_wrapper.dart instead of directly importing the "http" package.
+''';
+
+      const httpWrapperDart = '''
+import 'package:http/http.dart' as http;
+
+class HttpWrapper {
+  Future<String> get(String url) async {
+    final response = await http.get(Uri.parse(url));
+    return response.body;
+  }
+}
+''';
+
+      const userApiDart = '''
+import '../core/http_wrapper.dart';
+import 'package:http/http.dart';
+''';
+
+      const productApiDart = '''
+import 'package:http/http.dart' as http;
+''';
+
+      packageUnderTest.root
+        ..childFile('import_rules.yaml').writeAsStringSync(importRulesYaml)
+        ..createFiles({
+          'lib': {
+            'core': {'http_wrapper.dart': httpWrapperDart},
+            'api': {
+              'user_api.dart': userApiDart,
+              'product_api.dart': productApiDart,
+            },
+          },
+        });
+
+      final analyzerOutput = packageUnderTest.analyze();
+
+      // http_wrapper.dart is excluded, so no violations
+      expect(
+        analyzerOutput,
+        isNot(containsAnyLintErrors(file: 'lib/core/http_wrapper.dart')),
+      );
+
+      // user_api.dart violates: directly imports http package
+      expect(
+        analyzerOutput,
+        containsLintErrors(
+          exclusive: true,
+          file: 'lib/api/user_api.dart',
+          diagnostics: [
+            LintDiagnostic(
+              line: 2,
+              col: 1,
+              message:
+                  'Import rule violation. Use lib/core/http_wrapper.dart instead of directly importing the "http" package.',
+              code: 'import_rule_violation',
+            ),
+          ],
+        ),
+      );
+
+      // product_api.dart violates: directly imports http package
+      expect(
+        analyzerOutput,
+        containsLintErrors(
+          exclusive: true,
+          file: 'lib/api/product_api.dart',
+          diagnostics: [
+            LintDiagnostic(
+              line: 1,
+              col: 1,
+              message:
+                  'Import rule violation. Use lib/core/http_wrapper.dart instead of directly importing the "http" package.',
+              code: 'import_rule_violation',
+            ),
+          ],
+        ),
+      );
+    });
+
+    test('Legacy code deprecation', () {
+      const importRulesYaml = r'''
+rules:
+  - target: lib/features/**
+    exclude_target:
+      - lib/features/legacy/**
+      - lib/features/profile/**
+    disallow: lib/features/legacy/**
+    reason: Newly added features should not depend on legacy code.
+''';
+
+      const legacyAuthDart = '''
+class LegacyAuth {}
+''';
+
+      const newAuthDart = '''
+import '../legacy/auth/legacy_auth.dart';
+
+class NewAuth {}
+''';
+
+      const profileDart = '''
+import '../legacy/auth/legacy_auth.dart';
+
+class Profile {}
+''';
+
+      const feedDart = '''
+import '../legacy/auth/legacy_auth.dart';
+
+class Feed {}
+''';
+
+      packageUnderTest.root
+        ..childFile('import_rules.yaml').writeAsStringSync(importRulesYaml)
+        ..createFiles({
+          'lib': {
+            'features': {
+              'legacy': {
+                'auth': {'legacy_auth.dart': legacyAuthDart},
+              },
+              'auth': {'auth.dart': newAuthDart},
+              'profile': {'profile.dart': profileDart},
+              'feed': {'feed.dart': feedDart},
+            },
+          },
+        });
+
+      final analyzerOutput = packageUnderTest.analyze();
+
+      // Legacy code itself has no violations (excluded from target)
+      expect(
+        analyzerOutput,
+        isNot(
+          containsAnyLintErrors(
+            file: 'lib/features/legacy/auth/legacy_auth.dart',
+          ),
+        ),
+      );
+
+      // Profile is allowed to use legacy code (excluded from target)
+      expect(
+        analyzerOutput,
+        isNot(containsAnyLintErrors(file: 'lib/features/profile/profile.dart')),
+      );
+
+      // New auth module violates: imports from legacy
+      expect(
+        analyzerOutput,
+        containsLintErrors(
+          exclusive: true,
+          file: 'lib/features/auth/auth.dart',
+          diagnostics: [
+            LintDiagnostic(
+              line: 1,
+              col: 1,
+              message:
+                  'Import rule violation. Newly added features should not depend on legacy code.',
+              code: 'import_rule_violation',
+            ),
+          ],
+        ),
+      );
+
+      // Feed module violates: imports from legacy
+      expect(
+        analyzerOutput,
+        containsLintErrors(
+          exclusive: true,
+          file: 'lib/features/feed/feed.dart',
+          diagnostics: [
+            LintDiagnostic(
+              line: 1,
+              col: 1,
+              message:
+                  'Import rule violation. Newly added features should not depend on legacy code.',
+              code: 'import_rule_violation',
+            ),
+          ],
+        ),
+      );
+    });
+
+    test('Forbid IO operations in unit testing', () {
+      const importRulesYaml = r'''
+rules:
+  - target: test/unit/**
+    disallow: dart:io
+    reason: Unit tests should not perform IO operations.
+''';
+
+      const mainDart = '''
+import 'dart:io';
+
+void main() {
+  print(Platform.operatingSystem);
+}
+''';
+
+      const domainTestDart = '''
+import 'dart:io';
+
+void main() {
+  print(Platform.operatingSystem);
+}
+''';
+
+      packageUnderTest.root
+        ..childFile('import_rules.yaml').writeAsStringSync(importRulesYaml)
+        ..createFiles({
+          'lib': {'main.dart': mainDart},
+          'test': {
+            'unit': {'domain_test.dart': domainTestDart},
+          },
+        });
+
+      final analyzerOutput = packageUnderTest.analyze();
+
+      // lib/main.dart is not in test/unit/**, so no violations
+      expect(
+        analyzerOutput,
+        isNot(containsAnyLintErrors(file: 'lib/main.dart')),
+      );
+
+      // test/unit/domain_test.dart violates: imports dart:io
+      expect(
+        analyzerOutput,
+        containsLintErrors(
+          exclusive: true,
+          file: 'test/unit/domain_test.dart',
+          diagnostics: [
+            LintDiagnostic(
+              line: 1,
+              col: 1,
+              message:
+                  'Import rule violation. Unit tests should not perform IO operations.',
+              code: 'import_rule_violation',
+            ),
+          ],
+        ),
+      );
+    });
+
+    test('Prefer aggregate file imports', () {
+      const importRulesYaml = r'''
+rules:
+  - target: lib/**
+    exclude_target: lib/domain/**
+    disallow: lib/domain/**
+    exclude_disallow: lib/domain/domain.dart
+    reason: Import "domain/domain.dart" instead of directly importing "domain/**/*.dart".
+''';
+
+      const domainDart = '''
+export 'src/entity.dart';
+export 'value.dart' show Value;
+''';
+
+      const entityDart = '''
+class Entity {}
+''';
+
+      const valueDart = '''
+class Value {}
+class InternalValue {}
+''';
+
+      const mainDart = '''
+import 'domain/domain.dart';
+import 'application/application.dart';
+''';
+
+      const applicationDart = '''
+import '../domain/domain.dart';
+import '../domain/src/entity.dart';
+import '../domain/value.dart';
+''';
+
+      packageUnderTest.root
+        ..childFile('import_rules.yaml').writeAsStringSync(importRulesYaml)
+        ..createFiles({
+          'lib': {
+            'main.dart': mainDart,
+            'domain': {
+              'domain.dart': domainDart,
+              'value.dart': valueDart,
+              'src': {'entity.dart': entityDart},
+            },
+            'application': {'application.dart': applicationDart},
+          },
+        });
+
+      final analyzerOutput = packageUnderTest.analyze();
+
+      // Domain files themselves can import each other (excluded from target)
+      expect(
+        analyzerOutput,
+        isNot(containsAnyLintErrors(file: 'lib/domain/domain.dart')),
+      );
+
+      // main.dart only imports domain.dart, so no violations
+      expect(
+        analyzerOutput,
+        isNot(containsAnyLintErrors(file: 'lib/main.dart')),
+      );
+
+      // application.dart violates: imports individual domain files
+      expect(
+        analyzerOutput,
+        containsLintErrors(
+          exclusive: true,
+          file: 'lib/application/application.dart',
+          diagnostics: [
+            LintDiagnostic(
+              line: 2,
+              col: 1,
+              message:
+                  'Import rule violation. Import "domain/domain.dart" instead of directly importing "domain/**/*.dart".',
+              code: 'import_rule_violation',
+            ),
+            LintDiagnostic(
+              line: 3,
+              col: 1,
+              message:
+                  'Import rule violation. Import "domain/domain.dart" instead of directly importing "domain/**/*.dart".',
+              code: 'import_rule_violation',
+            ),
+          ],
+        ),
+      );
+    });
+
+    test('Implementation detail encapsulation', () {
+      const importRulesYaml = r'''
+rules:
+  - target: lib/**
+    disallow: lib/**/_*.dart
+    exclude_disallow: $DIR/_*.dart
+    reason: Implementation files should not be imported directly.
+''';
+
+      const cacheDart = '''
+import '_cache_file_loader.dart';
+import '_cache_table.dart';
+import '_cache_hash_algorithm.dart';
+''';
+
+      const utilsDart = '''
+import '../_cache_file_loader.dart';
+import '../_cache_table.dart';
+''';
+
+      const mainDart = '''
+import 'cache/cache.dart';
+import 'cache/_cache_file_loader.dart';
+''';
+
+      packageUnderTest.root
+        ..childFile('import_rules.yaml').writeAsStringSync(importRulesYaml)
+        ..createFiles({
+          'lib': {
+            'main.dart': mainDart,
+            'cache': {
+              'cache.dart': cacheDart,
+              '_cache_file_loader.dart': '',
+              '_cache_table.dart': '',
+              '_cache_hash_algorithm.dart': '',
+              'utils': {'utils.dart': utilsDart},
+            },
+          },
+        });
+
+      final analyzerOutput = packageUnderTest.analyze();
+
+      // cache.dart can import _*.dart from same directory, so no violations
+      expect(
+        analyzerOutput,
+        isNot(containsAnyLintErrors(file: 'lib/cache/cache.dart')),
+      );
+
+      // utils.dart violates: imports _*.dart from parent directory
+      expect(
+        analyzerOutput,
+        containsLintErrors(
+          exclusive: true,
+          file: 'lib/cache/utils/utils.dart',
+          diagnostics: [
+            LintDiagnostic(
+              line: 1,
+              col: 1,
+              message:
+                  'Import rule violation. Implementation files should not be imported directly.',
+              code: 'import_rule_violation',
+            ),
+            LintDiagnostic(
+              line: 2,
+              col: 1,
+              message:
+                  'Import rule violation. Implementation files should not be imported directly.',
+              code: 'import_rule_violation',
+            ),
+          ],
+        ),
+      );
+
+      // main.dart violates: imports _*.dart from cache directory
+      expect(
+        analyzerOutput,
+        containsLintErrors(
+          exclusive: true,
+          file: 'lib/main.dart',
+          diagnostics: [
+            LintDiagnostic(
+              line: 2,
+              col: 1,
+              message:
+                  'Import rule violation. Implementation files should not be imported directly.',
+              code: 'import_rule_violation',
+            ),
+          ],
+        ),
+      );
+    });
   });
 }
