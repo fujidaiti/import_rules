@@ -14,9 +14,9 @@ Matcher containsLintError({
       return output.errors.any(
         (error) =>
             error.file == file &&
-            (line == null || error.line == line) &&
-            (col == null || error.col == col) &&
-            (message == null || message.matches(error.message, {})),
+            (line == null || error.diagnostic.line == line) &&
+            (col == null || error.diagnostic.col == col) &&
+            (message == null || message.matches(error.diagnostic.message, {})),
       );
     },
     'contains lint error in $file${line != null ? ':$line' : ''}${col != null ? ':$col' : ''}',
@@ -46,7 +46,7 @@ Matcher containsAnyLintErrors({
       final expectedLines = lines.toSet();
       final presentLinesForFile = output.errors
           .where((error) => error.file == file)
-          .map((e) => e.line)
+          .map((e) => e.diagnostic.line)
           .toSet();
       final hasAllSpecified = expectedLines.every(presentLinesForFile.contains);
       if (!hasAllSpecified) return false;

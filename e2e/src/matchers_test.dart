@@ -9,10 +9,12 @@ void main() {
       final output = AnalyzerOutput([
         LintError(
           file: 'lib/main.dart',
-          line: 5,
-          col: 1,
-          message: 'Import rule violation. Do not import this.',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 5,
+            col: 1,
+            message: 'Import rule violation. Do not import this.',
+            code: 'import_rule_violation',
+          ),
         ),
       ]);
 
@@ -23,10 +25,12 @@ void main() {
       final output = AnalyzerOutput([
         LintError(
           file: 'lib/main.dart',
-          line: 5,
-          col: 1,
-          message: 'Import rule violation.',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 5,
+            col: 1,
+            message: 'Import rule violation.',
+            code: 'import_rule_violation',
+          ),
         ),
       ]);
 
@@ -37,10 +41,12 @@ void main() {
       final output = AnalyzerOutput([
         LintError(
           file: 'lib/main.dart',
-          line: 5,
-          col: 1,
-          message: 'Import rule violation.',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 5,
+            col: 1,
+            message: 'Import rule violation.',
+            code: 'import_rule_violation',
+          ),
         ),
       ]);
 
@@ -51,11 +57,13 @@ void main() {
       final output = AnalyzerOutput([
         LintError(
           file: 'lib/main.dart',
-          line: 5,
-          col: 1,
-          message:
-              'Import rule violation. Presentation layer should not import data layer.',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 5,
+            col: 1,
+            message:
+                'Import rule violation. Presentation layer should not import data layer.',
+            code: 'import_rule_violation',
+          ),
         ),
       ]);
 
@@ -72,10 +80,12 @@ void main() {
       final output = AnalyzerOutput([
         LintError(
           file: 'lib/main.dart',
-          line: 5,
-          col: 1,
-          message: 'Import rule violation.',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 5,
+            col: 1,
+            message: 'Import rule violation.',
+            code: 'import_rule_violation',
+          ),
         ),
       ]);
 
@@ -86,10 +96,12 @@ void main() {
       final output = AnalyzerOutput([
         LintError(
           file: 'lib/main.dart',
-          line: 5,
-          col: 1,
-          message: 'Import rule violation.',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 5,
+            col: 1,
+            message: 'Import rule violation.',
+            code: 'import_rule_violation',
+          ),
         ),
       ]);
 
@@ -100,10 +112,12 @@ void main() {
       final output = AnalyzerOutput([
         LintError(
           file: 'lib/main.dart',
-          line: 5,
-          col: 1,
-          message: 'Import rule violation.',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 5,
+            col: 1,
+            message: 'Import rule violation.',
+            code: 'import_rule_violation',
+          ),
         ),
       ]);
 
@@ -117,10 +131,12 @@ void main() {
       final output = AnalyzerOutput([
         LintError(
           file: 'lib/main.dart',
-          line: 5,
-          col: 1,
-          message: 'Import rule violation. Some other reason.',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 5,
+            col: 1,
+            message: 'Import rule violation. Some other reason.',
+            code: 'import_rule_violation',
+          ),
         ),
       ]);
 
@@ -139,17 +155,21 @@ void main() {
       final output = AnalyzerOutput([
         LintError(
           file: 'lib/main.dart',
-          line: 5,
-          col: 1,
-          message: 'First error',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 5,
+            col: 1,
+            message: 'First error',
+            code: 'import_rule_violation',
+          ),
         ),
         LintError(
           file: 'lib/other.dart',
-          line: 10,
-          col: 1,
-          message: 'Second error',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 10,
+            col: 1,
+            message: 'Second error',
+            code: 'import_rule_violation',
+          ),
         ),
       ]);
 
@@ -167,17 +187,21 @@ void main() {
       final output = AnalyzerOutput([
         LintError(
           file: 'lib/domain/domain.dart',
-          line: 2,
-          col: 1,
-          message: 'Err at line 2',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 2,
+            col: 1,
+            message: 'Err at line 2',
+            code: 'import_rule_violation',
+          ),
         ),
         LintError(
           file: 'lib/other.dart',
-          line: 10,
-          col: 1,
-          message: 'Other file error',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 10,
+            col: 1,
+            message: 'Other file error',
+            code: 'import_rule_violation',
+          ),
         ),
       ]);
 
@@ -190,24 +214,30 @@ void main() {
         final output = AnalyzerOutput([
           LintError(
             file: 'lib/domain/domain.dart',
-            line: 2,
-            col: 1,
-            message: 'Err at line 2',
-            code: 'import_rule_violation',
+            diagnostic: LintDiagnostic(
+              line: 2,
+              col: 1,
+              message: 'Err at line 2',
+              code: 'import_rule_violation',
+            ),
           ),
           LintError(
             file: 'lib/domain/domain.dart',
-            line: 3,
-            col: 1,
-            message: 'Err at line 3',
-            code: 'import_rule_violation',
+            diagnostic: LintDiagnostic(
+              line: 3,
+              col: 1,
+              message: 'Err at line 3',
+              code: 'import_rule_violation',
+            ),
           ),
           LintError(
             file: 'lib/domain/domain.dart',
-            line: 4,
-            col: 1,
-            message: 'Err at line 4',
-            code: 'import_rule_violation',
+            diagnostic: LintDiagnostic(
+              line: 4,
+              col: 1,
+              message: 'Err at line 4',
+              code: 'import_rule_violation',
+            ),
           ),
         ]);
 
@@ -219,10 +249,12 @@ void main() {
       final output = AnalyzerOutput([
         LintError(
           file: 'lib/feature/a.dart',
-          line: 1,
-          col: 1,
-          message: 'Some error',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 1,
+            col: 1,
+            message: 'Some error',
+            code: 'import_rule_violation',
+          ),
         ),
       ]);
 
@@ -245,10 +277,12 @@ void main() {
       final output = AnalyzerOutput([
         LintError(
           file: 'lib/domain/domain.dart',
-          line: 2,
-          col: 1,
-          message: 'Some other lint code',
-          code: 'some_other_code',
+          diagnostic: LintDiagnostic(
+            line: 2,
+            col: 1,
+            message: 'Some other lint code',
+            code: 'some_other_code',
+          ),
         ),
       ]);
 
@@ -258,17 +292,21 @@ void main() {
       final output = AnalyzerOutput([
         LintError(
           file: 'lib/domain/domain.dart',
-          line: 2,
-          col: 1,
-          message: 'Err at line 2',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 2,
+            col: 1,
+            message: 'Err at line 2',
+            code: 'import_rule_violation',
+          ),
         ),
         LintError(
           file: 'lib/domain/domain.dart',
-          line: 3,
-          col: 1,
-          message: 'Err at line 3',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 3,
+            col: 1,
+            message: 'Err at line 3',
+            code: 'import_rule_violation',
+          ),
         ),
       ]);
 
@@ -281,10 +319,12 @@ void main() {
       final output = AnalyzerOutput([
         LintError(
           file: 'lib/domain/domain.dart',
-          line: 2,
-          col: 1,
-          message: 'Err at line 2',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 2,
+            col: 1,
+            message: 'Err at line 2',
+            code: 'import_rule_violation',
+          ),
         ),
       ]);
 
@@ -299,10 +339,12 @@ void main() {
       final output = AnalyzerOutput([
         LintError(
           file: 'lib/domain/domain.dart',
-          line: 5,
-          col: 1,
-          message: 'Err at line 5',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 5,
+            col: 1,
+            message: 'Err at line 5',
+            code: 'import_rule_violation',
+          ),
         ),
       ]);
 
@@ -320,24 +362,30 @@ void main() {
       final output = AnalyzerOutput([
         LintError(
           file: 'lib/domain/domain.dart',
-          line: 2,
-          col: 1,
-          message: 'Err at line 2',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 2,
+            col: 1,
+            message: 'Err at line 2',
+            code: 'import_rule_violation',
+          ),
         ),
         LintError(
           file: 'lib/domain/domain.dart',
-          line: 3,
-          col: 1,
-          message: 'Err at line 3',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 3,
+            col: 1,
+            message: 'Err at line 3',
+            code: 'import_rule_violation',
+          ),
         ),
         LintError(
           file: 'lib/domain/domain.dart',
-          line: 4,
-          col: 1,
-          message: 'Extra err at line 4',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 4,
+            col: 1,
+            message: 'Extra err at line 4',
+            code: 'import_rule_violation',
+          ),
         ),
       ]);
 
@@ -350,17 +398,21 @@ void main() {
       final output = AnalyzerOutput([
         LintError(
           file: 'lib/domain/domain.dart',
-          line: 2,
-          col: 1,
-          message: 'Err at line 2',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 2,
+            col: 1,
+            message: 'Err at line 2',
+            code: 'import_rule_violation',
+          ),
         ),
         LintError(
           file: 'lib/domain/domain.dart',
-          line: 3,
-          col: 1,
-          message: 'Err at line 3',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 3,
+            col: 1,
+            message: 'Err at line 3',
+            code: 'import_rule_violation',
+          ),
         ),
       ]);
 
@@ -377,24 +429,30 @@ void main() {
       final output = AnalyzerOutput([
         LintError(
           file: 'lib/domain/domain.dart',
-          line: 2,
-          col: 1,
-          message: 'Err at line 2',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 2,
+            col: 1,
+            message: 'Err at line 2',
+            code: 'import_rule_violation',
+          ),
         ),
         LintError(
           file: 'lib/domain/domain.dart',
-          line: 3,
-          col: 1,
-          message: 'Err at line 3',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 3,
+            col: 1,
+            message: 'Err at line 3',
+            code: 'import_rule_violation',
+          ),
         ),
         LintError(
           file: 'lib/domain/domain.dart',
-          line: 4,
-          col: 1,
-          message: 'Extra err at line 4',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 4,
+            col: 1,
+            message: 'Extra err at line 4',
+            code: 'import_rule_violation',
+          ),
         ),
       ]);
 

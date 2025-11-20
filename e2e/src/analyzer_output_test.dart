@@ -1,4 +1,5 @@
 import 'package:test/test.dart';
+
 import 'analyzer_output.dart';
 
 void main() {
@@ -16,13 +17,13 @@ Analyzing test_project...
 
       expect(result.errors.length, 1);
       expect(result.errors[0].file, 'lib/main.dart');
-      expect(result.errors[0].line, 5);
-      expect(result.errors[0].col, 1);
+      expect(result.errors[0].diagnostic.line, 5);
+      expect(result.errors[0].diagnostic.col, 1);
       expect(
-        result.errors[0].message,
+        result.errors[0].diagnostic.message,
         'Import rule violation. Do not import this.',
       );
-      expect(result.errors[0].code, 'import_rule_violation');
+      expect(result.errors[0].diagnostic.code, 'import_rule_violation');
     });
 
     test('parses multiple errors correctly', () {
@@ -40,12 +41,12 @@ Analyzing test_project...
       expect(result.errors.length, 2);
 
       expect(result.errors[0].file, 'lib/main.dart');
-      expect(result.errors[0].line, 5);
-      expect(result.errors[0].col, 1);
+      expect(result.errors[0].diagnostic.line, 5);
+      expect(result.errors[0].diagnostic.col, 1);
 
       expect(result.errors[1].file, 'lib/other.dart');
-      expect(result.errors[1].line, 10);
-      expect(result.errors[1].col, 8);
+      expect(result.errors[1].diagnostic.line, 10);
+      expect(result.errors[1].diagnostic.col, 8);
     });
 
     test('returns empty list when no errors', () {
@@ -69,7 +70,7 @@ No issues found.
 
       expect(result.errors.length, 1);
       expect(result.errors[0].file, 'lib/features/auth/src/utils.dart');
-      expect(result.errors[0].line, 15);
+      expect(result.errors[0].diagnostic.line, 15);
     });
 
     test('ignores non-error lines', () {
@@ -105,10 +106,12 @@ Another line of output
     test('formats error correctly', () {
       final error = LintError(
         file: 'lib/main.dart',
-        line: 5,
-        col: 1,
-        message: 'Import rule violation.',
-        code: 'import_rule_violation',
+        diagnostic: LintDiagnostic(
+          line: 5,
+          col: 1,
+          message: 'Import rule violation.',
+          code: 'import_rule_violation',
+        ),
       );
 
       expect(
@@ -129,10 +132,12 @@ Another line of output
       final output = AnalyzerOutput([
         LintError(
           file: 'lib/main.dart',
-          line: 5,
-          col: 1,
-          message: 'Import rule violation.',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 5,
+            col: 1,
+            message: 'Import rule violation.',
+            code: 'import_rule_violation',
+          ),
         ),
       ]);
 
@@ -147,17 +152,21 @@ Another line of output
       final output = AnalyzerOutput([
         LintError(
           file: 'lib/main.dart',
-          line: 5,
-          col: 1,
-          message: 'First error.',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 5,
+            col: 1,
+            message: 'First error.',
+            code: 'import_rule_violation',
+          ),
         ),
         LintError(
           file: 'lib/other.dart',
-          line: 10,
-          col: 8,
-          message: 'Second error.',
-          code: 'import_rule_violation',
+          diagnostic: LintDiagnostic(
+            line: 10,
+            col: 8,
+            message: 'Second error.',
+            code: 'import_rule_violation',
+          ),
         ),
       ]);
 
