@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:path/path.dart' as p;
 import 'package:yaml/yaml.dart';
 
-import 'src/analyzer_output.dart';
-import 'src/io_extension.dart';
+import 'analyzer_output.dart';
+import 'io_extension.dart';
 
 class TestEnvironment {
   TestEnvironment({required this.root});

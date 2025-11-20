@@ -5,7 +5,7 @@ import 'package:test/test.dart';
 import 'src/analyzer_output.dart';
 import 'src/io_extension.dart';
 import 'src/matchers.dart';
-import 'test_environment.dart';
+import 'src/test_environment.dart';
 
 void main() {
   const sdkVersionConstraint = '^3.10.0';
@@ -21,7 +21,7 @@ void main() {
     env.tearDown();
   });
 
-  group('Common use case tests:', () {
+  group('Use case - ', () {
     // We're going to share pubspec.yaml, pubspec.lock, and .dart_tool from the template package
     // across all test packages in this group to avoid running "dart pub get" multiple times.
     late final DartPackage packageTemplate;
