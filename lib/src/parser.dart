@@ -60,6 +60,28 @@ String _normalizeDisallowPattern(String pattern, String? packageName) {
   return pattern;
 }
 
+/// Normalizes a reason string by replacing newlines with spaces and trimming.
+///
+/// This ensures that multi-line YAML strings (using |, >, or explicit \n)
+/// are converted to a single-line format for consistent display.
+///
+/// Normalization rules:
+/// - Leading and trailing whitespace (including newlines) are removed
+/// - All newline characters (\n, \r\n, \r) are replaced with single spaces
+/// - Multiple consecutive spaces are preserved (not collapsed)
+String _normalizeReason(String reason) {
+  // Trim leading and trailing whitespace
+  var normalized = reason.trim();
+
+  // Replace all newline characters with single spaces
+  // This handles \r\n (Windows), \n (Unix), and \r (old Mac)
+  normalized = normalized.replaceAll('\r\n', ' ');
+  normalized = normalized.replaceAll('\n', ' ');
+  normalized = normalized.replaceAll('\r', ' ');
+
+  return normalized;
+}
+
 class ConfigParser {
   ConfigParser([this.logger]);
 
@@ -199,13 +221,15 @@ class ConfigParser {
     final name = ruleMap['name'] as String?;
 
     // Parse reason (required)
-    final reason = ruleMap['reason'];
-    if (reason == null) {
+    final reasonRaw = ruleMap['reason'];
+    if (reasonRaw == null) {
       throw FormatException('Missing required field "reason"');
     }
-    if (reason is! String) {
+    if (reasonRaw is! String) {
       throw FormatException('"reason" must be a string');
     }
+    // Normalize the reason to handle multi-line YAML strings
+    final reason = _normalizeReason(reasonRaw);
 
     // Parse target (required)
     final targetRaw = ruleMap['target'];

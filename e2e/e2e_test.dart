@@ -17,7 +17,7 @@ void main() {
   });
 
   tearDownAll(() {
-    // env.tearDown();
+    env.tearDown();
   });
 
   group('Common use case tests:', () {
@@ -71,7 +71,7 @@ plugins:
     });
 
     tearDown(() {
-      // packageUnderTest.root.deleteSync(recursive: true);
+      packageUnderTest.root.deleteSync(recursive: true);
     });
 
     test('Keep domain layer pure', () {
@@ -332,6 +332,6 @@ import '../auth/auth.dart';
           ),
         ),
       );
-    }, skip: true);
+    });
   });
 }

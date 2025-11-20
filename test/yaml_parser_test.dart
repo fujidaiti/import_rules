@@ -953,4 +953,212 @@ rules:
       expect(rules[2].name, equals('Feature module boundaries'));
     });
   });
+
+  group('Reason field normalization', () {
+    test('single-line reason remains unchanged', () {
+      final yaml = '''
+rules:
+  - reason: This is a simple single-line reason
+    target: lib/**
+    disallow: test/**
+''';
+
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+
+      expect(rules, hasLength(1));
+      expect(rules[0].reason, equals('This is a simple single-line reason'));
+    });
+
+    test('literal block scalar (|) with newlines normalized to spaces', () {
+      final yaml = '''
+rules:
+  - reason: |
+      This is a multi-line reason
+      that spans multiple lines
+      using literal block scalar
+    target: lib/**
+    disallow: test/**
+''';
+
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+
+      expect(rules, hasLength(1));
+      expect(
+        rules[0].reason,
+        equals(
+          'This is a multi-line reason that spans multiple lines using literal block scalar',
+        ),
+      );
+    });
+
+    test('literal block scalar with strip chomping (|-) normalized', () {
+      final yaml = '''
+rules:
+  - reason: |-
+      First line
+      Second line
+      Third line
+    target: lib/**
+    disallow: test/**
+''';
+
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+
+      expect(rules, hasLength(1));
+      expect(rules[0].reason, equals('First line Second line Third line'));
+    });
+
+    test('folded block scalar (>) with newlines normalized', () {
+      final yaml = '''
+rules:
+  - reason: >
+      This folded block scalar
+      will have its newlines
+      converted to spaces
+    target: lib/**
+    disallow: test/**
+''';
+
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+
+      expect(rules, hasLength(1));
+      // Folded scalar may already convert some newlines, but our normalizer ensures consistency
+      expect(
+        rules[0].reason,
+        equals(
+          'This folded block scalar will have its newlines converted to spaces',
+        ),
+      );
+    });
+
+    test('double-quoted with explicit \\n escape sequences normalized', () {
+      final yaml = r'''
+rules:
+  - reason: "First line\nSecond line\nThird line"
+    target: lib/**
+    disallow: test/**
+''';
+
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+
+      expect(rules, hasLength(1));
+      expect(rules[0].reason, equals('First line Second line Third line'));
+    });
+
+    test('plain multi-line string normalized', () {
+      final yaml = '''
+rules:
+  - reason: This is a plain string
+      that continues on the next line
+      and another line
+    target: lib/**
+    disallow: test/**
+''';
+
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+
+      expect(rules, hasLength(1));
+      // Plain style may be pre-processed by YAML, but verify it's normalized
+      expect(rules[0].reason, isNot(contains('\n')));
+    });
+
+    test('leading and trailing newlines are trimmed', () {
+      final yaml = '''
+rules:
+  - reason: |
+
+
+      Reason with leading newlines
+
+
+    target: lib/**
+    disallow: test/**
+''';
+
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+
+      expect(rules, hasLength(1));
+      expect(rules[0].reason, equals('Reason with leading newlines'));
+    });
+
+    test('multiple consecutive newlines preserved as multiple spaces', () {
+      final yaml = r'''
+rules:
+  - reason: "First paragraph\n\n\nSecond paragraph after blank lines"
+    target: lib/**
+    disallow: test/**
+''';
+
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+
+      expect(rules, hasLength(1));
+      // Three newlines become three spaces
+      expect(
+        rules[0].reason,
+        equals('First paragraph   Second paragraph after blank lines'),
+      );
+    });
+
+    test('consecutive spaces within text are preserved', () {
+      final yaml = '''
+rules:
+  - reason: "Reason with    multiple    spaces    between    words"
+    target: lib/**
+    disallow: test/**
+''';
+
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+
+      expect(rules, hasLength(1));
+      expect(
+        rules[0].reason,
+        equals('Reason with    multiple    spaces    between    words'),
+      );
+    });
+
+    test('complex example with mixed whitespace', () {
+      final yaml = '''
+rules:
+  - reason: |
+      Presentation layer should not directly import data layer.
+
+      This enforces clean architecture principles by ensuring
+      that UI components remain decoupled from data sources.
+    target: lib/presentation/**
+    disallow: lib/data/**
+''';
+
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+
+      expect(rules, hasLength(1));
+      expect(
+        rules[0].reason,
+        equals(
+          'Presentation layer should not directly import data layer.  This enforces clean architecture principles by ensuring that UI components remain decoupled from data sources.',
+        ),
+      );
+    });
+
+    test('Windows-style line endings (\\r\\n) normalized', () {
+      // Create a string with actual \r\n characters
+      final yaml =
+          'rules:\n  - reason: "Line one\r\nLine two\r\nLine three"\n    target: lib/**\n    disallow: test/**\n';
+
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+
+      expect(rules, hasLength(1));
+      expect(rules[0].reason, equals('Line one Line two Line three'));
+    });
+
+    test('old Mac-style line endings (\\r) normalized', () {
+      // Create a string with actual \r characters
+      final yaml =
+          'rules:\n  - reason: "Line one\rLine two\rLine three"\n    target: lib/**\n    disallow: test/**\n';
+
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+
+      expect(rules, hasLength(1));
+      expect(rules[0].reason, equals('Line one Line two Line three'));
+    });
+  });
 }
