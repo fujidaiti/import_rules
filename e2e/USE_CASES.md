@@ -271,5 +271,17 @@ rules:
 ```dart
 import 'dart:developer'; // Not allowed
 import 'dart:developer' as dev; // Not allowed
-import 'dart:developer' hide logger; // Allowed
+import 'dart:developer' hide log; // Allowed
+```
+
+```dart
+// lib/common/logger.dart
+
+import 'dart:developer';
+
+class Logger {
+  void info(String message) {
+    log('[$DateTime.now().toIso8601String()] $message');
+  }
+}
 ```
