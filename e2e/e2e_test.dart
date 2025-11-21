@@ -182,7 +182,7 @@ import 'dart:io';
 rules:
   - target: "**"
     disallow: "**"
-    exclude_disallow: "$DIR/**"
+    exclude_disallow: "$TARGET_DIR/**"
     reason: Files can only import from same or deeper directory levels.
 ''';
 
@@ -446,7 +446,7 @@ rules:
   - target: lib/features/**
     disallow: lib/features/**
     exclude_disallow:
-      - $DIR/**
+      - $TARGET_DIR/**
       - lib/features/core/**
     reason: Features should be isolated from each other except the core module.
 ''';
@@ -850,7 +850,7 @@ import 'package:test_package/domain/src/entity.dart';
 rules:
   - target: lib/**
     disallow: lib/**/_*.dart
-    exclude_disallow: $DIR/_*.dart
+    exclude_disallow: $TARGET_DIR/_*.dart
     reason: Implementation files should not be imported directly.
 ''';
 

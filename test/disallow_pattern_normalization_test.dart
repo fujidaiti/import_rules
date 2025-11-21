@@ -283,39 +283,42 @@ rules:
       });
     });
 
-    group(r'$DIR placeholder handling', () {
-      test(r'normalizes pattern with $DIR placeholder', () {
+    group(r'$TARGET_DIR placeholder handling', () {
+      test(r'normalizes pattern with $TARGET_DIR placeholder', () {
         final yaml = r'''
 rules:
   - name: Test rule
     reason: Testing normalization
     target: lib/**
-    disallow: package:my_project/$DIR/**
+    disallow: package:my_project/$TARGET_DIR/**
 ''';
 
         final config = ConfigParser().parseRulesFromYaml(yaml, 'my_project');
         final rule = config.rules.first;
         final pattern = rule.disallowPatterns.first;
 
-        expect(pattern.pattern, equals(r'lib/$DIR/**'));
-        expect(pattern.originalPattern, equals(r'package:my_project/$DIR/**'));
+        expect(pattern.pattern, equals(r'lib/$TARGET_DIR/**'));
+        expect(
+          pattern.originalPattern,
+          equals(r'package:my_project/$TARGET_DIR/**'),
+        );
       });
 
-      test(r'keeps $DIR in relative path as-is', () {
+      test(r'keeps $TARGET_DIR in relative path as-is', () {
         final yaml = r'''
 rules:
   - name: Test rule
     reason: Testing normalization
     target: lib/**
-    disallow: lib/$DIR/src/**
+    disallow: lib/$TARGET_DIR/src/**
 ''';
 
         final config = ConfigParser().parseRulesFromYaml(yaml, 'my_project');
         final rule = config.rules.first;
         final pattern = rule.disallowPatterns.first;
 
-        expect(pattern.pattern, equals(r'lib/$DIR/src/**'));
-        expect(pattern.originalPattern, equals(r'lib/$DIR/src/**'));
+        expect(pattern.pattern, equals(r'lib/$TARGET_DIR/src/**'));
+        expect(pattern.originalPattern, equals(r'lib/$TARGET_DIR/src/**'));
       });
     });
 

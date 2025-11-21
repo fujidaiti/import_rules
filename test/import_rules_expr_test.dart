@@ -147,7 +147,7 @@ void main() {
       reason: 'src/ directories are always private to their parent module',
       targetPatterns: _targets(['**']),
       disallowPatterns: _disallows(['**/src/**']),
-      excludeDisallowPatterns: _disallows([r'$DIR/**']),
+      excludeDisallowPatterns: _disallows([r'$TARGET_DIR/**']),
     );
 
     test('allows same module to import from its own src/', () {
@@ -263,7 +263,7 @@ void main() {
       targetPatterns: _targets(['lib/platform/**']),
       disallowPatterns: _disallows(['lib/platform/**']),
       excludeDisallowPatterns: _disallows([
-        r'$DIR/**',
+        r'$TARGET_DIR/**',
         'lib/platform/common/**',
       ]),
     );
@@ -453,7 +453,7 @@ void main() {
       reason: 'Files can only import from same or deeper directory levels',
       targetPatterns: _targets(['lib/**']),
       disallowPatterns: _disallows(['**']),
-      excludeDisallowPatterns: _disallows([r'$DIR/**']),
+      excludeDisallowPatterns: _disallows([r'$TARGET_DIR/**']),
     );
 
     test('allows downward imports (same directory, deeper level)', () {

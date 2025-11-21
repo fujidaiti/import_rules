@@ -6,7 +6,7 @@ A Dart analyzer plugin that enforces custom import rules in your projects. Contr
 
 - **Flexible rule definitions** using glob patterns
 - **Architecture enforcement** for layered, feature-based, and modular codebases
-- **$DIR variable** for directory-relative rules
+- **$TARGET_DIR variable** for directory-relative rules
 - **Multiple configuration locations** (dedicated config file or `analysis_options.yaml`)
 - **Clear error messages** with custom reason explanations
 - **Zero runtime overhead** - analysis happens at development time
@@ -157,9 +157,9 @@ disallow: package:http/**
 disallow: dart:io
 ```
 
-### The $DIR Variable
+### The $TARGET_DIR Variable
 
-`$DIR` is a special variable that represents the parent directory of the file being checked. It enables directory-relative rules.
+`$TARGET_DIR` is a special variable that represents the parent directory of the file being checked. It enables directory-relative rules.
 
 **Where to use it:**
 
@@ -169,7 +169,7 @@ disallow: dart:io
 
 **How it works:**
 
-When a file matches `target`, `$DIR` is set to that file's parent directory path.
+When a file matches `target`, `$TARGET_DIR` is set to that file's parent directory path.
 
 **Example 1: Files can only import from their own directory**
 
@@ -177,13 +177,13 @@ When a file matches `target`, `$DIR` is set to that file's parent directory path
 rules:
   - target: "**"
     disallow: "**/src/**"
-    exclude_disallow: "$DIR/**"
+    exclude_disallow: "$TARGET_DIR/**"
     reason: src/ files are implementation details, only importable within same directory
 ```
 
 For file `lib/features/auth/src/utils.dart`:
 
-- `$DIR` becomes `lib/features/auth/src`
+- `$TARGET_DIR` becomes `lib/features/auth/src`
 - Can import from `lib/features/auth/src/**` (same directory)
 - Cannot import from `lib/features/profile/src/**` (different src directory)
 
@@ -193,13 +193,13 @@ For file `lib/features/auth/src/utils.dart`:
 rules:
   - target: "**"
     disallow: "**/_*.dart"
-    exclude_disallow: "$DIR/_*.dart"
+    exclude_disallow: "$TARGET_DIR/_*.dart"
     reason: Files prefixed with underscore are private to their directory
 ```
 
 For file `lib/cache/cache.dart`:
 
-- `$DIR` becomes `lib/cache`
+- `$TARGET_DIR` becomes `lib/cache`
 - Can import `lib/cache/_internal.dart` (same directory)
 - Cannot import `lib/utils/_helpers.dart` (different directory)
 
@@ -209,7 +209,7 @@ When you import a file, the plugin checks each rule in order. For each rule:
 
 1. **Does the source file match `target`?** If no, skip this rule
 2. **Does the source file match `exclude_target`?** If yes, skip this rule
-3. **Extract `$DIR`** from the source file's parent directory
+3. **Extract `$TARGET_DIR`** from the source file's parent directory
 4. **Does the import match `disallow`?** If no, allow the import
 5. **Does the import match `exclude_disallow`?** If yes, allow the import
 6. **Otherwise:** Report a violation with the rule's `reason`
@@ -222,8 +222,8 @@ flowchart TD
     CheckTarget -->|No| NextRule[Next Rule]
     CheckTarget -->|Yes| CheckExcludeTarget{Does File A<br/>match exclude_target?}
     CheckExcludeTarget -->|Yes| NextRule
-    CheckExcludeTarget -->|No| ExtractDIR[DIR = Parent directory of File A]
-    ExtractDIR --> CheckDisallow{Does File B<br/>match disallow?}
+    CheckExcludeTarget -->|No| ExtractTARGET_DIR[TARGET_DIR = Parent directory of File A]
+    ExtractTARGET_DIR --> CheckDisallow{Does File B<br/>match disallow?}
     CheckDisallow -->|No| Allow[Import Allowed]
     CheckDisallow -->|Yes| CheckExcludeDisallow{Does File B<br/>match exclude_disallow?}
     CheckExcludeDisallow -->|Yes| Allow
@@ -316,7 +316,7 @@ rules:
     target: lib/features/**
     disallow: lib/features/**
     exclude_disallow:
-      - $DIR/**
+      - $TARGET_DIR/**
       - lib/features/core/**
     reason: Features should be isolated except for shared core module
 ```
@@ -343,7 +343,7 @@ rules:
   - name: Private implementation files
     target: "**"
     disallow: "**/_*.dart"
-    exclude_disallow: "$DIR/_*.dart"
+    exclude_disallow: "$TARGET_DIR/_*.dart"
     reason: Files prefixed with _ are private to their directory
 ```
 
@@ -380,7 +380,7 @@ rules:
   - name: Downward dependencies only
     target: "**"
     disallow: "**"
-    exclude_disallow: "$DIR/**"
+    exclude_disallow: "$TARGET_DIR/**"
     reason: Files can only import from same or deeper directory levels
 ```
 

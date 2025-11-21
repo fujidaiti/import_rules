@@ -48,9 +48,9 @@ class DisallowPattern {
 
   /// Checks if the given import URI matches this disallow pattern.
   ///
-  /// The [dirValue] parameter is used to substitute $DIR placeholders in the pattern.
+  /// The [dirValue] parameter is used to substitute $TARGET_DIR placeholders in the pattern.
   bool matches(String importUri, String dirValue) {
-    final substitutedPattern = pattern.replaceAll(r'$DIR', dirValue);
+    final substitutedPattern = pattern.replaceAll(r'$TARGET_DIR', dirValue);
     final glob = Glob(substitutedPattern);
     return glob.matches(importUri);
   }
@@ -95,9 +95,9 @@ class ImportRule {
   /// The evaluation follows this logic:
   /// 1. If targetFile doesn't match any target pattern, the rule doesn't apply (return true)
   /// 2. If targetFile matches any excludeTarget pattern, the rule doesn't apply (return true)
-  /// 3. Extract $DIR from targetFile's parent directory
+  /// 3. Extract $TARGET_DIR from targetFile's parent directory
   /// 4. If importeeFile doesn't match any disallow pattern, the import is allowed (return true)
-  /// 5. If importeeFile matches any excludeDisallow pattern (with $DIR substituted), the import is allowed (return true)
+  /// 5. If importeeFile matches any excludeDisallow pattern (with $TARGET_DIR substituted), the import is allowed (return true)
   /// 6. Otherwise, the import is denied (return false)
   bool canImport(String targetFile, Import importee) {
     // Step 1: Check if targetFile matches any target pattern
@@ -110,7 +110,7 @@ class ImportRule {
       return true; // Rule doesn't apply
     }
 
-    // Step 3: Extract $DIR from targetFile's parent directory
+    // Step 3: Extract $TARGET_DIR from targetFile's parent directory
     final dir = _extractDir(targetFile);
 
     // Step 4: Check if importeeFile matches any disallow pattern
@@ -120,7 +120,7 @@ class ImportRule {
       return true; // Import is allowed (not in disallow list)
     }
 
-    // Step 5: Check if importeeFile matches any excludeDisallow pattern (with $DIR substituted)
+    // Step 5: Check if importeeFile matches any excludeDisallow pattern (with $TARGET_DIR substituted)
     if (excludeDisallowPatterns.any(
       (disallow) => disallow.matches(importee.uri, dir),
     )) {

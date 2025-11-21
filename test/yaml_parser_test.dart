@@ -159,13 +159,13 @@ rules:
       );
     });
 
-    test('parses rule with \$DIR placeholder', () {
+    test('parses rule with \$TARGET_DIR placeholder', () {
       final yaml = r'''
 rules:
-  - reason: DIR test
+  - reason: TARGET_DIR test
     target: "**"
     disallow: "**/src/**"
-    exclude_disallow: "$DIR/**"
+    exclude_disallow: "$TARGET_DIR/**"
 ''';
 
       final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
@@ -173,7 +173,7 @@ rules:
       expect(rules, hasLength(1));
       expect(
         rules[0].excludeDisallowPatterns.map((d) => d.pattern).toList(),
-        equals([r'$DIR/**']),
+        equals([r'$TARGET_DIR/**']),
       );
     });
   });
@@ -412,57 +412,14 @@ rules:
     });
   });
 
-  group('\$DIR placeholder validation', () {
-    test('throws when \$DIR is used in target field (single string)', () {
-      final yaml = r'''
-rules:
-  - reason: Invalid rule
-    target: "$DIR/**"
-    disallow: test/**
-''';
-
-      expect(
-        () => ConfigParser().parseRulesFromYaml(yaml),
-        throwsA(
-          isA<FormatException>().having(
-            (e) => e.message,
-            'message',
-            contains(r'$DIR placeholder cannot be used in "target" field'),
-          ),
-        ),
-      );
-    });
-
-    test('throws when \$DIR is used in target field (array)', () {
-      final yaml = r'''
-rules:
-  - reason: Invalid rule
-    target:
-      - lib/**
-      - "$DIR/src/**"
-    disallow: test/**
-''';
-
-      expect(
-        () => ConfigParser().parseRulesFromYaml(yaml),
-        throwsA(
-          isA<FormatException>().having(
-            (e) => e.message,
-            'message',
-            contains(r'$DIR placeholder cannot be used in "target" field'),
-          ),
-        ),
-      );
-    });
-
+  group('\$TARGET_DIR placeholder validation', () {
     test(
-      'throws when \$DIR is used in exclude_target field (single string)',
+      'throws when \$TARGET_DIR is used in target field (single string)',
       () {
         final yaml = r'''
 rules:
   - reason: Invalid rule
-    target: lib/**
-    exclude_target: "$DIR/**"
+    target: "$TARGET_DIR/**"
     disallow: test/**
 ''';
 
@@ -473,7 +430,7 @@ rules:
               (e) => e.message,
               'message',
               contains(
-                r'$DIR placeholder cannot be used in "exclude_target" field',
+                r'$TARGET_DIR placeholder cannot be used in "target" field',
               ),
             ),
           ),
@@ -481,14 +438,13 @@ rules:
       },
     );
 
-    test('throws when \$DIR is used in exclude_target field (array)', () {
+    test('throws when \$TARGET_DIR is used in target field (array)', () {
       final yaml = r'''
 rules:
   - reason: Invalid rule
-    target: lib/**
-    exclude_target:
-      - lib/core/**
-      - "$DIR/shared/**"
+    target:
+      - lib/**
+      - "$TARGET_DIR/src/**"
     disallow: test/**
 ''';
 
@@ -499,19 +455,70 @@ rules:
             (e) => e.message,
             'message',
             contains(
-              r'$DIR placeholder cannot be used in "exclude_target" field',
+              r'$TARGET_DIR placeholder cannot be used in "target" field',
             ),
           ),
         ),
       );
     });
 
-    test('allows \$DIR in disallow field', () {
+    test(
+      'throws when \$TARGET_DIR is used in exclude_target field (single string)',
+      () {
+        final yaml = r'''
+rules:
+  - reason: Invalid rule
+    target: lib/**
+    exclude_target: "$TARGET_DIR/**"
+    disallow: test/**
+''';
+
+        expect(
+          () => ConfigParser().parseRulesFromYaml(yaml),
+          throwsA(
+            isA<FormatException>().having(
+              (e) => e.message,
+              'message',
+              contains(
+                r'$TARGET_DIR placeholder cannot be used in "exclude_target" field',
+              ),
+            ),
+          ),
+        );
+      },
+    );
+
+    test('throws when \$TARGET_DIR is used in exclude_target field (array)', () {
+      final yaml = r'''
+rules:
+  - reason: Invalid rule
+    target: lib/**
+    exclude_target:
+      - lib/core/**
+      - "$TARGET_DIR/shared/**"
+    disallow: test/**
+''';
+
+      expect(
+        () => ConfigParser().parseRulesFromYaml(yaml),
+        throwsA(
+          isA<FormatException>().having(
+            (e) => e.message,
+            'message',
+            contains(
+              r'$TARGET_DIR placeholder cannot be used in "exclude_target" field',
+            ),
+          ),
+        ),
+      );
+    });
+
+    test('allows \$TARGET_DIR in disallow field', () {
       final yaml = r'''
 rules:
   - reason: Valid rule
     target: lib/**
-    disallow: "$DIR/**"
+    disallow: "$TARGET_DIR/**"
 ''';
 
       // Should not throw
@@ -519,17 +526,17 @@ rules:
       expect(rules, hasLength(1));
       expect(
         rules[0].disallowPatterns.map((d) => d.pattern).toList(),
-        equals([r'$DIR/**']),
+        equals([r'$TARGET_DIR/**']),
       );
     });
 
-    test('allows \$DIR in exclude_disallow field', () {
+    test('allows \$TARGET_DIR in exclude_disallow field', () {
       final yaml = r'''
 rules:
   - reason: Valid rule
     target: lib/**
     disallow: "**/src/**"
-    exclude_disallow: "$DIR/**"
+    exclude_disallow: "$TARGET_DIR/**"
 ''';
 
       // Should not throw
@@ -537,19 +544,19 @@ rules:
       expect(rules, hasLength(1));
       expect(
         rules[0].excludeDisallowPatterns.map((d) => d.pattern).toList(),
-        equals([r'$DIR/**']),
+        equals([r'$TARGET_DIR/**']),
       );
     });
   });
 
-  group('\$DIR with multiple target patterns', () {
-    test('\$DIR works correctly with single target pattern', () {
+  group('\$TARGET_DIR with multiple target patterns', () {
+    test('\$TARGET_DIR works correctly with single target pattern', () {
       final yaml = r'''
 rules:
   - reason: Test single target
     target: lib/features/auth/**
     disallow: "**/src/**"
-    exclude_disallow: "$DIR/**"
+    exclude_disallow: "$TARGET_DIR/**"
 ''';
 
       final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
@@ -574,7 +581,7 @@ rules:
       );
     });
 
-    test('\$DIR works correctly with multiple target patterns', () {
+    test('\$TARGET_DIR works correctly with multiple target patterns', () {
       final yaml = r'''
 rules:
   - reason: Test multiple targets
@@ -583,7 +590,7 @@ rules:
       - lib/features/profile/**
       - lib/features/settings/**
     disallow: "**/src/**"
-    exclude_disallow: "$DIR/**"
+    exclude_disallow: "$TARGET_DIR/**"
 ''';
 
       final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
@@ -635,52 +642,55 @@ rules:
       );
     });
 
-    test('\$DIR is evaluated per matched file, not per target pattern', () {
-      final yaml = r'''
+    test(
+      '\$TARGET_DIR is evaluated per matched file, not per target pattern',
+      () {
+        final yaml = r'''
 rules:
-  - reason: DIR is file-specific
+  - reason: TARGET_DIR is file-specific
     target:
       - lib/features/auth/**
       - lib/core/**
     disallow: "**"
-    exclude_disallow: "$DIR/**"
+    exclude_disallow: "$TARGET_DIR/**"
 ''';
 
-      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
-      expect(rules, hasLength(1));
+        final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+        expect(rules, hasLength(1));
 
-      // Auth file has DIR=lib/features/auth
-      expect(
-        rules[0].canImport(
-          'lib/features/auth/login.dart',
-          Import(uri: 'lib/features/auth/models/user.dart'),
-        ),
-        isTrue,
-      );
-      expect(
-        rules[0].canImport(
-          'lib/features/auth/login.dart',
-          Import(uri: 'lib/core/entity.dart'),
-        ),
-        isFalse,
-      );
+        // Auth file has TARGET_DIR=lib/features/auth
+        expect(
+          rules[0].canImport(
+            'lib/features/auth/login.dart',
+            Import(uri: 'lib/features/auth/models/user.dart'),
+          ),
+          isTrue,
+        );
+        expect(
+          rules[0].canImport(
+            'lib/features/auth/login.dart',
+            Import(uri: 'lib/core/entity.dart'),
+          ),
+          isFalse,
+        );
 
-      // Core file has DIR=lib/core
-      expect(
-        rules[0].canImport(
-          'lib/core/entity.dart',
-          Import(uri: 'lib/core/value.dart'),
-        ),
-        isTrue,
-      );
-      expect(
-        rules[0].canImport(
-          'lib/core/entity.dart',
-          Import(uri: 'lib/features/auth/login.dart'),
-        ),
-        isFalse,
-      );
-    });
+        // Core file has TARGET_DIR=lib/core
+        expect(
+          rules[0].canImport(
+            'lib/core/entity.dart',
+            Import(uri: 'lib/core/value.dart'),
+          ),
+          isTrue,
+        );
+        expect(
+          rules[0].canImport(
+            'lib/core/entity.dart',
+            Import(uri: 'lib/features/auth/login.dart'),
+          ),
+          isFalse,
+        );
+      },
+    );
   });
 
   group('ConfigParser().parseRulesFromYaml - analysis_options.yaml format', () {
@@ -756,14 +766,14 @@ import_rules:
       );
     });
 
-    test('parses rules with \$DIR under import_rules section', () {
+    test('parses rules with \$TARGET_DIR under import_rules section', () {
       final yaml = r'''
 import_rules:
   rules:
-    - reason: DIR test
+    - reason: TARGET_DIR test
       target: "**"
       disallow: "**/src/**"
-      exclude_disallow: "$DIR/**"
+      exclude_disallow: "$TARGET_DIR/**"
 ''';
 
       final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
@@ -771,7 +781,7 @@ import_rules:
       expect(rules, hasLength(1));
       expect(
         rules[0].excludeDisallowPatterns.map((d) => d.pattern).toList(),
-        equals([r'$DIR/**']),
+        equals([r'$TARGET_DIR/**']),
       );
     });
 
@@ -871,7 +881,7 @@ rules:
     reason: src/ directories are always private to their parent module
     target: "**"
     disallow: "**/src/**"
-    exclude_disallow: "$DIR/**"
+    exclude_disallow: "$TARGET_DIR/**"
 ''';
 
       final rules = ConfigParser().parseRulesFromYaml(yaml).rules;

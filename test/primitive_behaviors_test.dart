@@ -315,16 +315,16 @@ void main() {
     });
   });
 
-  group('\$DIR substitution', () {
-    test('substitutes DIR in excludeDisallow patterns', () {
+  group('\$TARGET_DIR substitution', () {
+    test('substitutes TARGET_DIR in excludeDisallow patterns', () {
       final rule = ImportRule(
         reason: 'test',
         targetPatterns: _targets(['**']),
         disallowPatterns: _disallows(['**']),
-        excludeDisallowPatterns: _disallows([r'$DIR/**']),
+        excludeDisallowPatterns: _disallows([r'$TARGET_DIR/**']),
       );
 
-      // lib/features/auth.dart has DIR=lib/features
+      // lib/features/auth.dart has TARGET_DIR=lib/features
       // Can import lib/features/user.dart (matches lib/features/**)
       expect(
         rule.canImport(
@@ -344,15 +344,15 @@ void main() {
       );
     });
 
-    test('DIR is extracted from parent directory of target file', () {
+    test('TARGET_DIR is extracted from parent directory of target file', () {
       final rule = ImportRule(
         reason: 'test',
         targetPatterns: _targets(['lib/features/auth/models/user.dart']),
         disallowPatterns: _disallows(['**']),
-        excludeDisallowPatterns: _disallows([r'$DIR/**']),
+        excludeDisallowPatterns: _disallows([r'$TARGET_DIR/**']),
       );
 
-      // DIR should be lib/features/auth/models
+      // TARGET_DIR should be lib/features/auth/models
       expect(
         rule.canImport(
           'lib/features/auth/models/user.dart',
@@ -369,12 +369,15 @@ void main() {
       );
     });
 
-    test('DIR substitution works with multiple occurrences', () {
+    test('TARGET_DIR substitution works with multiple occurrences', () {
       final rule = ImportRule(
         reason: 'test',
         targetPatterns: _targets(['**']),
         disallowPatterns: _disallows(['**']),
-        excludeDisallowPatterns: _disallows([r'$DIR/**', r'$DIR.dart']),
+        excludeDisallowPatterns: _disallows([
+          r'$TARGET_DIR/**',
+          r'$TARGET_DIR.dart',
+        ]),
       );
 
       expect(
@@ -393,15 +396,15 @@ void main() {
       );
     });
 
-    test('DIR works with package imports', () {
+    test('TARGET_DIR works with package imports', () {
       final rule = ImportRule(
         reason: 'test',
         targetPatterns: _targets(['package:my_app/**']),
         disallowPatterns: _disallows(['**']),
-        excludeDisallowPatterns: _disallows([r'$DIR/**']),
+        excludeDisallowPatterns: _disallows([r'$TARGET_DIR/**']),
       );
 
-      // package:my_app/features/auth.dart has DIR=package:my_app/features
+      // package:my_app/features/auth.dart has TARGET_DIR=package:my_app/features
       expect(
         rule.canImport(
           'package:my_app/features/auth.dart',
@@ -637,22 +640,22 @@ void main() {
     });
   });
 
-  group('DIR extraction for different file types', () {
+  group('TARGET_DIR extraction for different file types', () {
     test('extracts directory from nested file path', () {
       final rule = ImportRule(
         reason: 'test',
         targetPatterns: _targets(['lib/features/auth/src/utils.dart']),
         disallowPatterns: _disallows(['**/src/**']),
-        excludeDisallowPatterns: _disallows([r'$DIR/**']),
+        excludeDisallowPatterns: _disallows([r'$TARGET_DIR/**']),
       );
 
-      // We can test this indirectly by checking if $DIR substitution works
+      // We can test this indirectly by checking if $TARGET_DIR substitution works
       expect(
         rule.canImport(
           'lib/features/auth/src/utils.dart',
           Import(uri: 'lib/features/auth/src/cache.dart'),
         ),
-        isTrue, // Should match $DIR/** which is lib/features/auth/src/**
+        isTrue, // Should match $TARGET_DIR/** which is lib/features/auth/src/**
       );
     });
 
@@ -661,10 +664,10 @@ void main() {
         reason: 'test',
         targetPatterns: _targets(['package:flutter/widgets/container.dart']),
         disallowPatterns: _disallows(['**']),
-        excludeDisallowPatterns: _disallows([r'$DIR/**']),
+        excludeDisallowPatterns: _disallows([r'$TARGET_DIR/**']),
       );
 
-      // $DIR should be package:flutter/widgets
+      // $TARGET_DIR should be package:flutter/widgets
       expect(
         rule.canImport(
           'package:flutter/widgets/container.dart',

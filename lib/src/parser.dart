@@ -208,11 +208,11 @@ class ConfigParser {
     }
     final target = _normalizeToList(targetRaw, 'target');
 
-    // Validate that $DIR is not used in target
+    // Validate that $TARGET_DIR is not used in target
     for (var i = 0; i < target.length; i++) {
-      if (target[i].contains(r'$DIR')) {
+      if (target[i].contains(r'$TARGET_DIR')) {
         throw FormatException(
-          r'$DIR placeholder cannot be used in "target" field',
+          r'$TARGET_DIR placeholder cannot be used in "target" field',
         );
       }
     }
@@ -232,11 +232,11 @@ class ConfigParser {
         ? _normalizeToList(excludeTargetRaw, 'exclude_target')
         : <String>[];
 
-    // Validate that $DIR is not used in exclude_target
+    // Validate that $TARGET_DIR is not used in exclude_target
     for (var i = 0; i < excludeTarget.length; i++) {
-      if (excludeTarget[i].contains(r'$DIR')) {
+      if (excludeTarget[i].contains(r'$TARGET_DIR')) {
         throw FormatException(
-          r'$DIR placeholder cannot be used in "exclude_target" field',
+          r'$TARGET_DIR placeholder cannot be used in "exclude_target" field',
         );
       }
     }

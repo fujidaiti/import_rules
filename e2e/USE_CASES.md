@@ -49,7 +49,7 @@ lib/
 rules:
   - target: "**"
     disallow: "**"
-    exclude_disallow: "$DIR/**"
+    exclude_disallow: "$TARGET_DIR/**"
     reason: Files can only import from same or deeper directory levels.
 ```
 
@@ -107,7 +107,7 @@ rules:
   - target: lib/features/**
     disallow: lib/features/**
     exclude_disallow:
-      - $DIR/** # Allow internal dependencies within the same feature.
+      - $TARGET_DIR/** # Allow internal dependencies within the same feature.
       - lib/features/core/**
     reason: Features should be isolated from each other except the core module.
 ```
@@ -232,6 +232,6 @@ rules:
   - target: lib/**
     disallow: _*.dart
     # Allow to depend on implementation files within the same directory.
-    exclude_disallow: $DIR/_*.dart 
+    exclude_disallow: $TARGET_DIR/_*.dart 
     reason: Implementation files should not be imported directly.
 ```

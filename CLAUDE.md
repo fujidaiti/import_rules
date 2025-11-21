@@ -46,7 +46,7 @@ Plugin logs are written to `.dart_tool/import_rules/instrumentation_*.log` with 
 
 - `ImportRule`: Core rule evaluation logic with the `canImport()` method
 - `TargetPattern`: Glob patterns for matching source files
-- `DisallowPattern`: Glob patterns for matching disallowed imports, supports `$DIR` variable
+- `DisallowPattern`: Glob patterns for matching disallowed imports, supports `$TARGET_DIR` variable
 - Rule evaluation follows a specific order: target → exclude_target → disallow → exclude_disallow
 
 **Configuration Parser** (`lib/src/parser.dart`):
@@ -78,9 +78,9 @@ The plugin uses a normalization strategy to make rules format-agnostic:
 
 This allows a single rule like `disallow: lib/main.dart` to match both `import 'lib/main.dart'` and `import 'package:my_pkg/main.dart'`.
 
-### The $DIR Variable
+### The $TARGET_DIR Variable
 
-`$DIR` is a predefined variable representing the parent directory of the file matched by `target`. It's extracted using `_extractDir()` in `lib/src/import_rule.dart` and substituted into `disallow` and `exclude_disallow` patterns at evaluation time. This enables rules like "files can only import from their own directory" without hardcoding paths.
+`$TARGET_DIR` is a predefined variable representing the parent directory of the file matched by `target`. It's extracted using `_extractDir()` in `lib/src/import_rule.dart` and substituted into `disallow` and `exclude_disallow` patterns at evaluation time. This enables rules like "files can only import from their own directory" without hardcoding paths.
 
 ## Configuration Files
 
