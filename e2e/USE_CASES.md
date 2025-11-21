@@ -265,7 +265,8 @@ rules:
     disallow: dart:developer
     exclude_disallow: { path: dart:developer, hide: logger }
     reason: >
-      Always use lib/common/logger.dart instead of the built-in log function. If you need to import dart:developer, try hiding the log function from the import.
+      Always use lib/common/logger.dart instead of the built-in log function. 
+      If you need to import dart:developer, try hiding the log function from the import.
 ```
 
 ```dart
