@@ -182,4 +182,3 @@ rules:
     exclude_disallow: $DIR/_*.dart 
     reason: Implementation files should not be imported directly.
 ```
-

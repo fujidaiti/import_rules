@@ -139,28 +139,32 @@ import 'dart:io';
               line: 7,
               col: 1,
               message:
-                  'Import rule violation. The domain layer should not depend on other layers and external packages with a few exceptions.',
+                  'Import rule violation. The domain layer should not depend on '
+                  'other layers and external packages with a few exceptions.',
               code: 'import_rule_violation',
             ),
             LintDiagnostic(
               line: 8,
               col: 1,
               message:
-                  'Import rule violation. The domain layer should not depend on other layers and external packages with a few exceptions.',
+                  'Import rule violation. The domain layer should not depend on '
+                  'other layers and external packages with a few exceptions.',
               code: 'import_rule_violation',
             ),
             LintDiagnostic(
               line: 9,
               col: 1,
               message:
-                  'Import rule violation. The domain layer should not depend on other layers and external packages with a few exceptions.',
+                  'Import rule violation. The domain layer should not depend on '
+                  'other layers and external packages with a few exceptions.',
               code: 'import_rule_violation',
             ),
             LintDiagnostic(
               line: 10,
               col: 1,
               message:
-                  'Import rule violation. The domain layer should not depend on other layers and external packages with a few exceptions.',
+                  'Import rule violation. The domain layer should not depend on '
+                  'other layers and external packages with a few exceptions.',
               code: 'import_rule_violation',
             ),
           ],
@@ -324,9 +328,9 @@ import '../presentation/view.dart';
 ''';
 
       const viewDart = '''
-import '../application/use_case.dart';
-import '../domain/entity.dart';
-import '../persistence/repository.dart';
+import 'package:test_package/application/use_case.dart';
+import 'package:test_package/domain/entity.dart';
+import 'package:test_package/persistence/repository.dart';
 ''';
 
       packageUnderTest.root
@@ -345,13 +349,37 @@ import '../persistence/repository.dart';
 
       final analyzerOutput = packageUnderTest.analyze();
 
-      // Domain layer should have no violations (only imports from itself)
       expect(
         analyzerOutput,
-        isNot(containsAnyLintErrors(file: 'lib/domain/entity.dart')),
+        containsLintErrors(
+          file: 'lib/domain/domain.dart',
+          exclusive: true,
+          diagnostics: [
+            LintDiagnostic(
+              line: 2,
+              col: 1,
+              message:
+                  'Import rule violation. Domain layer should not depend on other layers.',
+              code: 'import_rule_violation',
+            ),
+            LintDiagnostic(
+              line: 3,
+              col: 1,
+              message:
+                  'Import rule violation. Domain layer should not depend on other layers.',
+              code: 'import_rule_violation',
+            ),
+            LintDiagnostic(
+              line: 4,
+              col: 1,
+              message:
+                  'Import rule violation. Domain layer should not depend on other layers.',
+              code: 'import_rule_violation',
+            ),
+          ],
+        ),
       );
 
-      // Persistence layer violates: imports from application
       expect(
         analyzerOutput,
         containsLintErrors(
@@ -359,17 +387,17 @@ import '../persistence/repository.dart';
           file: 'lib/persistence/repository.dart',
           diagnostics: [
             LintDiagnostic(
-              line: 2,
+              line: 3,
               col: 1,
               message:
-                  'Import rule violation. Persistence layer can not depend on application and presentation layers.',
+                  'Import rule violation. Persistence layer can not '
+                  'depend on application and presentation layers.',
               code: 'import_rule_violation',
             ),
           ],
         ),
       );
 
-      // Application layer violates: imports from presentation
       expect(
         analyzerOutput,
         containsLintErrors(
@@ -387,7 +415,6 @@ import '../persistence/repository.dart';
         ),
       );
 
-      // Presentation layer violates: imports from domain and persistence
       expect(
         analyzerOutput,
         containsLintErrors(
@@ -424,19 +451,20 @@ rules:
     reason: Features should be isolated from each other except the core module.
 ''';
 
-      const coreDart = '''
-import 'utils.dart';
+      const modelsDart = '''
+import '../auth/auth_service.dart';
+import 'src/utils.dart';
 ''';
 
-      const authDart = '''
-import 'auth_service.dart';
-import '../core/utils.dart';
-import '../profile/profile_service.dart';
+      const authServiceDart = '''
+import 'package:test_package/features/core/models.dart';
+import 'package:test_package/features/core/src/utils.dart';
+import 'package:test_package/features/profile/profile_service.dart';
 ''';
 
       const profileDart = '''
-import 'profile_service.dart';
-import '../core/utils.dart';
+import '../core/models.dart';
+import '../core/src/utils.dart';
 import '../auth/auth_service.dart';
 ''';
 
@@ -445,8 +473,11 @@ import '../auth/auth_service.dart';
         ..createFiles({
           'lib': {
             'features': {
-              'core': {'utils.dart': coreDart},
-              'auth': {'auth_service.dart': authDart},
+              'core': {
+                'models.dart': modelsDart,
+                'src': {'utils.dart': ''},
+              },
+              'auth': {'auth_service.dart': authServiceDart},
               'profile': {'profile_service.dart': profileDart},
             },
           },
@@ -454,13 +485,24 @@ import '../auth/auth_service.dart';
 
       final analyzerOutput = packageUnderTest.analyze();
 
-      // Core module should have no violations
       expect(
         analyzerOutput,
-        isNot(containsAnyLintErrors(file: 'lib/features/core/utils.dart')),
+        containsLintErrors(
+          exclusive: true,
+          file: 'lib/features/core/models.dart',
+          diagnostics: [
+            LintDiagnostic(
+              line: 1,
+              col: 1,
+              message:
+                  'Import rule violation. Features should be isolated '
+                  'from each other except the core module.',
+              code: 'import_rule_violation',
+            ),
+          ],
+        ),
       );
 
-      // Auth module violates: imports from profile
       expect(
         analyzerOutput,
         containsLintErrors(
@@ -471,14 +513,14 @@ import '../auth/auth_service.dart';
               line: 3,
               col: 1,
               message:
-                  'Import rule violation. Features should be isolated from each other except the core module.',
+                  'Import rule violation. Features should be isolated '
+                  'from each other except the core module.',
               code: 'import_rule_violation',
             ),
           ],
         ),
       );
 
-      // Profile module violates: imports from auth
       expect(
         analyzerOutput,
         containsLintErrors(
@@ -489,7 +531,8 @@ import '../auth/auth_service.dart';
               line: 3,
               col: 1,
               message:
-                  'Import rule violation. Features should be isolated from each other except the core module.',
+                  'Import rule violation. Features should be isolated '
+                  'from each other except the core module.',
               code: 'import_rule_violation',
             ),
           ],
@@ -509,17 +552,17 @@ rules:
       const httpWrapperDart = '''
 import 'package:http/http.dart' as http;
 
-class HttpWrapper {
-  Future<String> get(String url) async {
-    final response = await http.get(Uri.parse(url));
-    return response.body;
-  }
+export 'package:http/http.dart' show Response;
+
+Future<http.Response> get(Uri url, {Map<String, String>? headers}) {
+  // Perform some logging or other operations here.
+  // Then, forward the request to the actual http package.
+  return http.get(url, headers: headers);
 }
 ''';
 
       const userApiDart = '''
-import '../core/http_wrapper.dart';
-import 'package:http/http.dart';
+import 'package:test_package/core/http_wrapper.dart' as http;
 ''';
 
       const productApiDart = '''
@@ -540,31 +583,16 @@ import 'package:http/http.dart' as http;
 
       final analyzerOutput = packageUnderTest.analyze();
 
-      // http_wrapper.dart is excluded, so no violations
       expect(
         analyzerOutput,
         isNot(containsAnyLintErrors(file: 'lib/core/http_wrapper.dart')),
       );
 
-      // user_api.dart violates: directly imports http package
       expect(
         analyzerOutput,
-        containsLintErrors(
-          exclusive: true,
-          file: 'lib/api/user_api.dart',
-          diagnostics: [
-            LintDiagnostic(
-              line: 2,
-              col: 1,
-              message:
-                  'Import rule violation. Use lib/core/http_wrapper.dart instead of directly importing the "http" package.',
-              code: 'import_rule_violation',
-            ),
-          ],
-        ),
+        isNot(containsAnyLintErrors(file: 'lib/api/user_api.dart')),
       );
 
-      // product_api.dart violates: directly imports http package
       expect(
         analyzerOutput,
         containsLintErrors(
@@ -575,7 +603,8 @@ import 'package:http/http.dart' as http;
               line: 1,
               col: 1,
               message:
-                  'Import rule violation. Use lib/core/http_wrapper.dart instead of directly importing the "http" package.',
+                  'Import rule violation. Use lib/core/http_wrapper.dart '
+                  'instead of directly importing the "http" package.',
               code: 'import_rule_violation',
             ),
           ],
@@ -584,7 +613,7 @@ import 'package:http/http.dart' as http;
     });
 
     test('Legacy code deprecation', () {
-      const importRulesYaml = r'''
+      const importRulesYaml = '''
 rules:
   - target: lib/features/**
     exclude_target:
@@ -595,25 +624,16 @@ rules:
 ''';
 
       const legacyAuthDart = '''
-class LegacyAuth {}
-''';
-
-      const newAuthDart = '''
-import '../legacy/auth/legacy_auth.dart';
-
-class NewAuth {}
+import 'token_utils.dart';
 ''';
 
       const profileDart = '''
-import '../legacy/auth/legacy_auth.dart';
-
-class Profile {}
+import 'package:test_package/features/legacy/auth/auth.dart';
 ''';
 
       const feedDart = '''
-import '../legacy/auth/legacy_auth.dart';
-
-class Feed {}
+import 'package:test_package/features/legacy/auth/auth.dart';
+import 'package:test_package/features/auth/auth.dart';
 ''';
 
       packageUnderTest.root
@@ -622,9 +642,9 @@ class Feed {}
           'lib': {
             'features': {
               'legacy': {
-                'auth': {'legacy_auth.dart': legacyAuthDart},
+                'auth': {'auth.dart': legacyAuthDart, 'token_utils.dart': ''},
               },
-              'auth': {'auth.dart': newAuthDart},
+              'auth': {'auth.dart': ''},
               'profile': {'profile.dart': profileDart},
               'feed': {'feed.dart': feedDart},
             },
@@ -633,7 +653,6 @@ class Feed {}
 
       final analyzerOutput = packageUnderTest.analyze();
 
-      // Legacy code itself has no violations (excluded from target)
       expect(
         analyzerOutput,
         isNot(
@@ -641,33 +660,16 @@ class Feed {}
             file: 'lib/features/legacy/auth/legacy_auth.dart',
           ),
         ),
+        reason: 'Legacy code can depend on other legacy code.',
       );
 
-      // Profile is allowed to use legacy code (excluded from target)
       expect(
         analyzerOutput,
         isNot(containsAnyLintErrors(file: 'lib/features/profile/profile.dart')),
+        reason:
+            'Profile module is exceptionally allowed to depend on legacy code.',
       );
 
-      // New auth module violates: imports from legacy
-      expect(
-        analyzerOutput,
-        containsLintErrors(
-          exclusive: true,
-          file: 'lib/features/auth/auth.dart',
-          diagnostics: [
-            LintDiagnostic(
-              line: 1,
-              col: 1,
-              message:
-                  'Import rule violation. Newly added features should not depend on legacy code.',
-              code: 'import_rule_violation',
-            ),
-          ],
-        ),
-      );
-
-      // Feed module violates: imports from legacy
       expect(
         analyzerOutput,
         containsLintErrors(
@@ -683,11 +685,12 @@ class Feed {}
             ),
           ],
         ),
+        reason: 'Feed module should not depend on legacy code.',
       );
     });
 
     test('Forbid IO operations in unit testing', () {
-      const importRulesYaml = r'''
+      const importRulesYaml = '''
 rules:
   - target: test/unit/**
     disallow: dart:io
@@ -696,18 +699,10 @@ rules:
 
       const mainDart = '''
 import 'dart:io';
-
-void main() {
-  print(Platform.operatingSystem);
-}
 ''';
 
       const domainTestDart = '''
 import 'dart:io';
-
-void main() {
-  print(Platform.operatingSystem);
-}
 ''';
 
       packageUnderTest.root
@@ -721,13 +716,11 @@ void main() {
 
       final analyzerOutput = packageUnderTest.analyze();
 
-      // lib/main.dart is not in test/unit/**, so no violations
       expect(
         analyzerOutput,
         isNot(containsAnyLintErrors(file: 'lib/main.dart')),
       );
 
-      // test/unit/domain_test.dart violates: imports dart:io
       expect(
         analyzerOutput,
         containsLintErrors(
@@ -747,7 +740,7 @@ void main() {
     });
 
     test('Prefer aggregate file imports', () {
-      const importRulesYaml = r'''
+      const importRulesYaml = '''
 rules:
   - target: lib/**
     exclude_target: lib/domain/**
@@ -761,24 +754,20 @@ export 'src/entity.dart';
 export 'value.dart' show Value;
 ''';
 
-      const entityDart = '''
-class Entity {}
-''';
-
       const valueDart = '''
 class Value {}
-class InternalValue {}
 ''';
 
       const mainDart = '''
 import 'domain/domain.dart';
-import 'application/application.dart';
+import 'domain/value.dart';
+import 'domain/src/entity.dart';
 ''';
 
       const applicationDart = '''
-import '../domain/domain.dart';
-import '../domain/src/entity.dart';
-import '../domain/value.dart';
+import 'package:test_package/domain/domain.dart';
+import 'package:test_package/domain/value.dart';
+import 'package:test_package/domain/src/entity.dart';
 ''';
 
       packageUnderTest.root
@@ -786,30 +775,49 @@ import '../domain/value.dart';
         ..createFiles({
           'lib': {
             'main.dart': mainDart,
+            'application': {'application.dart': applicationDart},
             'domain': {
               'domain.dart': domainDart,
               'value.dart': valueDart,
-              'src': {'entity.dart': entityDart},
+              'src': {'entity.dart': ''},
             },
-            'application': {'application.dart': applicationDart},
           },
         });
 
       final analyzerOutput = packageUnderTest.analyze();
 
-      // Domain files themselves can import each other (excluded from target)
       expect(
         analyzerOutput,
         isNot(containsAnyLintErrors(file: 'lib/domain/domain.dart')),
+        reason: 'Domain files themselves can import each other.',
       );
 
-      // main.dart only imports domain.dart, so no violations
       expect(
         analyzerOutput,
-        isNot(containsAnyLintErrors(file: 'lib/main.dart')),
+        containsLintErrors(
+          file: 'lib/main.dart',
+          exclusive: true,
+          diagnostics: [
+            LintDiagnostic(
+              line: 2,
+              col: 1,
+              message:
+                  'Import rule violation. Import "domain/domain.dart" instead of '
+                  'directly importing "domain/**/*.dart".',
+              code: 'import_rule_violation',
+            ),
+            LintDiagnostic(
+              line: 3,
+              col: 1,
+              message:
+                  'Import rule violation. Import "domain/domain.dart" instead of '
+                  'directly importing "domain/**/*.dart".',
+              code: 'import_rule_violation',
+            ),
+          ],
+        ),
       );
 
-      // application.dart violates: imports individual domain files
       expect(
         analyzerOutput,
         containsLintErrors(
@@ -820,14 +828,16 @@ import '../domain/value.dart';
               line: 2,
               col: 1,
               message:
-                  'Import rule violation. Import "domain/domain.dart" instead of directly importing "domain/**/*.dart".',
+                  'Import rule violation. Import "domain/domain.dart" '
+                  'instead of directly importing "domain/**/*.dart".',
               code: 'import_rule_violation',
             ),
             LintDiagnostic(
               line: 3,
               col: 1,
               message:
-                  'Import rule violation. Import "domain/domain.dart" instead of directly importing "domain/**/*.dart".',
+                  'Import rule violation. Import "domain/domain.dart" '
+                  'instead of directly importing "domain/**/*.dart".',
               code: 'import_rule_violation',
             ),
           ],
@@ -853,11 +863,14 @@ import '_cache_hash_algorithm.dart';
       const utilsDart = '''
 import '../_cache_file_loader.dart';
 import '../_cache_table.dart';
+import '../_cache_hash_algorithm.dart';
 ''';
 
       const mainDart = '''
 import 'cache/cache.dart';
 import 'cache/_cache_file_loader.dart';
+import 'cache/_cache_table.dart';
+import 'cache/_cache_hash_algorithm.dart';
 ''';
 
       packageUnderTest.root
@@ -877,13 +890,11 @@ import 'cache/_cache_file_loader.dart';
 
       final analyzerOutput = packageUnderTest.analyze();
 
-      // cache.dart can import _*.dart from same directory, so no violations
       expect(
         analyzerOutput,
         isNot(containsAnyLintErrors(file: 'lib/cache/cache.dart')),
       );
 
-      // utils.dart violates: imports _*.dart from parent directory
       expect(
         analyzerOutput,
         containsLintErrors(
@@ -904,11 +915,17 @@ import 'cache/_cache_file_loader.dart';
                   'Import rule violation. Implementation files should not be imported directly.',
               code: 'import_rule_violation',
             ),
+            LintDiagnostic(
+              line: 3,
+              col: 1,
+              message:
+                  'Import rule violation. Implementation files should not be imported directly.',
+              code: 'import_rule_violation',
+            ),
           ],
         ),
       );
 
-      // main.dart violates: imports _*.dart from cache directory
       expect(
         analyzerOutput,
         containsLintErrors(
@@ -917,6 +934,20 @@ import 'cache/_cache_file_loader.dart';
           diagnostics: [
             LintDiagnostic(
               line: 2,
+              col: 1,
+              message:
+                  'Import rule violation. Implementation files should not be imported directly.',
+              code: 'import_rule_violation',
+            ),
+            LintDiagnostic(
+              line: 3,
+              col: 1,
+              message:
+                  'Import rule violation. Implementation files should not be imported directly.',
+              code: 'import_rule_violation',
+            ),
+            LintDiagnostic(
+              line: 4,
               col: 1,
               message:
                   'Import rule violation. Implementation files should not be imported directly.',
