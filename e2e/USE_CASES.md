@@ -1,5 +1,58 @@
 # Use Cases
 
+## Keep domain layer pure
+
+In a layered architecture, the domain layer should remain free from external dependencies to maintain purity and testability. Only specific, carefully chosen packages (like UUID generators or core Dart libraries) should be allowed as exceptions.
+
+```file tree
+lib/
+  domain/
+    domain.dart
+    src/entity.dart
+  repository/
+    repository.dart
+    user_repository.dart
+    product_repository.dart
+```
+
+```import_rules.yaml
+rules:
+  - target: lib/domain/**
+    disallow: "**"
+    exclude_disallow:
+      - lib/domain/**
+      - package:uuid/uuid.dart
+      - dart:collection
+      - dart:math
+    reason: >
+      The domain layer should not depend on other layers
+      and external packages with a few exceptions.
+```
+
+## Downward dependency only
+
+Enforce that files can only import from the same directory level or deeper, preventing upward dependencies. This creates a clear dependency hierarchy where higher-level directories cannot depend on lower-level ones.
+
+```file tree
+lib/
+  main.dart
+  features/
+    features.dart
+    auth/
+      auth.dart
+      auth_utils.dart
+    cart/
+      cart.dart
+```
+
+```import_rules.yaml
+rules:
+  - target: "**"
+    disallow: "**"
+    exclude_disallow: "$DIR/**"
+    reason: Files can only import from same or deeper directory levels.
+```
+
 ## Force uni-directional layer dependencies
 
 In a layerd architecture, the layers should have uni-directional dependencies, where the lower layers can not depend on the higher layers.
