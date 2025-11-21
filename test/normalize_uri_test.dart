@@ -1,39 +1,8 @@
 import 'dart:io';
 
+import 'package:import_rules/main.dart';
 import 'package:path/path.dart' as p;
 import 'package:test/test.dart';
-
-// Import the _normalizeUri function from main.dart
-// Since it's a private function, we need to test it through the public API
-// or expose it for testing. For now, we'll recreate it here for testing.
-
-/// Normalizes a URI to a relative path from the package root.
-///
-/// This is a copy of the private _normalizeUri function from lib/main.dart
-/// for testing purposes.
-String normalizeUri(Uri uri, String packageRootPath, String packageName) {
-  if (uri.scheme == 'file') {
-    // Convert file:// URI to relative path from package root
-    final filePath = uri.toFilePath();
-    return p.relative(filePath, from: packageRootPath);
-  } else if (uri.scheme == 'package') {
-    // Check if this is a package URI for the current package
-    final uriString = uri.toString();
-    final packagePrefix = 'package:$packageName/';
-
-    if (uriString.startsWith(packagePrefix)) {
-      // Internal package URI: strip prefix and prepend 'lib/'
-      final pathAfterPackage = uriString.substring(packagePrefix.length);
-      return 'lib/$pathAfterPackage';
-    } else {
-      // External package URI: keep as-is
-      return uriString;
-    }
-  }
-
-  // Fallback: return as-is (shouldn't happen in practice)
-  return uri.toString();
-}
 
 void main() {
   group('normalizeUri', () {

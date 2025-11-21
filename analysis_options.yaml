@@ -30,3 +30,10 @@ include: package:lints/recommended.yaml
 # plugins:
 #   import_rules:
 #     path: ./
+
+# import_rules:
+#   debug_log: true
+#   rules:
+#     - target: "**"
+#       disallow: "**/src/**"
+#       reason: Implementations should not be imported directly.

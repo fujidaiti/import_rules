@@ -1,11 +1,3 @@
-rules:
-  - target: "**"
-    disallow: package:analyzer/dart/ast/ast.dart
-    reason: "Do not use the ast package directly. Use the custom components instead."
-
-  - target: "**"
-    disallow: "**/src/**"
-    reason: Implementations should not be imported directly.
 # rules:
 #   - target:
 #       - lib/

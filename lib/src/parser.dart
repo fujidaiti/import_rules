@@ -4,7 +4,6 @@ import 'package:import_rules/src/config.dart';
 import 'package:yaml/yaml.dart';
 
 import 'import_rule.dart';
-import 'logger.dart';
 
 /// Extracts the package name from pubspec.yaml in the given package.
 String? _getPackageName(WorkspacePackage package) {
@@ -83,23 +82,15 @@ String _normalizeReason(String reason) {
 }
 
 class ConfigParser {
-  ConfigParser([this.logger]);
-
-  final Logger? logger;
+  ConfigParser();
 
   Config loadConfigurationFor(WorkspacePackage package) {
     const searchPaths = ['import_rules.yaml', 'analysis_options.yaml'];
 
     // Get package name from pubspec.yaml
     final packageName = _getPackageName(package);
-    if (packageName == null) {
-      logger?.warning(
-        'Could not determine package name from pubspec.yaml. Pattern normalization will be disabled.',
-      );
-    }
 
     for (final searchPath in searchPaths) {
-      logger?.info('Searching for configuration in $searchPath');
       final file = package.root.getChild(searchPath);
       if (file is! File || !file.exists) continue;
       final config = tryParseRulesFromYaml(
@@ -107,23 +98,6 @@ class ConfigParser {
         packageName,
       );
       if (config != null) {
-        for (final rule in config.rules) {
-          logger?.info('Rule loaded:');
-          logger?.info('  name: ${rule.name}');
-          logger?.info('  reason: ${rule.reason}');
-          logger?.info(
-            '  target: ${rule.targetPatterns.map((t) => t.pattern).toList()}',
-          );
-          logger?.info(
-            '  disallow: ${rule.disallowPatterns.map((d) => d.pattern).toList()}',
-          );
-          logger?.info(
-            '  exclude_target: ${rule.excludeTargetPatterns.map((t) => t.pattern).toList()}',
-          );
-          logger?.info(
-            '  exclude_disallow: ${rule.excludeDisallowPatterns.map((d) => d.pattern).toList()}',
-          );
-        }
         return config;
       }
     }
@@ -134,12 +108,8 @@ class ConfigParser {
   Config? tryParseRulesFromYaml(String yamlContent, String? packageName) {
     try {
       return parseRulesFromYaml(yamlContent, packageName);
-    } on FormatException catch (error, stackTrace) {
-      logger?.severe(
-        'Error parsing rules from YAML: $error',
-        error,
-        stackTrace,
-      );
+    } on FormatException catch (_) {
+      // TODO: Dump error somewhere.
       return null;
     }
   }

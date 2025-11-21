@@ -76,7 +76,7 @@ plugins:
     });
 
     test('Keep domain layer pure', () {
-      const importRulesYaml = r'''
+      const importRulesYaml = '''
 rules:
   - target: lib/domain/**
     disallow: "**"

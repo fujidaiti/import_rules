@@ -45,7 +45,7 @@ String? _getPackageName(WorkspacePackage package) {
 /// - file:///Users/user/project/lib/main.dart -> lib/main.dart
 /// - package:import_rules/src/config.dart -> lib/src/config.dart
 /// - package:flutter/material.dart -> package:flutter/material.dart (external)
-String _normalizeUri(Uri uri, String packageRootPath, String packageName) {
+String normalizeUri(Uri uri, String packageRootPath, String packageName) {
   if (uri.scheme == 'file') {
     // Convert file:// URI to relative path from package root
     final filePath = uri.toFilePath();
@@ -100,6 +100,7 @@ class ImportRuleViolation extends AnalysisRule {
 
   static final Map<String, Config> _configs = {};
   static final Map<String, String> _packageNames = {};
+  final parser = ConfigParser();
 
   ImportRuleViolation()
     : super(name: code.name, description: code.problemMessage);
@@ -125,9 +126,26 @@ class ImportRuleViolation extends AnalysisRule {
       config = _configs[package.root.path]!;
       packageName = _packageNames[package.root.path]!;
     } else {
-      final parser = ConfigParser(logger);
       config = parser.loadConfigurationFor(package);
       _configs[package.root.path] = config;
+
+      for (final rule in config.rules) {
+        logger.info('Rule loaded:');
+        logger.info('  name: ${rule.name}');
+        logger.info('  reason: ${rule.reason}');
+        logger.info(
+          '  target: ${rule.targetPatterns.map((t) => t.pattern).toList()}',
+        );
+        logger.info(
+          '  disallow: ${rule.disallowPatterns.map((d) => d.pattern).toList()}',
+        );
+        logger.info(
+          '  exclude_target: ${rule.excludeTargetPatterns.map((t) => t.pattern).toList()}',
+        );
+        logger.info(
+          '  exclude_disallow: ${rule.excludeDisallowPatterns.map((d) => d.pattern).toList()}',
+        );
+      }
 
       final name = _getPackageName(package);
       if (name == null) {
@@ -140,7 +158,7 @@ class ImportRuleViolation extends AnalysisRule {
     if (config.rules.isEmpty) return;
 
     logger.info('Analyzing: $sourceUri');
-    final normalizedSourceUri = _normalizeUri(
+    final normalizedSourceUri = normalizeUri(
       sourceUri,
       package.root.path,
       packageName,
@@ -180,7 +198,7 @@ class _Visitor extends SimpleAstVisitor<void> {
     final Import importDirective;
     if (node.libraryImport?.uri case DirectiveUriWithSource(:final source)) {
       final package = context.package!;
-      final normalizedImportUri = _normalizeUri(
+      final normalizedImportUri = normalizeUri(
         source.uri,
         package.root.path,
         packageName,
