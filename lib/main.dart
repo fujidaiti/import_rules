@@ -130,26 +130,26 @@ class ImportRuleViolation extends AnalysisRule {
       _configs[package.root.path] = config;
 
       for (final rule in config.rules) {
-        logger.info('Rule loaded:');
-        logger.info('  name: ${rule.name}');
-        logger.info('  reason: ${rule.reason}');
-        logger.info(
+        logger?.info('Rule loaded:');
+        logger?.info('  name: ${rule.name}');
+        logger?.info('  reason: ${rule.reason}');
+        logger?.info(
           '  target: ${rule.targetPatterns.map((t) => t.pattern).toList()}',
         );
-        logger.info(
+        logger?.info(
           '  disallow: ${rule.disallowPatterns.map((d) => d.pattern).toList()}',
         );
-        logger.info(
+        logger?.info(
           '  exclude_target: ${rule.excludeTargetPatterns.map((t) => t.pattern).toList()}',
         );
-        logger.info(
+        logger?.info(
           '  exclude_disallow: ${rule.excludeDisallowPatterns.map((d) => d.pattern).toList()}',
         );
       }
 
       final name = _getPackageName(package);
       if (name == null) {
-        logger.warning('Could not determine package name from pubspec.yaml');
+        logger?.warning('Could not determine package name from pubspec.yaml');
         return;
       }
       packageName = name;
@@ -157,13 +157,13 @@ class ImportRuleViolation extends AnalysisRule {
     }
     if (config.rules.isEmpty) return;
 
-    logger.info('Analyzing: $sourceUri');
+    logger?.info('Analyzing: $sourceUri');
     final normalizedSourceUri = normalizeUri(
       sourceUri,
       package.root.path,
       packageName,
     );
-    logger.info('Normalized to: $normalizedSourceUri');
+    logger?.info('Normalized to: $normalizedSourceUri');
     var visitor = _Visitor(
       this,
       normalizedSourceUri,
@@ -181,7 +181,7 @@ class _Visitor extends SimpleAstVisitor<void> {
   final String sourceUri;
   final RuleContext context;
   final Config config;
-  final Logger logger;
+  final Logger? logger;
   final String packageName;
 
   _Visitor(
@@ -204,21 +204,23 @@ class _Visitor extends SimpleAstVisitor<void> {
         packageName,
       );
       importDirective = Import(uri: normalizedImportUri);
-      logger.info('Analyzing import: ${source.uri} -> $importDirective');
+      logger?.info('Analyzing import: ${source.uri} -> $importDirective');
     } else {
-      logger.info('Skipping unresolved import: ${node.uri}');
+      logger?.info('Skipping unresolved import: ${node.uri}');
       return;
     }
 
     for (final rule in config.rules) {
-      logger.info('Calling ImportRule.canImport($sourceUri, $importDirective)');
+      logger?.info(
+        'Calling ImportRule.canImport($sourceUri, $importDirective)',
+      );
       if (!rule.canImport(sourceUri, importDirective)) {
-        logger.info('Import denied. Reason: ${rule.reason}');
+        logger?.info('Import denied. Reason: ${rule.reason}');
         this.rule.reportAtNode(node, arguments: [rule.reason]);
         return;
       }
     }
 
-    logger.info('Import allowed');
+    logger?.info('Import allowed');
   }
 }

@@ -27,13 +27,3 @@ include: package:lints/recommended.yaml
 
 # For additional information about configuring this file, see
 # https://dart.dev/guides/language/analysis-options
-# plugins:
-#   import_rules:
-#     path: ./
-
-# import_rules:
-#   debug_log: true
-#   rules:
-#     - target: "**"
-#       disallow: "**/src/**"
-#       reason: Implementations should not be imported directly.

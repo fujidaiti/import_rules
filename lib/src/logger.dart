@@ -5,7 +5,10 @@ import 'package:analyzer/workspace/workspace.dart';
 import 'package:logging/logging.dart' as logging;
 
 class Logger {
-  static Logger of(WorkspacePackage package) {
+  static Logger? of(WorkspacePackage package) {
+    // Temporary disable logging
+    return null;
+    /*
     final key = package.root.path;
     if (_loggers[key] case final logger?) {
       return logger;
@@ -14,6 +17,7 @@ class Logger {
       _loggers[key] = logger;
       return logger;
     }
+    */
   }
 
   static Future<void> closeAll() async {
