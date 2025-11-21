@@ -13,12 +13,10 @@ class TestEnvironment {
 
   var _isSetUp = false;
   var _isTornDown = false;
-  late final _DartCommand _dartCommand;
 
   void setUp() {
     assert(!_isSetUp, 'Test environment already set up');
     _isSetUp = true;
-    _dartCommand = _DartCommand.prepare();
 
     if (root.existsSync()) {
       root.deleteSync(recursive: true);
@@ -105,11 +103,22 @@ class DartPackage {
   final Directory dartTool;
 
   void pubGet() {
-    environment._dartCommand.pubGet(root);
+    final result = Process.runSync('dart', [
+      'pub',
+      'get',
+    ], workingDirectory: root.absolute.path);
+    if (result.exitCode != 0) {
+      throw Exception(
+        'Failed to pub get package ${root.path}: ${result.stderr}',
+      );
+    }
   }
 
   AnalyzerOutput analyze() {
-    return environment._dartCommand.analyze(root);
+    final result = Process.runSync('dart', [
+      'analyze',
+    ], workingDirectory: root.absolute.path);
+    return AnalyzerOutput.parse(result.stdout.toString());
   }
 }
 
@@ -149,50 +158,6 @@ class DartWorkspace extends DartPackage {
       ..flushTo(pubspec);
 
     return package;
-  }
-}
-
-class _DartCommand {
-  factory _DartCommand.prepare() {
-    final fvmDir = Directory('.fvm');
-    if (fvmDir.existsSync()) {
-      return _DartCommand._(
-        p.join(
-          fvmDir.path,
-          'flutter_sdk',
-          'bin',
-          'cache',
-          'dart-sdk',
-          'bin',
-          'dart',
-        ),
-      );
-    }
-
-    return _DartCommand._('dart');
-  }
-
-  _DartCommand._(this._dartExecutable);
-
-  final String _dartExecutable;
-
-  void pubGet(Directory package) {
-    final result = Process.runSync(_dartExecutable, [
-      'pub',
-      'get',
-    ], workingDirectory: package.absolute.path);
-    if (result.exitCode != 0) {
-      throw Exception(
-        'Failed to pub get package ${package.path}: ${result.stderr}',
-      );
-    }
-  }
-
-  AnalyzerOutput analyze(Directory package) {
-    final result = Process.runSync(_dartExecutable, [
-      'analyze',
-    ], workingDirectory: package.absolute.path);
-    return AnalyzerOutput.parse(result.stdout.toString());
   }
 }
 
