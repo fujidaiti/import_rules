@@ -306,20 +306,24 @@ rules:
 
       const domainDart = '''
 import 'entity.dart';
+import 'package:test_package/persistence/repository.dart';
+import '../application/use_case.dart';
+import '../presentation/view.dart';
 ''';
 
-      const persistenceDart = '''
-import '../domain/entity.dart';
+      const repositoryDart = '''
+import 'database.dart';
+import '../domain/domain.dart';
 import '../application/use_case.dart';
 ''';
 
-      const applicationDart = '''
+      const useCaseDart = '''
 import '../domain/entity.dart';
 import '../persistence/repository.dart';
 import '../presentation/view.dart';
 ''';
 
-      const presentationDart = '''
+      const viewDart = '''
 import '../application/use_case.dart';
 import '../domain/entity.dart';
 import '../persistence/repository.dart';
@@ -329,10 +333,13 @@ import '../persistence/repository.dart';
         ..childFile('import_rules.yaml').writeAsStringSync(importRulesYaml)
         ..createFiles({
           'lib': {
-            'domain': {'entity.dart': ''},
-            'persistence': {'repository.dart': persistenceDart},
-            'application': {'use_case.dart': applicationDart},
-            'presentation': {'view.dart': presentationDart},
+            'domain': {'domain.dart': domainDart, 'entity.dart': ''},
+            'persistence': {
+              'repository.dart': repositoryDart,
+              'database.dart': '',
+            },
+            'application': {'use_case.dart': useCaseDart},
+            'presentation': {'view.dart': viewDart},
           },
         });
 
