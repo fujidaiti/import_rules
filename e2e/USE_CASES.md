@@ -235,3 +235,41 @@ rules:
     exclude_disallow: $TARGET_DIR/_*.dart 
     reason: Implementation files should not be imported directly.
 ```
+
+## Always use the prefix 'math' for dart:math
+
+When using the `dart:math` library, we should always use the prefix 'math' for the imports.
+
+```import_rules.yaml
+rules:
+  - target: "**"
+    disallow: dart:math
+    exclude_disallow: { path: dart:math, as: math }
+    reason: Always use the prefix 'math' for dart:math.
+```
+
+```dart
+import 'dart:math'; // Not allowed
+import 'dart:math' as m; // Not allowed
+import 'dart:math' as math; // Allowed
+```
+
+## Enforce the use of custom logger instead of built-in log function
+
+Instead of using the built-in `log` function from `dart:developer`, we should use a custom logger.
+
+```import_rules.yaml
+rules:
+  - target: "**"
+    exclude_target: lib/common/logger.dart
+    disallow: dart:developer
+    exclude_disallow: { path: dart:developer, hide: logger }
+    reason: >
+      Always use lib/common/logger.dart instead of the built-in log function. If you need to import dart:developer, try hiding the log function from the import.
+```
+
+```dart
+import 'dart:developer'; // Not allowed
+import 'dart:developer' as dev; // Not allowed
+import 'dart:developer' hide logger; // Allowed
+```
