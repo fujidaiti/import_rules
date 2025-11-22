@@ -29,8 +29,7 @@ plugins:
 import_rules:
   rules:
     - reason: |
-        The domain layer should not depend on other layers
-        and external packages with a few exceptions.
+        The domain layer should not depend on other layers and external packages with a few exceptions.
       target: lib/domain/**
       disallow: "**"
       exclude_disallow:
@@ -45,8 +44,7 @@ import_rules:
 
 rules:
   - reason: |
-      The domain layer should not depend on other layers
-      and external packages with a few exceptions.
+      The domain layer should not depend on other layers and external packages with a few exceptions.
     target: lib/domain/**
     ...
 ```
