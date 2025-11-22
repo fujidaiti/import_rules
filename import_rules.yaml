@@ -1,0 +1,48 @@
+# rules:
+#   - target:
+#       - lib/
+#       - ^lib/components/
+#     disallow:
+#       - package:flutter/material.dart
+#       - package:flutter/cupertino.dart
+#       - package:flutter/widgets.dart
+#     reason: >
+#       Do not directly import the material/cupertino/widgets packages.
+#       Use the custom components in lib/components/ instead.
+
+#   - target: lib/
+#     disallow:
+#       - package:flutter/material.dart
+#       - path: ^package:flutter/material.dart
+#         hide: [debugPrint, print]
+#     reason: Do not use debugPrint or print in the main function.
+
+#   - target: lib/
+#     disallow:
+#       - dart:math
+#       - { path: dart:math, as: "*" }
+#       - { path: ^dart:math, as: math }
+#     reason: Always use the prefix 'math' for dart:math.
+
+#   - target: lib/domain/
+#     allow:
+#       - dart:io
+#       - ^dart:io
+#     reason: >
+#       The domain layer should depend only on the standard library
+#       except for the I/O module.
+
+#   - target:
+#       - lib/**
+#       - test/**
+#     allow:
+#       - /public
+#       - /assets
+#       - path: /lib/domain/**
+#         show: debugPrint
+#       - lib/**
+#       - package:analysis_server_plugin/registry.dart
+
+#   - target: test/
+#     disallow:
+#       - package:import_rules/import_rules.dart
