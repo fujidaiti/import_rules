@@ -7,8 +7,7 @@ void main() {
     test('parses simple rule with single string values', () {
       final yaml = '''
 rules:
-  - name: Test rule
-    reason: Testing
+  - reason: Testing
     target: lib/**
     disallow: test/**
 ''';
@@ -16,7 +15,6 @@ rules:
       final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
       expect(rules, hasLength(1));
-      expect(rules[0].name, equals('Test rule'));
       expect(rules[0].reason, equals('Testing'));
       expect(
         rules[0].targetPatterns.map((t) => t.pattern).toList(),
@@ -64,8 +62,7 @@ rules:
     test('parses rule with all optional fields', () {
       final yaml = '''
 rules:
-  - name: Complete rule
-    reason: Testing all fields
+  - reason: Testing all fields
     target: lib/**
     exclude_target: lib/core/**
     disallow: package:flutter/**
@@ -75,7 +72,6 @@ rules:
       final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
       expect(rules, hasLength(1));
-      expect(rules[0].name, equals('Complete rule'));
       expect(
         rules[0].excludeTargetPatterns.map((t) => t.pattern).toList(),
         equals(['lib/core/**']),
@@ -89,16 +85,13 @@ rules:
     test('parses multiple rules', () {
       final yaml = '''
 rules:
-  - name: Rule 1
-    reason: First rule
+  - reason: First rule
     target: lib/features/**
     disallow: lib/data/**
-  - name: Rule 2
-    reason: Second rule
+  - reason: Second rule
     target: lib/core/**
     disallow: package:flutter/**
-  - name: Rule 3
-    reason: Third rule
+  - reason: Third rule
     target: test/**
     disallow: lib/internal/**
 ''';
@@ -106,15 +99,15 @@ rules:
       final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
       expect(rules, hasLength(3));
-      expect(rules[0].name, equals('Rule 1'));
-      expect(rules[1].name, equals('Rule 2'));
-      expect(rules[2].name, equals('Rule 3'));
+      expect(rules[0].reason, equals('First rule'));
+      expect(rules[1].reason, equals('Second rule'));
+      expect(rules[2].reason, equals('Third rule'));
     });
 
-    test('parses rule without name field', () {
+    test('parses rule with only required fields', () {
       final yaml = '''
 rules:
-  - reason: Anonymous rule
+  - reason: Simple rule
     target: lib/**
     disallow: test/**
 ''';
@@ -122,8 +115,7 @@ rules:
       final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
       expect(rules, hasLength(1));
-      expect(rules[0].name, isNull);
-      expect(rules[0].reason, equals('Anonymous rule'));
+      expect(rules[0].reason, equals('Simple rule'));
     });
 
     test('parses rule with mixed single and array values', () {
@@ -230,8 +222,7 @@ rules: not_a_list
     test('throws on missing reason field', () {
       final yaml = '''
 rules:
-  - name: Test rule
-    target: lib/**
+  - target: lib/**
     disallow: test/**
 ''';
 
@@ -698,8 +689,7 @@ rules:
       final yaml = '''
 import_rules:
   rules:
-    - name: Test rule
-      reason: Testing
+    - reason: Testing
       target: lib/**
       disallow: test/**
 ''';
@@ -707,7 +697,6 @@ import_rules:
       final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
       expect(rules, hasLength(1));
-      expect(rules[0].name, equals('Test rule'));
       expect(rules[0].reason, equals('Testing'));
       expect(
         rules[0].targetPatterns.map((t) => t.pattern).toList(),
@@ -723,12 +712,10 @@ import_rules:
       final yaml = '''
 import_rules:
   rules:
-    - name: Rule 1
-      reason: First rule
+    - reason: First rule
       target: lib/features/**
       disallow: lib/data/**
-    - name: Rule 2
-      reason: Second rule
+    - reason: Second rule
       target: lib/core/**
       disallow: package:flutter/**
 ''';
@@ -736,16 +723,15 @@ import_rules:
       final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
       expect(rules, hasLength(2));
-      expect(rules[0].name, equals('Rule 1'));
-      expect(rules[1].name, equals('Rule 2'));
+      expect(rules[0].reason, equals('First rule'));
+      expect(rules[1].reason, equals('Second rule'));
     });
 
     test('parses rules with all fields under import_rules section', () {
       final yaml = '''
 import_rules:
   rules:
-    - name: Complete rule
-      reason: Testing all fields
+    - reason: Testing all fields
       target: lib/**
       exclude_target: lib/core/**
       disallow: package:flutter/**
@@ -755,7 +741,6 @@ import_rules:
       final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
       expect(rules, hasLength(1));
-      expect(rules[0].name, equals('Complete rule'));
       expect(
         rules[0].excludeTargetPatterns.map((t) => t.pattern).toList(),
         equals(['lib/core/**']),
@@ -800,8 +785,7 @@ linter:
 
 import_rules:
   rules:
-    - name: Test rule
-      reason: Testing
+    - reason: Testing
       target: lib/**
       disallow: test/**
 ''';
@@ -809,7 +793,6 @@ import_rules:
         final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
         expect(rules, hasLength(1));
-        expect(rules[0].name, equals('Test rule'));
         expect(
           rules[0].targetPatterns.map((t) => t.pattern).toList(),
           equals(['lib/**']),
@@ -847,8 +830,7 @@ import_rules:
     test('parses Layer Architecture Enforcement example', () {
       final yaml = '''
 rules:
-  - name: Presentation layer isolation
-    reason: Presentation layer should not directly import data layer
+  - reason: Presentation layer should not directly import data layer
     target: lib/presentation/**
     disallow: lib/data/**
     exclude_disallow: lib/data/models/**
@@ -857,7 +839,6 @@ rules:
       final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
       expect(rules, hasLength(1));
-      expect(rules[0].name, equals('Presentation layer isolation'));
       expect(
         rules[0].canImport(
           'lib/presentation/pages/home.dart',
@@ -877,8 +858,7 @@ rules:
     test('parses src Directory Encapsulation example', () {
       final yaml = r'''
 rules:
-  - name: src directory encapsulation
-    reason: src/ directories are always private to their parent module
+  - reason: src/ directories are always private to their parent module
     target: "**"
     disallow: "**/src/**"
     exclude_disallow: "$TARGET_DIR/**"
@@ -906,8 +886,7 @@ rules:
     test('parses Core Domain Independence example', () {
       final yaml = '''
 rules:
-  - name: Core independence
-    reason: Core domain must remain framework-agnostic
+  - reason: Core domain must remain framework-agnostic
     target: lib/core/**
     disallow:
       - package:flutter/**
@@ -933,21 +912,18 @@ rules:
     test('parses multiple rules from spec', () {
       final yaml = '''
 rules:
-  - name: Presentation layer isolation
-    reason: Presentation layer should not directly import data layer
+  - reason: Presentation layer should not directly import data layer
     target: lib/presentation/**
     disallow: lib/data/**
     exclude_disallow: lib/data/models/**
 
-  - name: Core independence
-    reason: Core domain must remain framework-agnostic
+  - reason: Core domain must remain framework-agnostic
     target: lib/core/**
     disallow:
       - package:flutter/**
       - lib/ui/**
 
-  - name: Feature module boundaries
-    reason: Features should not cross-import each other
+  - reason: Features should not cross-import each other
     target: lib/features/auth/**
     disallow:
       - lib/features/profile/**
@@ -958,9 +934,18 @@ rules:
       final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
 
       expect(rules, hasLength(3));
-      expect(rules[0].name, equals('Presentation layer isolation'));
-      expect(rules[1].name, equals('Core independence'));
-      expect(rules[2].name, equals('Feature module boundaries'));
+      expect(
+        rules[0].reason,
+        equals('Presentation layer should not directly import data layer'),
+      );
+      expect(
+        rules[1].reason,
+        equals('Core domain must remain framework-agnostic'),
+      );
+      expect(
+        rules[2].reason,
+        equals('Features should not cross-import each other'),
+      );
     });
   });
 

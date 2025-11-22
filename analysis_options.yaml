@@ -27,3 +27,16 @@ include: package:lints/recommended.yaml
 
 # For additional information about configuring this file, see
 # https://dart.dev/guides/language/analysis-options
+
+import_rules:
+  rules:
+    - reason: |
+        The domain layer should not depend on other layers
+        and external packages with a few exceptions.
+      target: lib/domain/**
+      disallow: "**"
+      exclude_disallow:
+        - lib/domain/**
+        - package:uuid/uuid.dart
+        - dart:collection
+        - dart:math

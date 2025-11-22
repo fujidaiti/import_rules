@@ -61,9 +61,6 @@ class DisallowPattern {
 
 /// Represents an import rule that controls which files can import which files.
 class ImportRule {
-  /// Optional name for the rule (used in error messages).
-  final String? name;
-
   /// Required reason explaining why this rule exists.
   final String reason;
 
@@ -80,7 +77,6 @@ class ImportRule {
   final List<DisallowPattern> excludeDisallowPatterns;
 
   ImportRule({
-    this.name,
     required this.reason,
     required this.targetPatterns,
     this.excludeTargetPatterns = const [],

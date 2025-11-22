@@ -131,7 +131,6 @@ class ImportRuleViolation extends AnalysisRule {
 
       for (final rule in config.rules) {
         logger?.info('Rule loaded:');
-        logger?.info('  name: ${rule.name}');
         logger?.info('  reason: ${rule.reason}');
         logger?.info(
           '  target: ${rule.targetPatterns.map((t) => t.pattern).toList()}',

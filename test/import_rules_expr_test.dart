@@ -11,7 +11,6 @@ List<DisallowPattern> _disallows(List<String> patterns) =>
 void main() {
   group('A1: Layer Architecture Enforcement', () {
     final rule = ImportRule(
-      name: 'Presentation layer isolation',
       reason: 'Presentation layer should not directly import data layer',
       targetPatterns: _targets(['lib/presentation/**']),
       disallowPatterns: _disallows(['lib/data/**']),
@@ -51,7 +50,6 @@ void main() {
 
   group('A2: Core Domain Independence', () {
     final rule = ImportRule(
-      name: 'Core independence',
       reason: 'Core domain must remain framework-agnostic',
       targetPatterns: _targets(['lib/core/**']),
       disallowPatterns: _disallows(['package:flutter/**', 'lib/ui/**']),
@@ -90,7 +88,6 @@ void main() {
 
   group('A3: Feature Module Boundaries', () {
     final rule = ImportRule(
-      name: 'Feature module boundaries',
       reason: 'Features should not cross-import each other',
       targetPatterns: _targets(['lib/features/auth/**']),
       disallowPatterns: _disallows([
@@ -143,7 +140,6 @@ void main() {
 
   group('A4: src Directory Encapsulation', () {
     final rule = ImportRule(
-      name: 'src directory encapsulation',
       reason: 'src/ directories are always private to their parent module',
       targetPatterns: _targets(['**']),
       disallowPatterns: _disallows(['**/src/**']),
@@ -203,7 +199,6 @@ void main() {
 
   group('A5: Test Isolation', () {
     final rule = ImportRule(
-      name: 'Test isolation',
       reason: 'Unit tests cannot import integration test utilities',
       targetPatterns: _targets(['test/unit/**']),
       disallowPatterns: _disallows(['**']),
@@ -258,7 +253,6 @@ void main() {
 
   group('A6: Platform Code Isolation', () {
     final rule = ImportRule(
-      name: 'Platform code isolation',
       reason: 'Platform implementations should not cross-import',
       targetPatterns: _targets(['lib/platform/**']),
       disallowPatterns: _disallows(['lib/platform/**']),
@@ -311,7 +305,6 @@ void main() {
 
   group('A7: Barrel File Pattern', () {
     final rule = ImportRule(
-      name: 'Use barrel files',
       reason: 'Internal files should be accessed via barrel exports',
       targetPatterns: _targets(['**']),
       excludeTargetPatterns: _targets(['lib/features/**']),
@@ -342,7 +335,6 @@ void main() {
 
   group('A8: Deprecated Code Migration', () {
     final rule = ImportRule(
-      name: 'Avoid legacy code',
       reason:
           'Legacy modules are deprecated and should not be used in new code',
       targetPatterns: _targets(['lib/features/**']),
@@ -374,7 +366,6 @@ void main() {
 
   group('A9: Third-party Package Restriction', () {
     final rule = ImportRule(
-      name: 'Use analytics wrapper',
       reason: 'Direct firebase_analytics usage is forbidden, use our wrapper',
       targetPatterns: _targets(['lib/**']),
       excludeTargetPatterns: _targets(['lib/core/analytics/**']),
@@ -405,7 +396,6 @@ void main() {
 
   group('A10: Generated Code Protection', () {
     final rule = ImportRule(
-      name: 'Generated code isolation',
       reason: 'Generated code should not import non-generated code',
       targetPatterns: _targets(['lib/**.g.dart', 'lib/**.freezed.dart']),
       disallowPatterns: _disallows(['lib/**']),
@@ -449,7 +439,6 @@ void main() {
 
   group('A11: Hierarchical Import Restriction', () {
     final rule = ImportRule(
-      name: 'Downward dependency only',
       reason: 'Files can only import from same or deeper directory levels',
       targetPatterns: _targets(['lib/**']),
       disallowPatterns: _disallows(['**']),

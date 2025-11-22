@@ -121,8 +121,7 @@ class ConfigParser {
   /// For import_rules.yaml:
   /// ```yaml
   /// rules:
-  ///   - name: Rule name (optional)
-  ///     reason: Why this rule exists (required)
+  ///   - reason: Why this rule exists (required)
   ///     target: pattern (required, can be string or array)
   ///     exclude_target: exception_pattern (optional, can be string or array)
   ///     disallow: disallowed_pattern (required, can be string or array)
@@ -133,8 +132,7 @@ class ConfigParser {
   /// ```yaml
   /// import_rules:
   ///   rules:
-  ///     - name: Rule name (optional)
-  ///       reason: Why this rule exists (required)
+  ///     - reason: Why this rule exists (required)
   ///       target: pattern (required, can be string or array)
   ///       exclude_target: exception_pattern (optional, can be string or array)
   ///       disallow: disallowed_pattern (required, can be string or array)
@@ -187,9 +185,6 @@ class ConfigParser {
 
   /// Parses a single rule from a map.
   ImportRule _parseRule(Map ruleMap, String? packageName) {
-    // Parse name (optional)
-    final name = ruleMap['name'] as String?;
-
     // Parse reason (required)
     final reasonRaw = ruleMap['reason'];
     if (reasonRaw == null) {
@@ -264,7 +259,6 @@ class ConfigParser {
         : <String>[];
 
     return ImportRule(
-      name: name,
       reason: reason,
       targetPatterns: target
           .map((pattern) => TargetPattern(pattern: pattern))
