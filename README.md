@@ -1,420 +1,353 @@
 # import_rules
 
-A Dart analyzer plugin that enforces custom import rules in your projects. Control which files can import which other files using simple YAML configuration, enabling architectural patterns like layered architecture, feature isolation, and encapsulation.
+A [lint plugin for the Dart analyzer](https://dart.dev/tools/analyzer-plugins) that enforces custom import rules in your projects. Control which files can import which other files using simple YAML configuration, enabling everything from simple allow/disallow lists to complex module dependency constraints for architectural patterns such as layered architecture, feature isolation, and encapsulation.
 
-## Features
+> [!IMPORTANT]
+> Dart SDK 3.10.0+ (Flutter SDK 3.38.0+) is required to enable Dart analyzer plguins.
 
-- **Flexible rule definitions** using glob patterns
-- **Architecture enforcement** for layered, feature-based, and modular codebases
-- **$TARGET_DIR variable** for directory-relative rules
-- **Multiple configuration locations** (dedicated config file or `analysis_options.yaml`)
-- **Clear error messages** with custom reason explanations
-- **Zero runtime overhead** - analysis happens at development time
+## Getting started
 
-## Installation
+### 1. Install plugin
 
-### 1. Add the plugin as a dev dependency
-
-Add `import_rules` to your `pubspec.yaml`:
+Add `import_rules` to the top-level `plugins` section of your `analaysis_options.yaml`. You don't need to add the plugin to the dependencies in `pubspec.yaml`.
 
 ```yaml
-dev_dependencies:
-  import_rules: ^0.0.1
+plugins:
+  import_rules: ^<latest-version> # e.g., ^0.0.1
 ```
 
-Run:
+### 2. Define rules
 
-```bash
-dart pub get
-```
-
-### 2. Enable the plugin in analysis_options.yaml
-
-Add the following to your `analysis_options.yaml`:
+The import rules are defined either in the top-level `import_rules` section of `analysis_options.yaml` or in the top-level `import_rules.yaml` file (the same directory as `analysis_options.yaml`). See [RULES_FILE_SPEC.md](RULES_FILE_SPEC.md) for more details about the rule syntax, or see the [Case studies](#case-studies) section for practical use cases.
 
 ```yaml
-analyzer:
-  plugins:
-    - import_rules
-```
+# analysis_options.yaml
 
-### 3. Create your import rules
-
-Create an `import_rules.yaml` file in your project root (or add rules to `analysis_options.yaml` under an `import_rules:` section).
-
-### 4. Run the analyzer
-
-```bash
-dart analyze
-```
-
-The plugin will check all import statements against your configured rules and report violations.
-
-## Configuration
-
-You can define rules in two ways:
-
-**Option 1: Dedicated config file** (recommended)
-
-Create `import_rules.yaml` in your project root:
-
-```yaml
-rules:
-  - name: Keep domain layer pure
-    reason: Domain layer should not depend on other layers
-    target: lib/domain/**
-    disallow: lib/**
-    exclude_disallow: lib/domain/**
-```
-
-**Option 2: In analysis_options.yaml**
-
-Add rules under an `import_rules:` section:
-
-```yaml
-analyzer:
-  plugins:
-    - import_rules
+plugins:
+  ...
 
 import_rules:
   rules:
-    - name: Keep domain layer pure
-      reason: Domain layer should not depend on other layers
+    - reason: |
+        The domain layer should not depend on other layers
+        and external packages with a few exceptions.
       target: lib/domain/**
-      disallow: lib/**
-      exclude_disallow: lib/domain/**
+      disallow: "**"
+      exclude_disallow:
+        - lib/domain/**
+        - package:uuid/uuid.dart
+        - dart:collection
+        - dart:math
 ```
 
-### Rule Fields
-
-Each rule has the following fields:
-
 ```yaml
+# import_rules.yaml
+
 rules:
-  - name: Optional rule name            # Used in error messages
-    reason: Why this rule exists        # Required - explains the rule
-    target: lib/domain/**               # Required - files to apply rule to
-    exclude_target: lib/domain/test/**  # Optional - exceptions to target
-    disallow: lib/**                    # Required - imports to disallow
-    exclude_disallow: lib/domain/**     # Optional - exceptions to disallow
-```
-
-**Multiple values:** Use array syntax for multiple patterns:
-
-```yaml
-rules:
-  - name: Layer isolation
-    reason: Enforce layered architecture
-    target:
-      - lib/presentation/**
-      - lib/ui/**
-    disallow:
-      - lib/data/**
-      - lib/domain/**
-```
-
-### Field Descriptions
-
-| Field | Required | Description |
-|-------|----------|-------------|
-| `name` | Optional | Rule identifier shown in error messages |
-| `reason` | **Required** | Human-readable explanation of why this rule exists |
-| `target` | **Required** | Glob patterns matching files that this rule applies to |
-| `exclude_target` | Optional | Patterns to exclude from `target` matches |
-| `disallow` | **Required** | Patterns matching imports that are not allowed |
-| `exclude_disallow` | Optional | Patterns to exclude from `disallow` (making them allowed) |
-
-## Pattern Syntax
-
-### Glob Patterns
-
-Rules use glob patterns to match files. Patterns work with both relative file paths and package imports.
-
-**Wildcards:**
-
-| Pattern | Matches | Example |
-|---------|---------|---------|
-| `*` | Any characters within a single directory level | `lib/*.dart` matches `lib/main.dart` but not `lib/src/utils.dart` |
-| `**` | Any number of directory levels | `lib/**` matches all files under `lib/` |
-| `?` | Any single character | `lib/?.dart` matches `lib/a.dart`, `lib/b.dart` |
-
-**Examples:**
-
-```yaml
-# Match all files in presentation layer
-target: lib/presentation/**
-
-# Match specific file types in any feature
-target: lib/features/*/models/*.dart
-
-# Match test files
-target: test/**_test.dart
-
-# Match external package imports
-disallow: package:http/**
-
-# Match Dart core libraries
-disallow: dart:io
-```
-
-### The $TARGET_DIR Variable
-
-`$TARGET_DIR` is a special variable that represents the parent directory of the file being checked. It enables directory-relative rules.
-
-**Where to use it:**
-
-- In `disallow` patterns
-- In `exclude_disallow` patterns
-- Cannot be used in `target` or `exclude_target`
-
-**How it works:**
-
-When a file matches `target`, `$TARGET_DIR` is set to that file's parent directory path.
-
-**Example 1: Files can only import from their own directory**
-
-```yaml
-rules:
-  - target: "**"
-    disallow: "**/src/**"
-    exclude_disallow: "$TARGET_DIR/**"
-    reason: src/ files are implementation details, only importable within same directory
-```
-
-For file `lib/features/auth/src/utils.dart`:
-
-- `$TARGET_DIR` becomes `lib/features/auth/src`
-- Can import from `lib/features/auth/src/**` (same directory)
-- Cannot import from `lib/features/profile/src/**` (different src directory)
-
-**Example 2: Encapsulate implementation files**
-
-```yaml
-rules:
-  - target: "**"
-    disallow: "**/_*.dart"
-    exclude_disallow: "$TARGET_DIR/_*.dart"
-    reason: Files prefixed with underscore are private to their directory
-```
-
-For file `lib/cache/cache.dart`:
-
-- `$TARGET_DIR` becomes `lib/cache`
-- Can import `lib/cache/_internal.dart` (same directory)
-- Cannot import `lib/utils/_helpers.dart` (different directory)
-
-## How Rules Are Evaluated
-
-When you import a file, the plugin checks each rule in order. For each rule:
-
-1. **Does the source file match `target`?** If no, skip this rule
-2. **Does the source file match `exclude_target`?** If yes, skip this rule
-3. **Extract `$TARGET_DIR`** from the source file's parent directory
-4. **Does the import match `disallow`?** If no, allow the import
-5. **Does the import match `exclude_disallow`?** If yes, allow the import
-6. **Otherwise:** Report a violation with the rule's `reason`
-
-**Visual diagram:**
-
-```mermaid
-flowchart TD
-    Start([File A imports File B]) --> CheckTarget{Does File A<br/>match target?}
-    CheckTarget -->|No| NextRule[Next Rule]
-    CheckTarget -->|Yes| CheckExcludeTarget{Does File A<br/>match exclude_target?}
-    CheckExcludeTarget -->|Yes| NextRule
-    CheckExcludeTarget -->|No| ExtractTARGET_DIR[TARGET_DIR = Parent directory of File A]
-    ExtractTARGET_DIR --> CheckDisallow{Does File B<br/>match disallow?}
-    CheckDisallow -->|No| Allow[Import Allowed]
-    CheckDisallow -->|Yes| CheckExcludeDisallow{Does File B<br/>match exclude_disallow?}
-    CheckExcludeDisallow -->|Yes| Allow
-    CheckExcludeDisallow -->|No| Deny[Import Denied]
-    NextRule --> End([Continue])
-    Allow --> End
-    Deny --> End
-
-    style Start fill:#e1f5ff
-    style End fill:#e1f5ff
-    style Allow fill:#d4edda
-    style Deny fill:#f8d7da
-```
-
-### Multiple Rules
-
-All rules are evaluated for every import. If **any** rule denies an import, it results in an error.
-
-**Example:**
-
-```yaml
-rules:
-  - name: No UI in domain
+  - reason: |
+      The domain layer should not depend on other layers
+      and external packages with a few exceptions.
     target: lib/domain/**
-    disallow: lib/ui/**
-    reason: Domain layer should not depend on UI
-
-  - name: No network in UI
-    target: lib/ui/**
-    disallow: package:http/**
-    reason: UI should not make direct network calls
+    ...
 ```
 
-A file in `lib/ui/` importing `package:http/http.dart` will be caught by the second rule, even if the first rule doesn't apply.
+### 3. Analyze your code
 
-## Common Use Cases
+The plugin and rules are automatically loaded when the dart analysis server starts, for example, when you run `dart analyze` in console or launch your IDE. Just like other lint rules, you can see the lint errors in the output of `dart analyze` or in dedicated places within the IDE, such as VSCode's "Problems" panel.
 
-### 1. Keep Domain Layer Pure
+> [!NOTE]
+> For IDEs, you may need to restart the analysis server to apply new configurations after modifying the rule file. For VSCode, open the Command Palette and run either `Developer: Reload Window` or `Dart: Restart Analysis Server`. This workaround is expected to be removed in a future release (see issue [#4](https://github.com/fujidaiti/import_rules/issues/4)).
 
-Prevent external dependencies in your domain layer:
+![error_in_editor](resources/lint_error_in_editor.png)
+![error_in_problem_panel](resources/lint_error_in_problems_pane.png)
 
-```yaml
+## Case studies
+
+Here's a list of practical use cases for the plugin.
+
+### Keep domain layer pure
+
+In a layered architecture, the domain layer should remain free from external dependencies to maintain purity and testability. Only specific, carefully chosen packages (like UUID generators or core Dart libraries) should be allowed as exceptions.
+
+```file tree
+lib/
+  domain/
+    domain.dart
+    src/entity.dart
+  repository/
+    repository.dart
+    user_repository.dart
+    product_repository.dart
+```
+
+```import_rules.yaml
 rules:
-  - name: Pure domain layer
-    target: lib/domain/**
+  - target: lib/domain/**
     disallow: "**"
     exclude_disallow:
       - lib/domain/**
-      - dart:core
+      - package:uuid/uuid.dart
       - dart:collection
       - dart:math
-      - package:uuid/uuid.dart
-    reason: Domain layer should remain free from external dependencies
+    reason: |
+      The domain layer should not depend on other layers
+      and external packages with a few exceptions.
 ```
 
-### 2. Enforce Layered Architecture
+### Downward dependency only
 
-Create uni-directional dependencies between layers:
+Enforce that files can only import from the same directory level or deeper, preventing upward dependencies. This creates a clear dependency hierarchy where higher-level directories cannot depend on lower-level ones.
 
-```yaml
+```file tree
+lib/
+  main.dart
+  features/
+    features.dart
+    auth/
+      auth.dart
+      auth_utils.dart
+    cart/
+      cart.dart
+```
+
+```import_rules.yaml
 rules:
-  - name: Domain isolation
-    target: lib/domain/**
+  - target: "**"
+    disallow: "**"
+    exclude_disallow: "$TARGET_DIR/**"
+    reason: Files can only import from same or deeper directory levels.
+```
+
+### Force uni-directional layer dependencies
+
+In a layerd architecture, the layers should have uni-directional dependencies, where the lower layers can not depend on the higher layers.
+For example, say we have 4 layers: domain, persistence, application, and presentation. Sice the domain layers is the lowest layer, it should not depend on the other layers. The persistence layer can depend on the domain layer. The application layer orchestrates business logic, so it can depend on the persistence layer. The presentation layer displays the data, so it should depend only on the application layer.
+
+```file tree
+lib/
+  domain/
+  persistence/
+  application/
+  presentation/
+```
+
+```import_rules.yaml
+rules:
+  - target: lib/domain/**
     disallow: lib/**
     exclude_disallow: lib/domain/**
-    reason: Domain layer should not depend on other layers
+    reason: Domain layer should not depend on other layers.
 
-  - name: Data layer boundaries
-    target: lib/data/**
+  - target: lib/persistence/**
     disallow:
+      - lib/application/**
       - lib/presentation/**
-      - lib/ui/**
-    reason: Data layer cannot depend on presentation
+    reason: Persistence layer can not depend on application and presentation layers.
 
-  - name: Presentation layer boundaries
-    target: lib/presentation/**
+  - target: lib/application/**
+    disallow: lib/presentation/**
+    reason: Application layer can not depend on presentation layer.
+    
+  - target: lib/presentation/**
     disallow:
-      - lib/data/**
+      - lib/persistence/**
       - lib/domain/**
-    reason: Presentation should only use application layer
+    reason: Presentation layer should depend only on application layer.
 ```
 
-### 3. Feature Module Isolation
+### Feature module isolation
 
-Keep features independent from each other:
+In a feature-driven architecture, each feature should be isolated from the other features. The only exception is the "core" module, which can be shared between features.
 
-```yaml
+```file tree
+lib/
+  features/
+    core/
+    auth/
+    profile/
+```
+
+```import_rules.yaml
 rules:
-  - name: Feature isolation
-    target: lib/features/**
+  - target: lib/features/**
     disallow: lib/features/**
     exclude_disallow:
-      - $TARGET_DIR/**
+      - $TARGET_DIR/** # Allow internal dependencies within the same feature.
       - lib/features/core/**
-    reason: Features should be isolated except for shared core module
+    reason: Features should be isolated from each other except the core module.
 ```
 
-### 4. Third-Party Package Wrappers
+### Thrid package wrapper enforcement
 
-Force usage of custom wrappers instead of direct imports:
+Enforce use of wrappers for third-party packages instead of directly importing them. For example, say we are using "http" package for network requests. When we have our own wrapper for the "http" package, called "http_wrapper", we should use it instead of directly importing the "http" package.
 
-```yaml
+```file tree
+lib/
+  core/
+    http_wrapper.dart
+  api/
+    user_api.dart
+    product_api.dart
+```
+
+```import_rules.yaml
 rules:
-  - name: Use HTTP wrapper
-    target: lib/**
+  - target: lib/**
     exclude_target: lib/core/http_wrapper.dart
     disallow: package:http/**
-    reason: Use lib/core/http_wrapper.dart instead of direct http package imports
+    reason: Use lib/core/http_wrapper.dart instead of directly importing the "http" package.
 ```
 
-### 5. Implementation Detail Encapsulation
+### Legacy code deprecation
 
-Hide implementation files (prefixed with underscore):
+A long lived application may have some legacy code that is no longer actively developed, but still used by the other parts of the codebase because it is in the middle of the migration to a new architecture, or for some backward compatibility reasons. Newly added features, however, should not depend on such legacy code.
 
-```yaml
-rules:
-  - name: Private implementation files
-    target: "**"
-    disallow: "**/_*.dart"
-    exclude_disallow: "$TARGET_DIR/_*.dart"
-    reason: Files prefixed with _ are private to their directory
+```file tree
+lib/
+  features/
+    auth/ # New auth module
+    profile/ # Still depends on legacy auth module
+    feed/ # newly added module
+    legacy/
+      auth/ # Legacy auth module 
 ```
 
-### 6. Aggregate File Pattern
-
-Force imports through aggregate files:
-
-```yaml
+```import_rules.yaml
 rules:
-  - name: Use domain aggregate
-    target: lib/**
+  - target: lib/features/**
+    exclude_target:
+      - lib/features/legacy/** # Legacy code can depend on other legacy code.
+      - lib/features/profile/** # Profile module is still using legacy code.
+    disallow: lib/features/legacy/**
+    reason: Newly added features should not depend on legacy code.
+```
+
+### Forbid IO operations in unit testing
+
+In unit testing, we don't want to perform any IO operations.
+
+```file tree
+lib/
+  main.dart
+test/
+  unit/
+    domain_test.dart
+```
+
+```import_rules.yaml
+rules:
+  - target: test/unit/**
+    disallow: dart:io
+```
+
+### Prefer aggregate file imports over individual file imports
+
+An aggregate file is a file that controls which components (classes, functions, etc.) defined in the sub directories can be visible from the outside. An aggregate file, which is typically named as the same as the parent directory, would look like this:
+
+```lib/domain/domain.dart
+// All public components in entiry.dart can be visible from the outside.
+export 'src/entity.dart';
+
+// Only Value class can be visible from the outside.
+export 'value.dart' show Value;
+```
+
+To make the aggregate file work, we need to forbid importing the individual files directly. For example, we should allow `import 'domain/domain.dart';` but disallow `import 'domain/entity.dart';` and `import 'domain/value.dart';` in the outside of the domain module.
+
+```file tree
+lib/
+  main.dart
+  application/
+    application.dart
+  domain/
+    domain.dart
+    value.dart
+    src/entity.dart
+```
+
+```import_rules.yaml
+rules:
+  - target: lib/**
     exclude_target: lib/domain/**
     disallow: lib/domain/**
     exclude_disallow: lib/domain/domain.dart
-    reason: Import domain/domain.dart instead of individual domain files
+    reason: Import "domain/domain.dart" instead of directly importing "domain/**/*.dart".
 ```
 
-### 7. Prevent IO in Unit Tests
+### Implementation detail encapsulation
 
-```yaml
+Say, our team has a naming convention for Dart files where the name of an implementation file should have a prfix of an underscore. The implementation files are files that are stemmed from splitting a large file into smaller ones for readability and maintainability, but should not be visible from the outside (similar to `part` and `part of` keywords). Because of this reason, such implementation files should be imported only from the same directory.
+
+```file tree
+lib/
+  main.dart
+  cache/
+    cache.dart
+    _cache_file_loader.dart
+    _cache_table.dart
+    _cache_hash_algorithm.dart
+    utils/
+      utils.dart
+```
+
+With the above file tree, the only file that can import `_cache_*.dart` files should be `lib/cache/cache.dart`. The other files including `lib/cache/utils/utils.dart` should not be able to import `_cache_*.dart` files because they are not in the same directory as the implementation files.
+
+```import_rules.yaml
 rules:
-  - name: No IO in unit tests
-    target: test/unit/**
-    disallow: dart:io
-    reason: Unit tests should not perform IO operations
+  - target: lib/**
+    disallow: _*.dart
+    # Allow to depend on implementation files within the same directory.
+    exclude_disallow: $TARGET_DIR/_*.dart 
+    reason: Implementation files should not be imported directly.
 ```
 
-### 8. Downward Dependencies Only
+### Always use the prefix 'math' for dart:math
 
-Prevent upward dependencies in directory hierarchy:
+When using the `dart:math` library, we should always use the prefix 'math' for the imports.
 
-```yaml
+```import_rules.yaml
 rules:
-  - name: Downward dependencies only
-    target: "**"
-    disallow: "**"
-    exclude_disallow: "$TARGET_DIR/**"
-    reason: Files can only import from same or deeper directory levels
+  - target: "**"
+    disallow: dart:math
+    exclude_disallow: { path: dart:math, as: math }
+    reason: Always use the prefix 'math' for dart:math.
 ```
 
-For more examples, see [e2e/USE_CASES.md](e2e/USE_CASES.md).
-
-## Debugging
-
-If rules aren't working as expected, check the plugin logs:
-
-```bash
-cat .dart_tool/import_rules/instrumentation_*.log
+```dart
+import 'dart:math'; // Not allowed
+import 'dart:math' as m; // Not allowed
+import 'dart:math' as math; // Allowed
 ```
 
-Logs include:
+### Enforce the use of custom logger instead of built-in log function
 
-- Loaded rules and their patterns
-- File paths being analyzed
-- Import URIs and how they're normalized
-- Rule evaluation decisions
+Instead of using the built-in `log` function from `dart:developer`, we should use a custom logger.
 
-## Understanding URI Normalization
+```import_rules.yaml
+rules:
+  - target: "**"
+    exclude_target: lib/common/logger.dart
+    disallow: dart:developer
+    exclude_disallow: { path: dart:developer, hide: logger }
+    reason: |
+      Always use lib/common/logger.dart instead of the built-in log function. 
+      If you need to import dart:developer, try hiding the log function from the import.
+```
 
-The plugin normalizes all paths to be consistent, so your rules work regardless of import style:
+```dart
+import 'dart:developer'; // Not allowed
+import 'dart:developer' as dev; // Not allowed
+import 'dart:developer' hide log; // Allowed
+```
 
-**Source files:**
+```dart
+// lib/common/logger.dart
 
-- `file:///Users/you/project/lib/main.dart` → `lib/main.dart`
-- `package:my_app/src/utils.dart` → `lib/src/utils.dart`
+import 'dart:developer';
 
-**Import URIs:**
-
-- `import 'package:my_app/main.dart'` → `lib/main.dart` (internal)
-- `import '../utils.dart'` → resolved to relative path
-- `import 'package:flutter/material.dart'` → `package:flutter/material.dart` (external)
-- `import 'dart:io'` → `dart:io` (core library)
-
-This means a rule like `disallow: lib/main.dart` will match both relative imports and package imports of the same file.
+class Logger {
+  void info(String message) {
+    log('[$DateTime.now().toIso8601String()] $message');
+  }
+}
+```
