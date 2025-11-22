@@ -4,7 +4,7 @@ description: |
   Control which files can import which other files using simple YAML configuration, 
   enabling everything from simple allow/disallow lists to complex module dependency constraints 
   for architectural patterns such as layered architecture, feature isolation, and encapsulation.
-version: 0.0.1
+version: 0.0.2
 repository: https://github.com/fujidaiti/import_rules.git
 
 environment:

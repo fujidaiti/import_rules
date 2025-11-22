@@ -54,8 +54,8 @@ The plugin and rules are automatically loaded when the dart analysis server star
 > [!NOTE]
 > For IDEs, you may need to restart the analysis server to apply new configurations after modifying the rule file. For VSCode, open the Command Palette and run either `Developer: Reload Window` or `Dart: Restart Analysis Server`. This workaround is expected to be removed in a future release (see issue [#4](https://github.com/fujidaiti/import_rules/issues/4)).
 
-![error_in_editor](resources/lint_error_in_editor.png)
-![error_in_problem_panel](resources/lint_error_in_problems_pane.png)
+![error-in-editor](https://github.com/user-attachments/assets/0a602219-a237-479f-943a-111f7ad0e074)
+![error-in-problems-pane](https://github.com/user-attachments/assets/66133f62-734c-492e-99b3-16ce0ab107c0)
 
 </br>
 
