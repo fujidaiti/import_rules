@@ -290,7 +290,7 @@ lib/
       utils.dart
 ```
 
-With the above file tree, the only file that can import `_cache_*.dart` files should be `lib/cache/cache.dart`. The other files including `lib/cache/utils/utils.dart` should not be able to import `_cache_*.dart` files because they are not in the same directory as the implementation files.
+With the above file tree, `lib/cache/cache.dart` should be the only file that can import `_cache_*.dart` files. The others including `lib/cache/utils/utils.dart` should not be able to import `_cache_*.dart` files because they are not in the same directory as the implementation files.
 
 ```import_rules.yaml
 rules:
