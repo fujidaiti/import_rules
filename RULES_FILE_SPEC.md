@@ -96,7 +96,7 @@ A disallow pattern is a URI based [glob](https://pub.dev/packages/glob#syntax) p
 
 ### Path URI pattern
 
-A path URI pattern is a glob path relative to the project root such as `lib/common/style.dart` and `test/**`. This is pretty much similar to target patterns; for example, `lib/common/style.dart` matches `import 'common/style.dart';`. Since path URI patterns are [normalized](#pattern-normalization), the pattern `lib/common/style.dart` also matches import directives like `import '../common/style.dart';` and `import '../../common/style.dart';`.
+A path URI pattern is a glob path relative to the project root such as `lib/common/style.dart` and `test/**`. This is pretty much similar to target patterns; for example, `lib/common/style.dart` matches `import 'common/style.dart';`. Due to the [pattern normalization](#pattern-normalization), the pattern `lib/common/style.dart` also matches import directives like `import '../common/style.dart';` and `import '../../common/style.dart';`.
 
 > [!NOTE]
 > Currently, disallow patterns ignore optional keywords in import directives such as `as`, `hide`, and `show`. For example, the pattern `lib/common/style.dart` also matches `import 'common/style.dart' as style;`. The same is true for package URI and Dart URI patterns.
@@ -155,7 +155,7 @@ import '../../domain/user.dart'; // From lib/features/auth/*.dart
 import '../lib/../lib/domain/user.dart'; // Weird, but it works in lib/main.dart
 ```
 
-Intuitively, we want a single disallow pattern for `lib/domain/user.dart` to match all the above import directives instead of having to write a separate pattern for each possible import directive. For this reason, the plugin normalizes package URI patterns whose package name is the same as the project name to path URI patterns. For example, the pattern `package:my_package/domain*.dart` is normalized to `lib/domain/*.dart`.
+Intuitively, we want a single disallow pattern for `lib/domain/user.dart` to match all the above import directives instead of having to write a separate pattern for each possible import directive. For this reason, the plugin normalizes package URI patterns whose package name is the same as the project name to path URI patterns. For example, the pattern `package:my_package/domain/*.dart` is normalized to `lib/domain/*.dart`.
 
 Similarly, the URIs in import directives that point to project files are also normalized to path URIs relative to the project root. For example, the URIs of `import 'package:my_package/domain/user.dart';` and `import '../domain/user.dart';` are both normalized to `lib/domain/user.dart`.
 
