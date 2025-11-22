@@ -1,8 +1,10 @@
 # Rules file specification
 
-A rules file is a YAML file that contains a list of import rules. A rules file would look like the following:
+The rules are defined either in a part of `analysis_options.yaml` or in a dedicated `import_rules.yaml` within the project root. A rules file would look like the following:
 
 ```yaml
+# import_rules.yaml
+
 rules:
   # Rule 1
   - target: lib/domain/**
@@ -18,19 +20,28 @@ rules:
     reason: Persistence layer can not depend on application and presentation layers.
 ```
 
-Here are the descriptions of the top level fields. Note that if the rules are defined in `analysis_options.yaml`, ensure that all the top-level fields are declared in the `import_rules:` section.
+Note that if rules are defined in `analysis_options.yaml`, ensure that all the top-level fields such as `rules` are declared in the `import_rules:` section.
 
 ```yaml
 # analysis_options.yaml
+
+plugins:
+ import_rules: ^x.x.x
 
 import_rules:
   rules:
     ...
 ```
 
+## Top level fields
+
+Here are the descriptions of the top level fields in the rules file:
+
 | Field | Required | Description |
 |-------|----------|-------------|
 | `rules` | **Required** | List of [import rule](#import-rule) definitions. |
+
+</br>
 
 ## Import rule
 
@@ -39,93 +50,89 @@ An import rule defines which files can import which other files. Each rule is ev
 | Field             | Required   | Description |
 |-------------------|------------|-------------|
 | `reason`          | **Required** | Human-readable explanation of why this rule exists. It will be displayed as a lint error message when the rule is violated in the IDE or in the output of `dart analyze`. All leading/trailing whitespaces are removed, and newline characters in the middle are replaced with a single whitespace. |
-| `target`          | **Required** | A list of [target pattern](#target-pattern-syntax)s. If any of the patterns in the list matches the path of a Dart file in the project, the rule is applied to that file and such file is called a *target file*. If the list contains only one pattern, it can be specified as a single string instead of a list: `target: lib/**`. |
-| `exclude_target`  | Optional   | A list of [target pattern](#target-pattern-syntax)s. If any of the patterns in the list matches the target file's path, the rule is not applied to that file. If the list contains only one pattern, it can be specified as a single string instead of a list: `exclude_target: lib/domain/**`. |
-| `disallow`        | **Required** | A list of [disallow pattern](#disallow-pattern-syntax)s. The plugin tests each of import directives in the target file against the specified patterns one by one, and if any of the patterns matches the target import directive, the plugin reports an rule violation at that line in the target file. If the list contains only one pattern, it can be specified as a single string instead of a list: `disallow: lib/**`. |
-| `exclude_disallow`| Optional   | A list of [disallow pattern](#disallow-pattern-syntax)s. If any of the patterns in the list matches the target import directive, the plugin reports an rule violation at that line in the target file. If the list contains only one pattern, it can be specified as a single string instead of a list: `exclude_disallow: lib/domain/**`. |
+| `target`          | **Required** | A list of [target pattern](#target-pattern)s. If any of the patterns in the list matches the path of a Dart file in the project, the rule is applied to that file and such file is called a **target file**. </br></br> If the list contains only one pattern, it can be specified as a single string instead of a list: `target: lib/**`. |
+| `exclude_target`  | Optional   | A list of [target pattern](#target-pattern)s. If the target file matches any of the patterns in the list, the rule is not applied to that file. </br></br> If the list contains only one pattern, it can be specified as a single string instead of a list: `exclude_target: lib/domain/**`. |
+| `disallow`        | **Required** | A list of [disallow pattern](#disallow-pattern)s. The plugin tests each of the specified patterns one by one against an import directive of the target file (called an **importee**), and if any of the patterns matches, the plugin reports a rule violation error with the `reason` at that line in the target file. </br></br> If the list contains only one pattern, it can be specified as a single string instead of a list: `disallow: lib/**`. |
+| `exclude_disallow`| Optional   | A list of [disallow pattern](#disallow-pattern)s. If the importee was matched any of the `disallow` patterns, but also matched any of the `exclude_disallow` patterns, the target file is exceptioinally allowed to import that importee and no error is reported. </br></br> If the list contains only one pattern, it can be specified as a single string instead of a list: `exclude_disallow: lib/domain/**`. |
 
-### Target pattern syntax
+</br>
 
-### Disallow pattern syntax
+## Target pattern
 
-## Pattern Syntax
+A target pattern is a glob path pattern used to determine which files an import rule applies to. A path pattern must be relative to the project root, and can contain wildcards to match multiple files. See the documentation of [glob](https://pub.dev/packages/glob#syntax) package for more details about the wildcards.
 
-### Glob Patterns
+```yaml
+# Match a specific Dart file.
+target: lib/src/utils.dart
 
-Rules use glob patterns to match files. Patterns work with both relative file paths and package imports.
+# Match a specific test file.
+target: test/widget_test.dart
 
-**Wildcards:**
+# Match every file in the project.
+target: "**"
 
-| Pattern | Matches | Example |
-|---------|---------|---------|
-| `*` | Any characters within a single directory level | `lib/*.dart` matches `lib/main.dart` but not `lib/src/utils.dart` |
-| `**` | Any number of directory levels | `lib/**` matches all files under `lib/` |
-| `?` | Any single character | `lib/?.dart` matches `lib/a.dart`, `lib/b.dart` |
+# Match all files in "domain" directory.
+target: lib/domain/**
+
+# Match all files in "src" directory under any directory, e.g.,
+#   - lib/src/utils.dart
+#   - lib/domain/src/utils.dart
+#   - lib/features/auth/src/common/utils.dart
+#
+# Note that this doesn't match the top level "src" directory.
+target: "**/src/**"
+
+# Match all files with the prefix of "_".
+target: _*.dart
+```
+
+</br>
+
+## Disallow pattern
+
+A disallow pattern is a [glob](https://pub.dev/packages/glob#syntax) based URI pattern that is tested against import directives of Dart files. It is similar to target patterns, but it can also contain a scheme and [predefined variables](#predefined-variables).
+
+The plugin normalizes import URIs and disallow patterns to make them format-agnostic:
+
+1. **Current Package:** `package:<current_package>/path/to/file.dart` is normalized to `lib/path/to/file.dart`.
+2. **Relative Paths:** Relative paths like `lib/foo.dart` remain unchanged.
+3. **External Packages:** `package:<other_package>/...` and `dart:...` URIs remain unchanged.
+
+This means a single pattern `lib/domain/**` will match both:
+
+- `import 'lib/domain/user.dart'` (relative import)
+- `import 'package:my_app/domain/user.dart'` (package import)
 
 **Examples:**
 
 ```yaml
-# Match all files in presentation layer
-target: lib/presentation/**
+# Match any file in the lib folder (relative or package import)
+disallow: lib/**
 
-# Match specific file types in any feature
-target: lib/features/*/models/*.dart
+# Match a specific file
+disallow: lib/main.dart
 
-# Match test files
-target: test/**_test.dart
-
-# Match external package imports
+# Match any file from an external package
 disallow: package:http/**
 
-# Match Dart core libraries
+# Match any file from the Dart standard library
 disallow: dart:io
+
+# Match files based on the target file's location (see predefined variables below)
+disallow: $TARGET_DIR/private/**
 ```
 
-### The $TARGET_DIR Variable
+</br>
 
-`$TARGET_DIR` is a special variable that represents the parent directory of the file being checked. It enables directory-relative rules.
+### Predefined variables
 
-**Where to use it:**
+There are several predefined variables that can be referenced in a disallow pattern with the prefix of `$`. These variables are substituted with actual values at evaluation time. See [How Rules Are Evaluated](#how-rules-are-evaluated) section for more details.
 
-- In `disallow` patterns
-- In `exclude_disallow` patterns
-- Cannot be used in `target` or `exclude_target`
+| Variable | Description |
+|----------|-------------|
+| `TARGET_DIR` | The path of the target file's parent directory relative to the project root. For example, if the target file is `lib/domain/user.dart`, the pattern `$TARGET_DIR/**` is expanded to `lib/domain/**` at evaluation time. An example of using this variable can be found in [Case study: Implementation detail encapsulation](README.md#implementation-detail-encapsulation). |
 
-**How it works:**
-
-When a file matches `target`, `$TARGET_DIR` is set to that file's parent directory path.
-
-**Example 1: Files can only import from their own directory**
-
-```yaml
-rules:
-  - target: "**"
-    disallow: "**/src/**"
-    exclude_disallow: "$TARGET_DIR/**"
-    reason: src/ files are implementation details, only importable within same directory
-```
-
-For file `lib/features/auth/src/utils.dart`:
-
-- `$TARGET_DIR` becomes `lib/features/auth/src`
-- Can import from `lib/features/auth/src/**` (same directory)
-- Cannot import from `lib/features/profile/src/**` (different src directory)
-
-**Example 2: Encapsulate implementation files**
-
-```yaml
-rules:
-  - target: "**"
-    disallow: "**/_*.dart"
-    exclude_disallow: "$TARGET_DIR/_*.dart"
-    reason: Files prefixed with underscore are private to their directory
-```
-
-For file `lib/cache/cache.dart`:
-
-- `$TARGET_DIR` becomes `lib/cache`
-- Can import `lib/cache/_internal.dart` (same directory)
-- Cannot import `lib/utils/_helpers.dart` (different directory)
+</br>
 
 ## How Rules Are Evaluated
 
@@ -141,7 +148,7 @@ When you import a file, the plugin checks each rule in order. For each rule:
 **Visual diagram:**
 
 ```mermaid
-flowchart TD
+flowchart LR
     Start([File A imports File B]) --> CheckTarget{Does File A<br/>match target?}
     CheckTarget -->|No| NextRule[Next Rule]
     CheckTarget -->|Yes| CheckExcludeTarget{Does File A<br/>match exclude_target?}
