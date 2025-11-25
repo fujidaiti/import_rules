@@ -123,10 +123,44 @@ class _Rule extends AnalysisRule {
     final Config config;
     final String packageName;
 
-    if (_configs.containsKey(package.root.path)) {
-      config = _configs[package.root.path]!;
+    // Check if we have a cached config
+    final cachedConfig = _configs[package.root.path];
+    var shouldReload = cachedConfig == null;
+
+    // If we have a cached config, check if the file has been modified
+    if (cachedConfig != null && cachedConfig.configFilePath != null) {
+      try {
+        final configFile = package.root.getChild(cachedConfig.configFilePath!);
+        if (configFile is File) {
+          final currentStamp = configFile.modificationStamp;
+          if (currentStamp != cachedConfig.modificationStamp) {
+            logger?.info(
+              'Config file modified, reloading: ${cachedConfig.configFilePath}',
+            );
+            shouldReload = true;
+          }
+        } else {
+          // File is no longer a file (deleted or changed type)
+          logger?.info(
+            'Config file no longer exists, reloading: ${cachedConfig.configFilePath}',
+          );
+          shouldReload = true;
+        }
+      } on FileSystemException catch (_) {
+        // File was deleted or is inaccessible, reload config
+        logger?.info(
+          'Config file inaccessible, reloading: ${cachedConfig.configFilePath}',
+        );
+        shouldReload = true;
+      }
+    }
+
+    if (!shouldReload) {
+      // Use cached config
+      config = cachedConfig!;
       packageName = _packageNames[package.root.path]!;
     } else {
+      // Load or reload config
       config = parser.loadConfigurationFor(package);
       _configs[package.root.path] = config;
 

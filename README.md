@@ -51,9 +51,6 @@ rules:
 
 The plugin and rules are automatically loaded when the dart analysis server starts, for example, when you run `dart analyze` in console or launch your IDE. Just like other lint rules, you can see the lint errors in the output of `dart analyze` or in dedicated places within the IDE, such as VSCode's "Problems" panel.
 
-> [!NOTE]
-> For IDEs, you may need to restart the analysis server to apply new configurations after modifying the rule file. For VSCode, open the Command Palette and run either `Developer: Reload Window` or `Dart: Restart Analysis Server`. This workaround is expected to be removed in a future release (see issue [#4](https://github.com/fujidaiti/import_rules/issues/4)).
-
 <img src="https://raw.githubusercontent.com/fujidaiti/import_rules/535b0d91b97ded609f30dd290a2574b9fcd762ab/resources/lint_error_in_editor.png" alt="error-in-editor" />
 
 <img src="https://raw.githubusercontent.com/fujidaiti/import_rules/535b0d91b97ded609f30dd290a2574b9fcd762ab/resources/lint_error_in_problems_pane.png" alt="error-in-problems-pane" />

@@ -98,7 +98,12 @@ class ConfigParser {
         packageName,
       );
       if (config != null) {
-        return config;
+        // Return config with file metadata for cache invalidation
+        return Config(
+          rules: config.rules,
+          configFilePath: file.path,
+          modificationStamp: file.modificationStamp,
+        );
       }
     }
 
