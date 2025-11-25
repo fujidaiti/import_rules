@@ -10,9 +10,9 @@ class Config {
   });
 
   const Config.empty()
-      : rules = const [],
-        configFilePath = null,
-        modificationStamp = null;
+    : rules = const [],
+      configFilePath = null,
+      modificationStamp = null;
 
   final List<ImportRule> rules;
   final String? configFilePath;
