@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.5
+
+- Support `analyzer` v9.
+
 ## 0.0.4
 
 - feat(pkg): Refresh stale cached rules when rules file changes (#5)
