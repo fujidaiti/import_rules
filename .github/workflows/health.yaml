@@ -1,0 +1,60 @@
+name: Health
+on:
+  pull_request:
+
+jobs:
+  static-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - run: dart format --output=none --set-exit-if-changed .
+      - run: dart analyze
+
+  unit-testing:
+    needs: static-analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      checks: write
+    env:
+      UNIT_TESTING_REPORT: ${{github.workspace}}/unit-testing-report.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - run: dart test --file-reporter="json:${{ env.UNIT_TESTING_REPORT }}"
+      - uses: dorny/test-reporter@v1
+        # PRs from forks have no write permissions, so we skip this step in that case.
+        if: github.event.pull_request.head.repo.fork == false && (success() || failure())
+        with:
+          name: Unit Testing Report
+          path: ${{ env.UNIT_TESTING_REPORT }}
+          reporter: dart-json
+
+  e2e-testing:
+    needs: static-analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      checks: write
+    env:
+      E2E_TESTING_REPORT: ${{github.workspace}}/e2e-testing-report.json
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+      - run: dart test e2e/e2e_test.dart --file-reporter="json:${{ env.E2E_TESTING_REPORT }}"
+      - uses: dorny/test-reporter@v1
+        # PRs from forks have no write permissions, so we skip this step in that case.
+        if: github.event.pull_request.head.repo.fork == false && (success() || failure())
+        with:
+          name: E2E Testing Report
+          path: ${{ env.E2E_TESTING_REPORT }}
+          reporter: dart-json
