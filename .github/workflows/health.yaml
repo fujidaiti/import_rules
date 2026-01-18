@@ -1,0 +1,84 @@
+name: Health
+on:
+  pull_request:
+
+jobs:
+  static-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Get dependencies
+        run: dart pub get
+
+      - name: Check formatting
+        run: dart format --output=none --set-exit-if-changed .
+
+      - name: Analyze code
+        run: dart analyze
+
+  unit-testing:
+    needs: static-analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      checks: write
+    env:
+      UNIT_TESTING_REPORT: ${{github.workspace}}/unit-testing-report.json
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Run unit tests
+        run: dart test --file-reporter="json:${{ env.UNIT_TESTING_REPORT }}"
+
+      - name: Publish unit test report
+        uses: dorny/test-reporter@v1
+        # PRs from forks have no write permissions, so we skip this step in that case.
+        if: github.event.pull_request.head.repo.fork == false && (success() || failure())
+        with:
+          name: Unit Testing Report
+          path: ${{ env.UNIT_TESTING_REPORT }}
+          reporter: dart-json
+
+  e2e-testing:
+    needs: static-analysis
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: read
+      checks: write
+    env:
+      E2E_TESTING_REPORT: ${{github.workspace}}/e2e-testing-report.json
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Dart SDK
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Run E2E tests
+        run: dart test e2e/e2e_test.dart --file-reporter="json:${{ env.E2E_TESTING_REPORT }}"
+
+      - name: Publish E2E test report
+        uses: dorny/test-reporter@v1
+        # PRs from forks have no write permissions, so we skip this step in that case.
+        if: github.event.pull_request.head.repo.fork == false && (success() || failure())
+        with:
+          name: E2E Testing Report
+          path: ${{ env.E2E_TESTING_REPORT }}
+          reporter: dart-json
