@@ -2,7 +2,8 @@
 
 ## 0.0.7
 
-- Add a global and per-rule `severity` field to change the severity level of rule violation reports.
+- Add a global and per-rule `severity` field to change the severity level of
+  rule violation reports.
 
 ## 0.0.6
 
@@ -15,7 +16,8 @@
 ## 0.0.4
 
 - feat(pkg): Refresh stale cached rules when rules file changes (#5)
-  - Restarting the analysis server is no longer required after modifying the rules file.
+  - Restarting the analysis server is no longer required after modifying the
+    rules file.
 
 ## 0.0.3
 

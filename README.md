@@ -1,15 +1,22 @@
 # import_rules
 
-A [lint plugin](https://dart.dev/tools/analyzer-plugins) for the Dart analyzer that enforces custom import rules in your projects. Control which files can import which other files using simple YAML configuration, enabling everything from simple allow/disallow lists to complex module dependency constraints for architectural patterns such as layered architecture, feature isolation, and encapsulation.
+A [lint plugin](https://dart.dev/tools/analyzer-plugins) for the Dart analyzer
+that enforces custom import rules in your projects. Control which files can
+import which other files using simple YAML configuration, enabling everything
+from simple allow/disallow lists to complex module dependency constraints for
+architectural patterns such as layered architecture, feature isolation, and
+encapsulation.
 
-> [!IMPORTANT]
-> Dart SDK 3.10.0+ (Flutter SDK 3.38.0+) is required to enable Dart analyzer plugins.
+> [!IMPORTANT] Dart SDK 3.10.0+ (Flutter SDK 3.38.0+) is required to enable Dart
+> analyzer plugins.
 
 ## Getting started
 
 ### 1. Install plugin
 
-Add `import_rules` to the top-level `plugins` section of your `analysis_options.yaml`. You don't need to add the plugin to the dependencies in `pubspec.yaml`.
+Add `import_rules` to the top-level `plugins` section of your
+`analysis_options.yaml`. You don't need to add the plugin to the dependencies in
+`pubspec.yaml`.
 
 ```yaml
 plugins:
@@ -18,17 +25,22 @@ plugins:
 
 ### 2. Define rules
 
-The rules are defined either in the top-level `import_rules` section of `analysis_options.yaml` or in the top-level `import_rules.yaml` file in the project root. See the [spec](RULES_FILE_SPEC.md) for more details about the rule syntax, and the [Case studies](#case-studies) section for practical examples of the rules file.
+The rules are defined either in the top-level `import_rules` section of
+`analysis_options.yaml` or in the top-level `import_rules.yaml` file in the
+project root. See the [spec](RULES_FILE_SPEC.md) for more details about the rule
+syntax, and the [Case studies](#case-studies) section for practical examples of
+the rules file.
 
 ```yaml
 # analysis_options.yaml
 
-plugins:
-  ...
+plugins: ...
 
 import_rules:
   rules:
-    - reason: The domain layer should not depend on other layers and external packages with a few exceptions.
+    - reason:
+        The domain layer should not depend on other layers and external packages
+        with a few exceptions.
       target: lib/domain/**
       disallow: "**"
       exclude_disallow:
@@ -49,7 +61,11 @@ rules:
 
 ### 3. Analyze your code
 
-The plugin and rules are automatically loaded when the dart analysis server starts, for example, when you run `dart analyze` in console or launch your IDE. Just like other lint rules, you can see the lint errors in the output of `dart analyze` or in dedicated places within the IDE, such as VSCode's "Problems" panel.
+The plugin and rules are automatically loaded when the dart analysis server
+starts, for example, when you run `dart analyze` in console or launch your IDE.
+Just like other lint rules, you can see the lint errors in the output of
+`dart analyze` or in dedicated places within the IDE, such as VSCode's
+"Problems" panel.
 
 <img src="https://raw.githubusercontent.com/fujidaiti/import_rules/535b0d91b97ded609f30dd290a2574b9fcd762ab/resources/lint_error_in_editor.png" alt="error-in-editor" />
 
@@ -63,7 +79,10 @@ Here's a list of rules file examples for practical use cases.
 
 ### Keep domain layer pure
 
-In a layered architecture, the domain layer should remain free from external dependencies to maintain purity and testability. Only specific, carefully chosen packages (like UUID generators or core Dart libraries) should be allowed as exceptions.
+In a layered architecture, the domain layer should remain free from external
+dependencies to maintain purity and testability. Only specific, carefully chosen
+packages (like UUID generators or core Dart libraries) should be allowed as
+exceptions.
 
 ```file tree
 lib/
@@ -92,7 +111,9 @@ rules:
 
 ### Downward dependencies only
 
-Enforce that files can only import from the same directory level or deeper, preventing upward dependencies. This creates a clear dependency hierarchy where higher-level directories cannot depend on lower-level ones.
+Enforce that files can only import from the same directory level or deeper,
+preventing upward dependencies. This creates a clear dependency hierarchy where
+higher-level directories cannot depend on lower-level ones.
 
 ```file tree
 lib/
@@ -116,8 +137,13 @@ rules:
 
 ### Enforce unidirectional layer dependencies
 
-In a layered architecture, the layers should have unidirectional dependencies, where lower layers cannot depend on higher layers.
-For example, suppose we have 4 layers: domain, persistence, application, and presentation. Since the domain layer is the lowest layer, it should not depend on other layers. The persistence layer can depend on the domain layer. The application layer orchestrates business logic, so it can depend on the persistence layer. The presentation layer displays the data, so it should depend only on the application layer.
+In a layered architecture, the layers should have unidirectional dependencies,
+where lower layers cannot depend on higher layers. For example, suppose we have
+4 layers: domain, persistence, application, and presentation. Since the domain
+layer is the lowest layer, it should not depend on other layers. The persistence
+layer can depend on the domain layer. The application layer orchestrates
+business logic, so it can depend on the persistence layer. The presentation
+layer displays the data, so it should depend only on the application layer.
 
 ```file tree
 lib/
@@ -143,7 +169,7 @@ rules:
   - target: lib/application/**
     disallow: lib/presentation/**
     reason: Application layer can not depend on presentation layer.
-    
+
   - target: lib/presentation/**
     disallow:
       - lib/persistence/**
@@ -153,7 +179,9 @@ rules:
 
 ### Feature module isolation
 
-In a feature-driven architecture, each feature should be isolated from other features. The only exception is the "core" module, which can be shared between features.
+In a feature-driven architecture, each feature should be isolated from other
+features. The only exception is the "core" module, which can be shared between
+features.
 
 ```file tree
 lib/
@@ -175,7 +203,12 @@ rules:
 
 ### Enforcing custom component usage
 
-Suppose we have custom Flutter widgets in `lib/components/`, such as `Text` and `FilledButton`, that are styled based on our company's design system. We want our team members to always use these custom widgets instead of directly using built-in Material and Cupertino widgets. The custom components, however, should be allowed to import built-in widgets as an exception, since our components are basically wrappers around the built-in widgets.
+Suppose we have custom Flutter widgets in `lib/components/`, such as `Text` and
+`FilledButton`, that are styled based on our company's design system. We want
+our team members to always use these custom widgets instead of directly using
+built-in Material and Cupertino widgets. The custom components, however, should
+be allowed to import built-in widgets as an exception, since our components are
+basically wrappers around the built-in widgets.
 
 ```yaml
 rules:
@@ -232,7 +265,10 @@ import 'package:my_app/components/common.dart'; // OK
 
 ### Legacy code deprecation
 
-A long-lived application may have some legacy code that is no longer actively developed, but still used by other parts of the codebase because it is in the middle of migration to a new architecture, or for backward compatibility reasons. Newly added features, however, should not depend on such legacy code.
+A long-lived application may have some legacy code that is no longer actively
+developed, but still used by other parts of the codebase because it is in the
+middle of migration to a new architecture, or for backward compatibility
+reasons. Newly added features, however, should not depend on such legacy code.
 
 ```file tree
 lib/
@@ -241,7 +277,7 @@ lib/
     profile/ # Still depends on legacy auth module
     feed/ # newly added module
     legacy/
-      auth/ # Legacy auth module 
+      auth/ # Legacy auth module
 ```
 
 ```import_rules.yaml
@@ -274,7 +310,10 @@ rules:
 
 ### Prefer aggregate file imports over individual file imports
 
-An aggregate file is a file that controls which components (classes, functions, etc.) defined in the subdirectories can be visible from the outside. An aggregate file, which is typically named the same as the parent directory, would look like this:
+An aggregate file is a file that controls which components (classes, functions,
+etc.) defined in the subdirectories can be visible from the outside. An
+aggregate file, which is typically named the same as the parent directory, would
+look like this:
 
 ```lib/domain/domain.dart
 // All public components in entity.dart can be visible from the outside.
@@ -284,7 +323,10 @@ export 'src/entity.dart';
 export 'value.dart' show Value;
 ```
 
-To make the aggregate file work, we need to forbid importing the individual files directly. For example, we should allow `import 'domain/domain.dart';` but disallow `import 'domain/entity.dart';` and `import 'domain/value.dart';` in the outside of the domain module.
+To make the aggregate file work, we need to forbid importing the individual
+files directly. For example, we should allow `import 'domain/domain.dart';` but
+disallow `import 'domain/entity.dart';` and `import 'domain/value.dart';` in the
+outside of the domain module.
 
 ```file tree
 lib/
@@ -303,12 +345,19 @@ rules:
     exclude_target: lib/domain/**
     disallow: lib/domain/**
     exclude_disallow: lib/domain/domain.dart
-    reason: Import "domain/domain.dart" instead of directly importing "domain/**/*.dart".
+    reason:
+      Import "domain/domain.dart" instead of directly importing
+      "domain/**/*.dart".
 ```
 
 ### Implementation detail encapsulation
 
-Suppose our team has a naming convention for Dart files where the name of an implementation file should have a prefix of an underscore. Implementation files are created by splitting a large file into smaller ones for readability and maintainability, but should not be visible from the outside (similar to `part` and `part of` keywords). For this reason, such implementation files should be imported only from the same directory.
+Suppose our team has a naming convention for Dart files where the name of an
+implementation file should have a prefix of an underscore. Implementation files
+are created by splitting a large file into smaller ones for readability and
+maintainability, but should not be visible from the outside (similar to `part`
+and `part of` keywords). For this reason, such implementation files should be
+imported only from the same directory.
 
 ```file tree
 lib/
@@ -322,13 +371,16 @@ lib/
       utils.dart
 ```
 
-With the above file tree, `lib/cache/cache.dart` should be the only file that can import `_cache_*.dart` files. The others including `lib/cache/utils/utils.dart` should not be able to import `_cache_*.dart` files because they are not in the same directory as the implementation files.
+With the above file tree, `lib/cache/cache.dart` should be the only file that
+can import `_cache_*.dart` files. The others including
+`lib/cache/utils/utils.dart` should not be able to import `_cache_*.dart` files
+because they are not in the same directory as the implementation files.
 
 ```import_rules.yaml
 rules:
   - target: lib/**
     disallow: _*.dart
     # Allow to depend on implementation files within the same directory.
-    exclude_disallow: $TARGET_DIR/_*.dart 
+    exclude_disallow: $TARGET_DIR/_*.dart
     reason: Implementation files should not be imported directly.
 ```
