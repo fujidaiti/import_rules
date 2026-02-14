@@ -42,6 +42,7 @@ Here are the descriptions of the top level fields in the rules file:
 | Field | Required | Description |
 |-------|----------|-------------|
 | `rules` | **Required** | List of [import rule](#import-rule) definitions. |
+| `severity` | Optional | Sets the default severity for all rules. Valid values: `error`, `warning`, `info`. Defaults to `warning`. |
 
 </br>
 
@@ -56,6 +57,7 @@ An import rule defines which files can import which other files. Each rule is ev
 | `exclude_target`  | Optional   | A list of [target pattern](#target-pattern)s. If the target file matches any of the patterns in the list, the rule is not applied to that file. </br></br> If the list contains only one pattern, it can be specified as a single string instead of a list: `exclude_target: lib/domain/**`. |
 | `disallow`        | **Required** | A list of [disallow pattern](#disallow-pattern)s. The plugin tests each of the specified patterns one by one against an import directive of the target file (called an **importee**), and if any of the patterns matches, the plugin reports a rule violation error with the `reason` at that line in the target file. </br></br> If the list contains only one pattern, it can be specified as a single string instead of a list: `disallow: lib/**`. |
 | `exclude_disallow`| Optional   | A list of [disallow pattern](#disallow-pattern)s. If the importee was matched any of the `disallow` patterns, but also matched any of the `exclude_disallow` patterns, the target file is exceptionally allowed to import that importee and no error is reported. </br></br> If the list contains only one pattern, it can be specified as a single string instead of a list: `exclude_disallow: lib/domain/**`. |
+| `severity`        | Optional   | Overrides the global default severity for this specific rule. Valid values: `error`, `warning`, `info`. |
 
 </br>
 

@@ -92,22 +92,51 @@ class _ImportRulesPlugin extends Plugin {
   }
 }
 
-class _Rule extends AnalysisRule {
-  static const code = LintCode(
+class _Rule extends MultiAnalysisRule {
+  static const _codeError = LintCode(
     'import_rule_violation',
     'Import rule violation.',
-    // `{0}` will be replaced with the reason for an import rule violation.
     correctionMessage: '{0}',
+    uniqueName: 'LintCode.import_rule_violation_error',
+    severity: DiagnosticSeverity.ERROR,
   );
+
+  static const _codeWarning = LintCode(
+    'import_rule_violation',
+    'Import rule violation.',
+    correctionMessage: '{0}',
+    uniqueName: 'LintCode.import_rule_violation_warning',
+    severity: DiagnosticSeverity.WARNING,
+  );
+
+  static const _codeInfo = LintCode(
+    'import_rule_violation',
+    'Import rule violation.',
+    correctionMessage: '{0}',
+    uniqueName: 'LintCode.import_rule_violation_info',
+    severity: DiagnosticSeverity.INFO,
+  );
+
+  static LintCode _lintCodeFor(Severity severity) {
+    return switch (severity) {
+      Severity.error => _codeError,
+      Severity.warning => _codeWarning,
+      Severity.info => _codeInfo,
+    };
+  }
 
   static final Map<String, Config> _configs = {};
   static final Map<String, String> _packageNames = {};
   final parser = ConfigParser();
 
-  _Rule() : super(name: code.name, description: code.problemMessage);
+  _Rule()
+    : super(
+        name: 'import_rule_violation',
+        description: 'Import rule violation.',
+      );
 
   @override
-  LintCode get diagnosticCode => code;
+  List<LintCode> get diagnosticCodes => [_codeError, _codeWarning, _codeInfo];
 
   @override
   void registerNodeProcessors(
@@ -211,7 +240,7 @@ class _Rule extends AnalysisRule {
 }
 
 class _Visitor extends SimpleAstVisitor<void> {
-  final AnalysisRule rule;
+  final _Rule rule;
   final String sourceUri;
   final RuleContext context;
   final Config config;
@@ -244,13 +273,20 @@ class _Visitor extends SimpleAstVisitor<void> {
       return;
     }
 
-    for (final rule in config.rules) {
+    for (final importRule in config.rules) {
       logger?.info(
         'Calling ImportRule.canImport($sourceUri, $importDirective)',
       );
-      if (!rule.canImport(sourceUri, importDirective)) {
-        logger?.info('Import denied. Reason: ${rule.reason}');
-        this.rule.reportAtNode(node, arguments: [rule.reason]);
+      if (!importRule.canImport(sourceUri, importDirective)) {
+        logger?.info(
+          'Import denied. Reason: ${importRule.reason} '
+          '(severity: ${importRule.severity.name})',
+        );
+        rule.reportAtNode(
+          node,
+          diagnosticCode: _Rule._lintCodeFor(importRule.severity),
+          arguments: [importRule.reason],
+        );
         return;
       }
     }

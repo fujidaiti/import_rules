@@ -158,9 +158,8 @@ class ConfigParser {
 
     // Check if this is an analysis_options.yaml format with import_rules section
     final importRulesSection = doc['import_rules'];
-    final rulesData = importRulesSection is Map
-        ? importRulesSection['rules']
-        : doc['rules'];
+    final configSection = importRulesSection is Map ? importRulesSection : doc;
+    final rulesData = configSection['rules'];
 
     if (rulesData == null) {
       throw FormatException('Missing "rules" key in YAML');
@@ -170,6 +169,9 @@ class ConfigParser {
       throw FormatException('"rules" must be a list');
     }
 
+    // Parse optional global default severity
+    final globalSeverity = _parseSeverityField(configSection, 'top-level');
+
     final rules = <ImportRule>[];
     for (var i = 0; i < rulesData.length; i++) {
       final ruleMap = rulesData[i];
@@ -178,7 +180,7 @@ class ConfigParser {
       }
 
       try {
-        final rule = _parseRule(ruleMap, packageName);
+        final rule = _parseRule(ruleMap, packageName, globalSeverity);
         rules.add(rule);
       } catch (e) {
         throw FormatException('Error parsing rule at index $i: $e');
@@ -188,8 +190,25 @@ class ConfigParser {
     return Config(rules: rules);
   }
 
+  /// Parses the optional `severity` field from a YAML map.
+  ///
+  /// Returns `null` if the field is not present.
+  /// Throws [FormatException] if the value is invalid.
+  Severity? _parseSeverityField(Map map, String fieldContext) {
+    final severityRaw = map['severity'];
+    if (severityRaw == null) return null;
+    if (severityRaw is! String) {
+      throw FormatException('"severity" in $fieldContext must be a string');
+    }
+    return Severity.parse(severityRaw);
+  }
+
   /// Parses a single rule from a map.
-  ImportRule _parseRule(Map ruleMap, String? packageName) {
+  ImportRule _parseRule(
+    Map ruleMap,
+    String? packageName,
+    Severity? globalSeverity,
+  ) {
     // Parse reason (required)
     final reasonRaw = ruleMap['reason'];
     if (reasonRaw == null) {
@@ -263,8 +282,13 @@ class ConfigParser {
         ? _normalizeToList(excludeDisallowRaw, 'exclude_disallow')
         : <String>[];
 
+    // Parse severity (optional, falls back to global default, then to warning)
+    final ruleSeverity = _parseSeverityField(ruleMap, 'rule');
+    final severity = ruleSeverity ?? globalSeverity ?? Severity.warning;
+
     return ImportRule(
       reason: reason,
+      severity: severity,
       targetPatterns: target
           .map((pattern) => TargetPattern(pattern: pattern))
           .toList(),

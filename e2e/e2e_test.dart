@@ -21,6 +21,260 @@ void main() {
     env.tearDown();
   });
 
+  group('Severity - ', () {
+    late final DartPackage packageTemplate;
+    late final Directory testGroupRoot;
+    late DartPackage packageUnderTest;
+
+    setUpAll(() {
+      testGroupRoot = env.root.childDirectory('severity-tests');
+      packageTemplate = env.createPackage(
+        name: 'severity_test_package',
+        root: testGroupRoot.childDirectory('template'),
+        sdkVersionConstraint: sdkVersionConstraint,
+      );
+      packageTemplate.pubGet();
+    });
+
+    setUp(() {
+      packageUnderTest = env.createPackage(
+        name: packageTemplate.name,
+        root: testGroupRoot.childDirectory('severity_test_package'),
+        sdkVersionConstraint: sdkVersionConstraint,
+      );
+
+      packageUnderTest.pubspec.deleteSync();
+      packageUnderTest.root
+          .childSymlink('pubspec.yaml')
+          .createSync(packageTemplate.pubspec.absolute.path);
+      packageUnderTest.root
+          .childSymlink('pubspec.lock')
+          .createSync(packageTemplate.pubspecLock.absolute.path);
+      packageUnderTest.root
+          .childSymlink('.dart_tool')
+          .createSync(packageTemplate.dartTool.absolute.path);
+      packageUnderTest.root
+          .childFile('analysis_options.yaml')
+          .writeAsStringSync('''
+analyzer:
+  errors:
+    unused_import: ignore
+
+plugins:
+  import_rules:
+    path: ${pluginRoot.absolute.path}
+''');
+    });
+
+    tearDown(() {
+      packageUnderTest.root.deleteSync(recursive: true);
+    });
+
+    test('Rule with severity: error reports as error', () {
+      const importRulesYaml = '''
+rules:
+  - target: lib/**
+    disallow: dart:io
+    severity: error
+    reason: No IO allowed.
+''';
+
+      packageUnderTest.root
+        ..childFile('import_rules.yaml').writeAsStringSync(importRulesYaml)
+        ..createFiles({
+          'lib': {'main.dart': "import 'dart:io';\n"},
+        });
+
+      final analyzerOutput = packageUnderTest.analyze();
+      expect(
+        analyzerOutput,
+        containsLintErrors(
+          exclusive: true,
+          file: 'lib/main.dart',
+          diagnostics: [
+            LintDiagnostic(
+              severity: 'error',
+              line: 1,
+              col: 1,
+              message: 'Import rule violation. No IO allowed.',
+              code: 'import_rule_violation',
+            ),
+          ],
+        ),
+      );
+    });
+
+    test('Rule with severity: info reports as info', () {
+      const importRulesYaml = '''
+rules:
+  - target: lib/**
+    disallow: dart:io
+    severity: info
+    reason: Consider avoiding IO.
+''';
+
+      packageUnderTest.root
+        ..childFile('import_rules.yaml').writeAsStringSync(importRulesYaml)
+        ..createFiles({
+          'lib': {'main.dart': "import 'dart:io';\n"},
+        });
+
+      final analyzerOutput = packageUnderTest.analyze();
+      expect(
+        analyzerOutput,
+        containsLintErrors(
+          exclusive: true,
+          file: 'lib/main.dart',
+          diagnostics: [
+            LintDiagnostic(
+              severity: 'info',
+              line: 1,
+              col: 1,
+              message: 'Import rule violation. Consider avoiding IO.',
+              code: 'import_rule_violation',
+            ),
+          ],
+        ),
+      );
+    });
+
+    test('Rule with no severity defaults to warning', () {
+      const importRulesYaml = '''
+rules:
+  - target: lib/**
+    disallow: dart:io
+    reason: No IO allowed.
+''';
+
+      packageUnderTest.root
+        ..childFile('import_rules.yaml').writeAsStringSync(importRulesYaml)
+        ..createFiles({
+          'lib': {'main.dart': "import 'dart:io';\n"},
+        });
+
+      final analyzerOutput = packageUnderTest.analyze();
+      expect(
+        analyzerOutput,
+        containsLintErrors(
+          exclusive: true,
+          file: 'lib/main.dart',
+          diagnostics: [
+            LintDiagnostic(
+              severity: 'warning',
+              line: 1,
+              col: 1,
+              message: 'Import rule violation. No IO allowed.',
+              code: 'import_rule_violation',
+            ),
+          ],
+        ),
+      );
+    });
+
+    test('Global severity with per-rule override', () {
+      const importRulesYaml = '''
+severity: error
+rules:
+  - target: lib/**
+    disallow: dart:io
+    reason: No IO (inherits global error).
+  - target: lib/**
+    disallow: dart:math
+    severity: info
+    reason: Math is optional (overridden to info).
+''';
+
+      packageUnderTest.root
+        ..childFile('import_rules.yaml').writeAsStringSync(importRulesYaml)
+        ..createFiles({
+          'lib': {
+            'io_user.dart': "import 'dart:io';\n",
+            'math_user.dart': "import 'dart:math';\n",
+          },
+        });
+
+      final analyzerOutput = packageUnderTest.analyze();
+      expect(
+        analyzerOutput,
+        containsLintErrors(
+          exclusive: true,
+          file: 'lib/io_user.dart',
+          diagnostics: [
+            LintDiagnostic(
+              severity: 'error',
+              line: 1,
+              col: 1,
+              message: 'Import rule violation. No IO (inherits global error).',
+              code: 'import_rule_violation',
+            ),
+          ],
+        ),
+      );
+      expect(
+        analyzerOutput,
+        containsLintErrors(
+          exclusive: true,
+          file: 'lib/math_user.dart',
+          diagnostics: [
+            LintDiagnostic(
+              severity: 'info',
+              line: 1,
+              col: 1,
+              message:
+                  'Import rule violation. Math is optional (overridden to info).',
+              code: 'import_rule_violation',
+            ),
+          ],
+        ),
+      );
+    });
+
+    test('Multiple rules with different severity levels in one file', () {
+      const importRulesYaml = '''
+rules:
+  - target: lib/**
+    disallow: dart:io
+    severity: error
+    reason: IO is critical.
+  - target: lib/**
+    disallow: dart:math
+    severity: info
+    reason: Math is informational.
+''';
+
+      packageUnderTest.root
+        ..childFile('import_rules.yaml').writeAsStringSync(importRulesYaml)
+        ..createFiles({
+          'lib': {'both.dart': "import 'dart:io';\nimport 'dart:math';\n"},
+        });
+
+      final analyzerOutput = packageUnderTest.analyze();
+      expect(
+        analyzerOutput,
+        containsLintErrors(
+          exclusive: true,
+          file: 'lib/both.dart',
+          diagnostics: [
+            LintDiagnostic(
+              severity: 'error',
+              line: 1,
+              col: 1,
+              message: 'Import rule violation. IO is critical.',
+              code: 'import_rule_violation',
+            ),
+            LintDiagnostic(
+              severity: 'info',
+              line: 2,
+              col: 1,
+              message: 'Import rule violation. Math is informational.',
+              code: 'import_rule_violation',
+            ),
+          ],
+        ),
+      );
+    });
+  });
+
   group('Use case - ', () {
     // We're going to share pubspec.yaml, pubspec.lock, and .dart_tool from the template package
     // across all test packages in this group to avoid running "dart pub get" multiple times.

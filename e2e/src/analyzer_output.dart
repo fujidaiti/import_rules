@@ -6,20 +6,22 @@ class AnalyzerOutput {
 
   static AnalyzerOutput parse(String output) {
     final errors = <LintError>[];
-    // Parse format: "   info - lib/main.dart:5:1 - Message - code"
+    // Parse format: "  severity - lib/main.dart:5:1 - Message - code"
+    // Note: leading whitespace is optional as some Dart SDK versions omit it.
     final regex = RegExp(
-      r'^\s+\w+ - ([^:]+):(\d+):(\d+) - (.+?) - (\w+)$',
+      r'^\s*(\w+) - ([^:]+):(\d+):(\d+) - (.+?) - (\w+)$',
       multiLine: true,
     );
 
     for (final match in regex.allMatches(output)) {
       final diagnostic = LintDiagnostic(
-        line: int.parse(match.group(2)!),
-        col: int.parse(match.group(3)!),
-        message: match.group(4)!,
-        code: match.group(5)!,
+        severity: match.group(1)!,
+        line: int.parse(match.group(3)!),
+        col: int.parse(match.group(4)!),
+        message: match.group(5)!,
+        code: match.group(6)!,
       );
-      errors.add(LintError(file: match.group(1)!, diagnostic: diagnostic));
+      errors.add(LintError(file: match.group(2)!, diagnostic: diagnostic));
     }
 
     return AnalyzerOutput(List.unmodifiable(errors));
@@ -37,12 +39,14 @@ class AnalyzerOutput {
 
 /// Represents diagnostic details for a lint error
 class LintDiagnostic {
+  final String? severity;
   final int line;
   final int col;
   final String message;
   final String code;
 
   LintDiagnostic({
+    this.severity,
     required this.line,
     required this.col,
     required this.message,
