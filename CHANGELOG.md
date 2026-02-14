@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.7
+
+- Add a global and per-rule `severity` field to change the severity level of rule violation reports.
+
 ## 0.0.6
 
 - Support `analyzer` v10.
