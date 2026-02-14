@@ -279,9 +279,7 @@ class _Visitor extends SimpleAstVisitor<void> {
       );
       if (!importRule.canImport(sourceUri, importDirective)) {
         final severity =
-            importRule.severity ??
-            config.defaultSeverity ??
-            Severity.warning;
+            importRule.severity ?? config.defaultSeverity ?? Severity.warning;
         logger?.info(
           'Import denied. Reason: ${importRule.reason} '
           '(severity: ${severity.name})',
