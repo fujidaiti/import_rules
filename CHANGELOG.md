@@ -11,7 +11,8 @@
 ## 0.0.4
 
 - feat(pkg): Refresh stale cached rules when rules file changes (#5)
-  - Restarting the analysis server is no longer required after modifying the rules file.
+  - Restarting the analysis server is no longer required after modifying the
+    rules file.
 
 ## 0.0.3
 

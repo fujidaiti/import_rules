@@ -9,6 +9,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Format markdown files
+        run: npx prettier --check "**/*.{md,yaml,yml}"
+
       - name: Setup Dart SDK
         uses: dart-lang/setup-dart@v1
         with:
@@ -42,12 +45,16 @@ jobs:
           sdk: stable
 
       - name: Run unit tests
-        run: dart test --file-reporter="json:${{ env.UNIT_TESTING_REPORT }}" test/ e2e/src/
+        run:
+          dart test --file-reporter="json:${{ env.UNIT_TESTING_REPORT }}" test/
+          e2e/src/
 
       - name: Publish unit test report
         uses: dorny/test-reporter@v1
         # PRs from forks have no write permissions, so we skip this step in that case.
-        if: github.event.pull_request.head.repo.fork == false && (success() || failure())
+        if:
+          github.event.pull_request.head.repo.fork == false && (success() ||
+          failure())
         with:
           name: Unit Testing Report
           path: ${{ env.UNIT_TESTING_REPORT }}
@@ -72,12 +79,16 @@ jobs:
           sdk: stable
 
       - name: Run E2E tests
-        run: dart test e2e/e2e_test.dart --file-reporter="json:${{ env.E2E_TESTING_REPORT }}"
+        run:
+          dart test e2e/e2e_test.dart --file-reporter="json:${{
+          env.E2E_TESTING_REPORT }}"
 
       - name: Publish E2E test report
         uses: dorny/test-reporter@v1
         # PRs from forks have no write permissions, so we skip this step in that case.
-        if: github.event.pull_request.head.repo.fork == false && (success() || failure())
+        if:
+          github.event.pull_request.head.repo.fork == false && (success() ||
+          failure())
         with:
           name: E2E Testing Report
           path: ${{ env.E2E_TESTING_REPORT }}
