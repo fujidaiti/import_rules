@@ -826,6 +826,189 @@ import_rules:
     );
   });
 
+  group('Severity parsing', () {
+    test('parses per-rule severity: error', () {
+      final yaml = '''
+rules:
+  - reason: Critical rule
+    target: lib/**
+    disallow: test/**
+    severity: error
+''';
+
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+
+      expect(rules, hasLength(1));
+      expect(rules[0].severity, equals(Severity.error));
+    });
+
+    test('parses per-rule severity: warning', () {
+      final yaml = '''
+rules:
+  - reason: Warning rule
+    target: lib/**
+    disallow: test/**
+    severity: warning
+''';
+
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+
+      expect(rules, hasLength(1));
+      expect(rules[0].severity, equals(Severity.warning));
+    });
+
+    test('parses per-rule severity: info', () {
+      final yaml = '''
+rules:
+  - reason: Info rule
+    target: lib/**
+    disallow: test/**
+    severity: info
+''';
+
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+
+      expect(rules, hasLength(1));
+      expect(rules[0].severity, equals(Severity.info));
+    });
+
+    test('defaults to null when no severity specified', () {
+      final yaml = '''
+rules:
+  - reason: Default rule
+    target: lib/**
+    disallow: test/**
+''';
+
+      final config = ConfigParser().parseRulesFromYaml(yaml);
+
+      expect(config.rules, hasLength(1));
+      expect(config.rules[0].severity, isNull);
+      expect(config.defaultSeverity, isNull);
+    });
+
+    test(
+      'global default severity stored in config, rule severity remains null',
+      () {
+        final yaml = '''
+severity: error
+rules:
+  - reason: Rule inheriting global
+    target: lib/**
+    disallow: test/**
+''';
+
+        final config = ConfigParser().parseRulesFromYaml(yaml);
+
+        expect(config.rules, hasLength(1));
+        expect(config.rules[0].severity, isNull);
+        expect(config.defaultSeverity, equals(Severity.error));
+      },
+    );
+
+    test('per-rule severity is stored independently from global', () {
+      final yaml = '''
+severity: error
+rules:
+  - reason: Rule with override
+    target: lib/**
+    disallow: test/**
+    severity: info
+''';
+
+      final config = ConfigParser().parseRulesFromYaml(yaml);
+
+      expect(config.rules, hasLength(1));
+      expect(config.rules[0].severity, equals(Severity.info));
+      expect(config.defaultSeverity, equals(Severity.error));
+    });
+
+    test('invalid severity value throws FormatException', () {
+      final yaml = '''
+rules:
+  - reason: Bad severity
+    target: lib/**
+    disallow: test/**
+    severity: fatal
+''';
+
+      expect(
+        () => ConfigParser().parseRulesFromYaml(yaml),
+        throwsA(
+          isA<FormatException>().having(
+            (e) => e.message,
+            'message',
+            contains('severity'),
+          ),
+        ),
+      );
+    });
+
+    test('invalid global severity value throws FormatException', () {
+      final yaml = '''
+severity: fatal
+rules:
+  - reason: Rule
+    target: lib/**
+    disallow: test/**
+''';
+
+      expect(
+        () => ConfigParser().parseRulesFromYaml(yaml),
+        throwsA(
+          isA<FormatException>().having(
+            (e) => e.message,
+            'message',
+            contains('severity'),
+          ),
+        ),
+      );
+    });
+
+    test('multiple rules with mixed severity settings', () {
+      final yaml = '''
+severity: error
+rules:
+  - reason: Inherits global
+    target: lib/**
+    disallow: test/**
+  - reason: Overrides to info
+    target: lib/**
+    disallow: test/**
+    severity: info
+  - reason: Overrides to warning
+    target: lib/**
+    disallow: test/**
+    severity: warning
+''';
+
+      final config = ConfigParser().parseRulesFromYaml(yaml);
+
+      expect(config.defaultSeverity, equals(Severity.error));
+      expect(config.rules, hasLength(3));
+      expect(config.rules[0].severity, isNull);
+      expect(config.rules[1].severity, equals(Severity.info));
+      expect(config.rules[2].severity, equals(Severity.warning));
+    });
+
+    test('global severity in analysis_options.yaml format', () {
+      final yaml = '''
+import_rules:
+  severity: error
+  rules:
+    - reason: Rule in analysis_options
+      target: lib/**
+      disallow: test/**
+''';
+
+      final config = ConfigParser().parseRulesFromYaml(yaml);
+
+      expect(config.defaultSeverity, equals(Severity.error));
+      expect(config.rules, hasLength(1));
+      expect(config.rules[0].severity, isNull);
+    });
+  });
+
   group('Real-world examples from spec', () {
     test('parses Layer Architecture Enforcement example', () {
       final yaml = '''

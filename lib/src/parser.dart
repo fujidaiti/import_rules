@@ -101,6 +101,7 @@ class ConfigParser {
         // Return config with file metadata for cache invalidation
         return Config(
           rules: config.rules,
+          defaultSeverity: config.defaultSeverity,
           configFilePath: file.path,
           modificationStamp: file.modificationStamp,
         );
@@ -158,9 +159,8 @@ class ConfigParser {
 
     // Check if this is an analysis_options.yaml format with import_rules section
     final importRulesSection = doc['import_rules'];
-    final rulesData = importRulesSection is Map
-        ? importRulesSection['rules']
-        : doc['rules'];
+    final configSection = importRulesSection is Map ? importRulesSection : doc;
+    final rulesData = configSection['rules'];
 
     if (rulesData == null) {
       throw FormatException('Missing "rules" key in YAML');
@@ -169,6 +169,9 @@ class ConfigParser {
     if (rulesData is! List) {
       throw FormatException('"rules" must be a list');
     }
+
+    // Parse optional global default severity
+    final globalSeverity = _parseSeverityField(configSection, 'top-level');
 
     final rules = <ImportRule>[];
     for (var i = 0; i < rulesData.length; i++) {
@@ -185,7 +188,28 @@ class ConfigParser {
       }
     }
 
-    return Config(rules: rules);
+    return Config(rules: rules, defaultSeverity: globalSeverity);
+  }
+
+  /// Parses the optional `severity` field from a YAML map.
+  ///
+  /// Returns `null` if the field is not present.
+  /// Throws [FormatException] if the value is invalid.
+  Severity? _parseSeverityField(Map map, String fieldContext) {
+    final severityRaw = map['severity'];
+    if (severityRaw == null) return null;
+    if (severityRaw is! String) {
+      throw FormatException('"severity" in $fieldContext must be a string');
+    }
+    return switch (severityRaw) {
+      'error' => Severity.error,
+      'warning' => Severity.warning,
+      'info' => Severity.info,
+      _ => throw FormatException(
+        'Invalid severity "$severityRaw" in $fieldContext. '
+        'Must be one of: error, warning, info',
+      ),
+    };
   }
 
   /// Parses a single rule from a map.
@@ -263,8 +287,12 @@ class ConfigParser {
         ? _normalizeToList(excludeDisallowRaw, 'exclude_disallow')
         : <String>[];
 
+    // Parse severity (optional per-rule override)
+    final severity = _parseSeverityField(ruleMap, 'rule');
+
     return ImportRule(
       reason: reason,
+      severity: severity,
       targetPatterns: target
           .map((pattern) => TargetPattern(pattern: pattern))
           .toList(),

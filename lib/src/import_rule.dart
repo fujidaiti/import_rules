@@ -2,6 +2,9 @@ import 'package:glob/glob.dart';
 import 'package:meta/meta.dart';
 import 'package:path/path.dart' as p;
 
+/// Severity level for import rule violations.
+enum Severity { error, warning, info }
+
 /// Represents an import directive in a Dart file.
 @immutable
 class Import {
@@ -76,12 +79,17 @@ class ImportRule {
   /// Disallow patterns to exclude from disallows (making them importable).
   final List<DisallowPattern> excludeDisallowPatterns;
 
+  /// The per-rule severity level for violations of this rule.
+  /// If null, the global default severity should be used.
+  final Severity? severity;
+
   ImportRule({
     required this.reason,
     required this.targetPatterns,
     this.excludeTargetPatterns = const [],
     required this.disallowPatterns,
     this.excludeDisallowPatterns = const [],
+    this.severity,
   });
 
   /// Checks if a target file can import an importee file according to this rule.

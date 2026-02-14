@@ -68,7 +68,8 @@ Matcher containsLintErrors({
               d.line == expected.line &&
               d.col == expected.col &&
               d.message == expected.message &&
-              d.code == expected.code,
+              d.code == expected.code &&
+              (expected.severity == null || d.severity == expected.severity),
         );
         if (index == -1) return false;
         remaining.removeAt(index);
