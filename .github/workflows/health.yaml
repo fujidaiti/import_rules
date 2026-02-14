@@ -42,7 +42,7 @@ jobs:
           sdk: stable
 
       - name: Run unit tests
-        run: dart test --file-reporter="json:${{ env.UNIT_TESTING_REPORT }}"
+        run: dart test --file-reporter="json:${{ env.UNIT_TESTING_REPORT }}" test/ e2e/src/
 
       - name: Publish unit test report
         uses: dorny/test-reporter@v1
