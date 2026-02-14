@@ -101,6 +101,7 @@ class ConfigParser {
         // Return config with file metadata for cache invalidation
         return Config(
           rules: config.rules,
+          defaultSeverity: config.defaultSeverity,
           configFilePath: file.path,
           modificationStamp: file.modificationStamp,
         );
@@ -180,14 +181,14 @@ class ConfigParser {
       }
 
       try {
-        final rule = _parseRule(ruleMap, packageName, globalSeverity);
+        final rule = _parseRule(ruleMap, packageName);
         rules.add(rule);
       } catch (e) {
         throw FormatException('Error parsing rule at index $i: $e');
       }
     }
 
-    return Config(rules: rules);
+    return Config(rules: rules, defaultSeverity: globalSeverity);
   }
 
   /// Parses the optional `severity` field from a YAML map.
@@ -200,15 +201,19 @@ class ConfigParser {
     if (severityRaw is! String) {
       throw FormatException('"severity" in $fieldContext must be a string');
     }
-    return Severity.parse(severityRaw);
+    return switch (severityRaw) {
+      'error' => Severity.error,
+      'warning' => Severity.warning,
+      'info' => Severity.info,
+      _ => throw FormatException(
+        'Invalid severity "$severityRaw" in $fieldContext. '
+        'Must be one of: error, warning, info',
+      ),
+    };
   }
 
   /// Parses a single rule from a map.
-  ImportRule _parseRule(
-    Map ruleMap,
-    String? packageName,
-    Severity? globalSeverity,
-  ) {
+  ImportRule _parseRule(Map ruleMap, String? packageName) {
     // Parse reason (required)
     final reasonRaw = ruleMap['reason'];
     if (reasonRaw == null) {
@@ -282,9 +287,8 @@ class ConfigParser {
         ? _normalizeToList(excludeDisallowRaw, 'exclude_disallow')
         : <String>[];
 
-    // Parse severity (optional, falls back to global default, then to warning)
-    final ruleSeverity = _parseSeverityField(ruleMap, 'rule');
-    final severity = ruleSeverity ?? globalSeverity ?? Severity.warning;
+    // Parse severity (optional per-rule override)
+    final severity = _parseSeverityField(ruleMap, 'rule');
 
     return ImportRule(
       reason: reason,

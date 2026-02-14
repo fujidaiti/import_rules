@@ -278,13 +278,17 @@ class _Visitor extends SimpleAstVisitor<void> {
         'Calling ImportRule.canImport($sourceUri, $importDirective)',
       );
       if (!importRule.canImport(sourceUri, importDirective)) {
+        final severity =
+            importRule.severity ??
+            config.defaultSeverity ??
+            Severity.warning;
         logger?.info(
           'Import denied. Reason: ${importRule.reason} '
-          '(severity: ${importRule.severity.name})',
+          '(severity: ${severity.name})',
         );
         rule.reportAtNode(
           node,
-          diagnosticCode: _Rule._lintCodeFor(importRule.severity),
+          diagnosticCode: _Rule._lintCodeFor(severity),
           arguments: [importRule.reason],
         );
         return;

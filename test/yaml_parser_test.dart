@@ -872,7 +872,7 @@ rules:
       expect(rules[0].severity, equals(Severity.info));
     });
 
-    test('defaults to warning when no severity specified', () {
+    test('defaults to null when no severity specified', () {
       final yaml = '''
 rules:
   - reason: Default rule
@@ -880,14 +880,15 @@ rules:
     disallow: test/**
 ''';
 
-      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+      final config = ConfigParser().parseRulesFromYaml(yaml);
 
-      expect(rules, hasLength(1));
-      expect(rules[0].severity, equals(Severity.warning));
+      expect(config.rules, hasLength(1));
+      expect(config.rules[0].severity, isNull);
+      expect(config.defaultSeverity, isNull);
     });
 
     test(
-      'global default severity applied to rules without per-rule severity',
+      'global default severity stored in config, rule severity remains null',
       () {
         final yaml = '''
 severity: error
@@ -897,14 +898,15 @@ rules:
     disallow: test/**
 ''';
 
-        final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+        final config = ConfigParser().parseRulesFromYaml(yaml);
 
-        expect(rules, hasLength(1));
-        expect(rules[0].severity, equals(Severity.error));
+        expect(config.rules, hasLength(1));
+        expect(config.rules[0].severity, isNull);
+        expect(config.defaultSeverity, equals(Severity.error));
       },
     );
 
-    test('per-rule severity overrides global default', () {
+    test('per-rule severity is stored independently from global', () {
       final yaml = '''
 severity: error
 rules:
@@ -914,10 +916,11 @@ rules:
     severity: info
 ''';
 
-      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+      final config = ConfigParser().parseRulesFromYaml(yaml);
 
-      expect(rules, hasLength(1));
-      expect(rules[0].severity, equals(Severity.info));
+      expect(config.rules, hasLength(1));
+      expect(config.rules[0].severity, equals(Severity.info));
+      expect(config.defaultSeverity, equals(Severity.error));
     });
 
     test('invalid severity value throws FormatException', () {
@@ -979,12 +982,13 @@ rules:
     severity: warning
 ''';
 
-      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+      final config = ConfigParser().parseRulesFromYaml(yaml);
 
-      expect(rules, hasLength(3));
-      expect(rules[0].severity, equals(Severity.error));
-      expect(rules[1].severity, equals(Severity.info));
-      expect(rules[2].severity, equals(Severity.warning));
+      expect(config.defaultSeverity, equals(Severity.error));
+      expect(config.rules, hasLength(3));
+      expect(config.rules[0].severity, isNull);
+      expect(config.rules[1].severity, equals(Severity.info));
+      expect(config.rules[2].severity, equals(Severity.warning));
     });
 
     test('global severity in analysis_options.yaml format', () {
@@ -997,10 +1001,11 @@ import_rules:
       disallow: test/**
 ''';
 
-      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+      final config = ConfigParser().parseRulesFromYaml(yaml);
 
-      expect(rules, hasLength(1));
-      expect(rules[0].severity, equals(Severity.error));
+      expect(config.defaultSeverity, equals(Severity.error));
+      expect(config.rules, hasLength(1));
+      expect(config.rules[0].severity, isNull);
     });
   });
 
