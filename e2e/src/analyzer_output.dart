@@ -6,8 +6,7 @@ class AnalyzerOutput {
 
   static AnalyzerOutput parse(String output) {
     final errors = <LintError>[];
-    // Parse format: "  severity - lib/main.dart:5:1 - Message - code"
-    // Note: leading whitespace is optional as some Dart SDK versions omit it.
+    // Parse format: "<severity> - lib/main.dart:5:1 - Message - code"
     final regex = RegExp(
       r'^\s*(\w+) - ([^:]+):(\d+):(\d+) - (.+?) - (\w+)$',
       multiLine: true,

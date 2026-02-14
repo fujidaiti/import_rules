@@ -96,6 +96,7 @@ class _Rule extends MultiAnalysisRule {
   static const _codeError = LintCode(
     'import_rule_violation',
     'Import rule violation.',
+    // {0} will be replaced with the reason text from the rule config
     correctionMessage: '{0}',
     uniqueName: 'LintCode.import_rule_violation_error',
     severity: DiagnosticSeverity.ERROR,
@@ -117,14 +118,6 @@ class _Rule extends MultiAnalysisRule {
     severity: DiagnosticSeverity.INFO,
   );
 
-  static LintCode _lintCodeFor(Severity severity) {
-    return switch (severity) {
-      Severity.error => _codeError,
-      Severity.warning => _codeWarning,
-      Severity.info => _codeInfo,
-    };
-  }
-
   static final Map<String, Config> _configs = {};
   static final Map<String, String> _packageNames = {};
   final parser = ConfigParser();
@@ -137,6 +130,22 @@ class _Rule extends MultiAnalysisRule {
 
   @override
   List<LintCode> get diagnosticCodes => [_codeError, _codeWarning, _codeInfo];
+
+  void reportRuleViolationAt(
+    AstNode node, {
+    required String reason,
+    required Severity severity,
+  }) {
+    reportAtNode(
+      node,
+      arguments: [reason],
+      diagnosticCode: switch (severity) {
+        Severity.error => _codeError,
+        Severity.warning => _codeWarning,
+        Severity.info => _codeInfo,
+      },
+    );
+  }
 
   @override
   void registerNodeProcessors(
@@ -279,15 +288,15 @@ class _Visitor extends SimpleAstVisitor<void> {
       );
       if (!importRule.canImport(sourceUri, importDirective)) {
         final severity =
-            importRule.severity ?? config.defaultSeverity ?? Severity.warning;
+            importRule.severity ?? config.defaultSeverity ?? Severity.info;
         logger?.info(
           'Import denied. Reason: ${importRule.reason} '
           '(severity: ${severity.name})',
         );
-        rule.reportAtNode(
+        rule.reportRuleViolationAt(
           node,
-          diagnosticCode: _Rule._lintCodeFor(severity),
-          arguments: [importRule.reason],
+          reason: importRule.reason,
+          severity: severity,
         );
         return;
       }

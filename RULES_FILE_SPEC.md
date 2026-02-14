@@ -42,7 +42,7 @@ Here are the descriptions of the top level fields in the rules file:
 | Field | Required | Description |
 |-------|----------|-------------|
 | `rules` | **Required** | List of [import rule](#import-rule) definitions. |
-| `severity` | Optional | Sets the default severity for all rules. Valid values: `error`, `warning`, `info`. Defaults to `warning`. |
+| `severity` | Optional | Sets the default severity for all rules. Valid values: `error`, `warning`, `info`. Defaults to `info`. |
 
 </br>
 

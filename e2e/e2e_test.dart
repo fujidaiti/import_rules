@@ -138,7 +138,7 @@ rules:
       );
     });
 
-    test('Rule with no severity defaults to warning', () {
+    test('Rule with no severity defaults to info', () {
       const importRulesYaml = '''
 rules:
   - target: lib/**
@@ -160,7 +160,7 @@ rules:
           file: 'lib/main.dart',
           diagnostics: [
             LintDiagnostic(
-              severity: 'warning',
+              severity: 'info',
               line: 1,
               col: 1,
               message: 'Import rule violation. No IO allowed.',
