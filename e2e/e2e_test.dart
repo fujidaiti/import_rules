@@ -1212,4 +1212,141 @@ import 'cache/_cache_hash_algorithm.dart';
       );
     });
   });
+
+  group('Capture group - ', () {
+    late final DartPackage packageTemplate;
+    late final Directory testGroupRoot;
+    late DartPackage packageUnderTest;
+
+    setUpAll(() {
+      testGroupRoot = env.root.childDirectory('capture-group-tests');
+      packageTemplate = env.createPackage(
+        name: 'capture_group_test_package',
+        root: testGroupRoot.childDirectory('template'),
+        sdkVersionConstraint: sdkVersionConstraint,
+      );
+      packageTemplate.pubGet();
+    });
+
+    setUp(() {
+      packageUnderTest = env.createPackage(
+        name: packageTemplate.name,
+        root: testGroupRoot.childDirectory('capture_group_test_package'),
+        sdkVersionConstraint: sdkVersionConstraint,
+      );
+
+      packageUnderTest.pubspec.deleteSync();
+      packageUnderTest.root
+          .childSymlink('pubspec.yaml')
+          .createSync(packageTemplate.pubspec.absolute.path);
+      packageUnderTest.root
+          .childSymlink('pubspec.lock')
+          .createSync(packageTemplate.pubspecLock.absolute.path);
+      packageUnderTest.root
+          .childSymlink('.dart_tool')
+          .createSync(packageTemplate.dartTool.absolute.path);
+      packageUnderTest.root
+          .childFile('analysis_options.yaml')
+          .writeAsStringSync('''
+analyzer:
+  errors:
+    unused_import: ignore
+
+plugins:
+  import_rules:
+    path: ${pluginRoot.absolute.path}
+''');
+    });
+
+    tearDown(() {
+      packageUnderTest.root.deleteSync(recursive: true);
+    });
+
+    test('Module isolation with capture group', () {
+      const importRulesYaml = r'''
+rules:
+  - target: "lib/features/{MODULE}/**"
+    disallow: lib/features/**
+    exclude_disallow:
+      - "lib/features/$MODULE/**"
+      - lib/features/shared/**
+    reason: Features must be isolated from each other.
+''';
+
+      const authDart = '''
+import 'service.dart';
+import '../profile/profile.dart';
+''';
+
+      const profileDart = '''
+import '../shared/utils.dart';
+import '../auth/auth.dart';
+''';
+
+      const sharedUtilsDart = '''
+// No imports
+''';
+
+      packageUnderTest.root
+        ..childFile('import_rules.yaml').writeAsStringSync(importRulesYaml)
+        ..createFiles({
+          'lib': {
+            'features': {
+              'auth': {
+                'auth.dart': authDart,
+                'service.dart': '',
+              },
+              'profile': {'profile.dart': profileDart},
+              'shared': {'utils.dart': sharedUtilsDart},
+            },
+          },
+        });
+
+      final analyzerOutput = packageUnderTest.analyze();
+
+      // auth.dart: import of service.dart is OK (same module),
+      // but import of ../profile/profile.dart is a violation
+      expect(
+        analyzerOutput,
+        containsLintErrors(
+          exclusive: true,
+          file: 'lib/features/auth/auth.dart',
+          diagnostics: [
+            LintDiagnostic(
+              line: 2,
+              col: 1,
+              message:
+                  'Import rule violation. Features must be isolated from each other.',
+              code: 'import_rule_violation',
+            ),
+          ],
+        ),
+      );
+
+      // profile.dart: import of ../shared/utils.dart is OK (shared is excluded),
+      // but import of ../auth/auth.dart is a violation
+      expect(
+        analyzerOutput,
+        containsLintErrors(
+          exclusive: true,
+          file: 'lib/features/profile/profile.dart',
+          diagnostics: [
+            LintDiagnostic(
+              line: 2,
+              col: 1,
+              message:
+                  'Import rule violation. Features must be isolated from each other.',
+              code: 'import_rule_violation',
+            ),
+          ],
+        ),
+      );
+
+      // shared/utils.dart has no violations
+      expect(
+        analyzerOutput,
+        isNot(containsAnyLintErrors(file: 'lib/features/shared/utils.dart')),
+      );
+    });
+  });
 }

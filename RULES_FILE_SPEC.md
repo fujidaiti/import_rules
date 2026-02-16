@@ -102,6 +102,88 @@ target: _*.dart
 
 </br>
 
+### Capture groups
+
+A target pattern can contain **capture groups** written as `{NAME}`, where
+`NAME` is an uppercase identifier (letters, digits, and underscores). A capture
+group matches a single path segment (equivalent to `*` in glob syntax) and
+captures the matched value so it can be referenced in `disallow` and
+`exclude_disallow` patterns using `$NAME`.
+
+Capture groups are only allowed in `target` patterns. They cannot be used in
+`exclude_target`, `disallow`, or `exclude_disallow` patterns. Any variable
+reference (`$NAME`) used in `disallow` or `exclude_disallow` must correspond to
+a capture group (`{NAME}`) defined in the `target` pattern of the same rule;
+referencing an undefined capture group is an error.
+
+A single target pattern can contain multiple capture groups:
+
+```yaml
+# Capture a single path segment.
+target: "lib/entities/{MODULE}/**"
+
+# Capture two path segments.
+target: "lib/{LAYER}/{MODULE}/**"
+```
+
+**Syntax rules:** A capture group must occupy an **entire path segment** on its
+own (i.e., delimited by `/` or at the start/end of the pattern). It cannot be
+combined with other text, wildcards, or other capture groups within the same
+segment. Additionally, a capture group must not appear after a `**` wildcard,
+because `**` matches a variable number of segments, making the position of the
+capture group ambiguous.
+
+The following table summarizes valid and invalid uses of capture groups in target
+patterns:
+
+| Pattern                             | Valid | Reason                                                                         |
+| ----------------------------------- | ----- | ------------------------------------------------------------------------------ |
+| `lib/entities/{MODULE}/**`          | Yes   | `{MODULE}` is a full segment at a fixed position.                              |
+| `lib/{LAYER}/{MODULE}/**`           | Yes   | Multiple captures, each occupying a full segment at a fixed position.          |
+| `lib/{MODULE}/**/service.dart`      | Yes   | `{MODULE}` is at a fixed position; `**` comes after it.                        |
+| `lib/**/{DIR}/**/src/**`            | **No** | `{DIR}` appears after `**`, so its position is ambiguous.                     |
+| `lib/{MODULE}_v2/**`                | **No** | `{MODULE}` does not occupy the full segment (mixed with literal text `_v2`).  |
+| `lib/prefix_{MODULE}/**`            | **No** | Same reason; capture group shares the segment with `prefix_`.                 |
+| `lib/{MODULE}*.dart`                | **No** | Capture group mixed with wildcard `*` in the same segment.                    |
+| `lib/{A}{B}/**`                     | **No** | Two capture groups in the same segment.                                       |
+| `{MODULE}.dart`                     | **No** | Capture group shares the segment with `.dart`.                                |
+
+The captured values are substituted into `disallow` and `exclude_disallow`
+patterns at evaluation time. For example, if the target file is
+`lib/entities/auth/service.dart` and the target pattern is
+`lib/entities/{MODULE}/**`, then `MODULE` captures `auth`, and a pattern like
+`lib/entities/$MODULE/**` expands to `lib/entities/auth/**`.
+
+This enables expressing **sibling isolation** with a single rule instead of
+enumerating each module:
+
+```yaml
+# Without capture groups: one rule per module pair (tedious, scales poorly)
+rules:
+  - target: lib/entities/a/**
+    disallow:
+      - lib/entities/b/**
+      - lib/entities/c/**
+    reason: Module a cannot depend on other entity modules.
+  - target: lib/entities/b/**
+    disallow:
+      - lib/entities/a/**
+      - lib/entities/c/**
+    reason: Module b cannot depend on other entity modules.
+
+# With capture groups: a single rule covers all modules
+rules:
+  - target: "lib/entities/{MODULE}/**"
+    disallow: lib/entities/**
+    exclude_disallow: "lib/entities/$MODULE/**"
+    reason: Entity modules must be isolated from each other.
+```
+
+See [Capture group variable](#capture-group-variables) for reference syntax
+details in disallow patterns.
+
+</br>
+
 ## Disallow pattern
 
 A disallow pattern is a URI based [glob](https://pub.dev/packages/glob#syntax)
@@ -225,6 +307,52 @@ with actual values at evaluation time. See
 
 </br>
 
+### Capture group variables
+
+In addition to predefined variables, disallow patterns can reference **capture
+group variables** defined in the `target` pattern of the same rule. A capture
+group `{NAME}` in a `target` pattern defines a variable `$NAME` that can be used
+in `disallow` and `exclude_disallow` patterns.
+
+When a target file matches the target pattern, each `{NAME}` captures the
+corresponding path segment, and all `$NAME` references in disallow patterns are
+replaced with the captured value.
+
+```yaml
+# {FEATURE} captures a path segment in the target pattern.
+# $FEATURE is substituted in exclude_disallow with the captured value.
+rules:
+  - target: "lib/features/{FEATURE}/**"
+    disallow: lib/features/**
+    exclude_disallow:
+      - "lib/features/$FEATURE/**"
+      - lib/features/shared/**
+    reason: Features must be isolated from each other.
+```
+
+With multiple capture groups, each variable is substituted independently:
+
+```yaml
+rules:
+  - target: "lib/{LAYER}/{MODULE}/**"
+    disallow: lib/**
+    exclude_disallow: "lib/$LAYER/$MODULE/**"
+    reason: Files can only import from their own layer and module.
+```
+
+**Validation rules:**
+
+- Every `$NAME` reference in `disallow` or `exclude_disallow` must have a
+  corresponding `{NAME}` capture group in `target`. Referencing an undefined
+  variable is a parse error.
+- Capture groups (`{NAME}`) can only appear in `target` patterns. Using them in
+  `exclude_target`, `disallow`, or `exclude_disallow` is a parse error.
+
+See [Capture groups](#capture-groups) in the Target pattern section for more
+details and examples.
+
+</br>
+
 ## How Rules Are Evaluated
 
 When the Dart analyzer asks the plugin to analyze a Dart file `F`, the plugin
@@ -233,13 +361,15 @@ file one by one, and tests the rule `R` against the pair of `F` and `I` as
 follows:
 
 1. **Does the path of file `F` match any `target` pattern in rule `R`?** If no,
-   skip this rule.
+   skip this rule. If the target pattern contains capture groups (`{NAME}`),
+   extract the captured values from the matched path.
 2. **Does the path of file `F` match any `exclude_target` pattern in rule `R`?**
    If yes, skip this rule.
 3. **Does importee `I` match any `disallow` pattern in rule `R`?** If no, allow
-   the import.
+   the import. Before matching, substitute any `$TARGET_DIR` and capture group
+   variables (`$NAME`) in the pattern with their resolved values.
 4. **Does importee `I` match any `exclude_disallow` pattern in rule `R`?** If
-   yes, allow the import.
+   yes, allow the import. The same variable substitution applies here.
 
 Otherwise, report a rule violation at the line of the importee `I` in the file
 `F` with the `R.reason` message.

@@ -1339,4 +1339,209 @@ rules:
       expect(rules[0].reason, equals('Line one Line two Line three'));
     });
   });
+
+  group('Capture group syntax parsing', () {
+    test('parses single capture group in target', () {
+      final yaml = '''
+rules:
+  - reason: Module isolation
+    target: "lib/entities/{MODULE}/**"
+    disallow: lib/entities/**
+    exclude_disallow: "lib/entities/\$MODULE/**"
+''';
+
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+
+      expect(rules, hasLength(1));
+      expect(
+        rules[0].targetPatterns.map((t) => t.pattern).toList(),
+        equals(['lib/entities/{MODULE}/**']),
+      );
+    });
+
+    test('parses capture group referenced in exclude_disallow', () {
+      final yaml = '''
+rules:
+  - reason: Module isolation
+    target: "lib/entities/{MODULE}/**"
+    disallow: lib/entities/**
+    exclude_disallow: "lib/entities/\$MODULE/**"
+''';
+
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+
+      expect(rules, hasLength(1));
+      expect(
+        rules[0].excludeDisallowPatterns.map((d) => d.pattern).toList(),
+        equals([r'lib/entities/$MODULE/**']),
+      );
+    });
+
+    test('parses capture group referenced in disallow', () {
+      final yaml = '''
+rules:
+  - reason: No self-internal imports
+    target: "lib/features/{FEATURE}/**"
+    disallow: "lib/features/\$FEATURE/internal/**"
+''';
+
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+
+      expect(rules, hasLength(1));
+      expect(
+        rules[0].disallowPatterns.map((d) => d.pattern).toList(),
+        equals([r'lib/features/$FEATURE/internal/**']),
+      );
+    });
+
+    test('parses multiple capture groups', () {
+      final yaml = '''
+rules:
+  - reason: Layer-module isolation
+    target: "lib/{LAYER}/{MODULE}/**"
+    disallow: "lib/**"
+    exclude_disallow: "lib/\$LAYER/\$MODULE/**"
+''';
+
+      final rules = ConfigParser().parseRulesFromYaml(yaml).rules;
+
+      expect(rules, hasLength(1));
+      expect(
+        rules[0].targetPatterns.map((t) => t.pattern).toList(),
+        equals(['lib/{LAYER}/{MODULE}/**']),
+      );
+      expect(
+        rules[0].excludeDisallowPatterns.map((d) => d.pattern).toList(),
+        equals([r'lib/$LAYER/$MODULE/**']),
+      );
+    });
+
+    test('error: undefined variable reference in disallow', () {
+      final yaml = '''
+rules:
+  - reason: Bad rule
+    target: "lib/features/{FEATURE}/**"
+    disallow: "lib/features/\$UNDEFINED/**"
+''';
+
+      expect(
+        () => ConfigParser().parseRulesFromYaml(yaml),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
+    test('error: undefined variable reference in exclude_disallow', () {
+      final yaml = '''
+rules:
+  - reason: Bad rule
+    target: "lib/features/{FEATURE}/**"
+    disallow: lib/features/**
+    exclude_disallow: "lib/features/\$UNDEFINED/**"
+''';
+
+      expect(
+        () => ConfigParser().parseRulesFromYaml(yaml),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
+    test('error: capture group in exclude_target', () {
+      final yaml = '''
+rules:
+  - reason: Bad rule
+    target: "lib/features/{MODULE}/**"
+    exclude_target: "lib/features/{MODULE}/shared/**"
+    disallow: lib/features/**
+''';
+
+      expect(
+        () => ConfigParser().parseRulesFromYaml(yaml),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
+    test('error: capture group after ** wildcard', () {
+      final yaml = '''
+rules:
+  - reason: Ambiguous capture
+    target: "lib/**/{DIR}/**/src/**"
+    disallow: lib/**
+''';
+
+      expect(
+        () => ConfigParser().parseRulesFromYaml(yaml),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
+    test('error: capture group mixed with literal text in segment', () {
+      final yaml = '''
+rules:
+  - reason: Invalid syntax
+    target: "lib/{MODULE}_v2/**"
+    disallow: lib/**
+''';
+
+      expect(
+        () => ConfigParser().parseRulesFromYaml(yaml),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
+    test('error: capture group mixed with wildcard in segment', () {
+      final yaml = '''
+rules:
+  - reason: Invalid syntax
+    target: "lib/{MODULE}*.dart"
+    disallow: lib/**
+''';
+
+      expect(
+        () => ConfigParser().parseRulesFromYaml(yaml),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
+    test('error: two capture groups in same segment', () {
+      final yaml = '''
+rules:
+  - reason: Invalid syntax
+    target: "lib/{A}{B}/**"
+    disallow: lib/**
+''';
+
+      expect(
+        () => ConfigParser().parseRulesFromYaml(yaml),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
+    test('error: capture group not occupying full segment (suffix)', () {
+      final yaml = '''
+rules:
+  - reason: Invalid syntax
+    target: "{MODULE}.dart"
+    disallow: lib/**
+''';
+
+      expect(
+        () => ConfigParser().parseRulesFromYaml(yaml),
+        throwsA(isA<FormatException>()),
+      );
+    });
+
+    test('error: capture group not occupying full segment (prefix)', () {
+      final yaml = '''
+rules:
+  - reason: Invalid syntax
+    target: "lib/prefix_{MODULE}/**"
+    disallow: lib/**
+''';
+
+      expect(
+        () => ConfigParser().parseRulesFromYaml(yaml),
+        throwsA(isA<FormatException>()),
+      );
+    });
+  });
 }
