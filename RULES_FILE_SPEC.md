@@ -4,6 +4,14 @@ The rules are defined either in a part of `analysis_options.yaml` or in a
 dedicated `import_rules.yaml` under the project root. A rules file would look
 like the following:
 
+The JSON Schema for `import_rules.yaml` is available at
+[`import_rules.schema.json`](import_rules.schema.json) and is intended for
+SchemaStore registration.
+
+```yaml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/fujidaiti/import_rules/main/import_rules.schema.json
+```
+
 ```yaml
 # import_rules.yaml
 

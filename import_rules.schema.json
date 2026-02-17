@@ -1,0 +1,97 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/fujidaiti/import_rules/main/import_rules.schema.json",
+  "title": "import_rules.yaml",
+  "description": "Schema for import_rules rule files.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "rules": {
+      "type": "array",
+      "description": "List of import rule definitions.",
+      "items": {
+        "$ref": "#/definitions/rule"
+      }
+    },
+    "severity": {
+      "$ref": "#/definitions/severity"
+    }
+  },
+  "required": [
+    "rules"
+  ],
+  "definitions": {
+    "severity": {
+      "type": "string",
+      "enum": [
+        "error",
+        "warning",
+        "info"
+      ]
+    },
+    "targetPattern": {
+      "type": "string",
+      "pattern": "^(?!package:)(?!.*\\$TARGET_DIR).+"
+    },
+    "disallowPattern": {
+      "type": "string",
+      "minLength": 1
+    },
+    "targetOrList": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/targetPattern"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/targetPattern"
+          }
+        }
+      ]
+    },
+    "disallowOrList": {
+      "oneOf": [
+        {
+          "$ref": "#/definitions/disallowPattern"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/disallowPattern"
+          }
+        }
+      ]
+    },
+    "rule": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "reason": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target": {
+          "$ref": "#/definitions/targetOrList"
+        },
+        "exclude_target": {
+          "$ref": "#/definitions/targetOrList"
+        },
+        "disallow": {
+          "$ref": "#/definitions/disallowOrList"
+        },
+        "exclude_disallow": {
+          "$ref": "#/definitions/disallowOrList"
+        },
+        "severity": {
+          "$ref": "#/definitions/severity"
+        }
+      },
+      "required": [
+        "reason",
+        "target",
+        "disallow"
+      ]
+    }
+  }
+}
