@@ -31,15 +31,6 @@ project root. See the [spec](RULES_FILE_SPEC.md) for more details about the rule
 syntax, and the [Case studies](#case-studies) section for practical examples of
 the rules file.
 
-The repository ships a JSON Schema at
-[`import_rules.schema.json`](import_rules.schema.json). It is intended for
-SchemaStore registration and can already be used in editors that support YAML
-schemas.
-
-```yaml
-# yaml-language-server: $schema=https://raw.githubusercontent.com/fujidaiti/import_rules/main/import_rules.schema.json
-```
-
 ```yaml
 # analysis_options.yaml
 
