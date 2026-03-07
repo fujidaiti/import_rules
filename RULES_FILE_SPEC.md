@@ -139,12 +139,16 @@ target: "{...prefix}/{module}/src/**"
 
 #### Matching algorithm
 
-Capture groups are matched **greedily from left to right**. Each multi-segment
-capture group `{...name}` takes as many segments as possible while leaving
-enough segments for remaining components. Every capture group — both `{name}`
-and `{...name}` — must match at least one segment. This is consistent with how
-the Dart [glob](https://pub.dev/packages/glob) package handles `/`-separated
-components: each component separated by `/` requires at least one segment.
+When a target pattern contains capture groups, the matching phase treats all
+`/`-separated components uniformly using a **greedy left-to-right** algorithm.
+Plain wildcards `*` and `**` are handled as anonymous capture groups — `*`
+matches exactly one segment (like `{name}`) and `**` matches one or more
+segments greedily (like `{...name}`), but both discard their captured values.
+This means capture groups and wildcards follow the same matching rules and can
+be freely mixed. Every component — whether a named capture group, an anonymous
+wildcard, or a literal — must match at least one segment. This is consistent
+with how the Dart [glob](https://pub.dev/packages/glob) package handles
+`/`-separated components.
 
 For example, matching `lib/a/b/c/d/e.dart` against
 `lib/{...foo}/{bar}/{...baz}/*.dart`:
