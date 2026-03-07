@@ -104,35 +104,65 @@ target: _*.dart
 
 ### Capture groups
 
-A target pattern can contain **capture groups** written as `{name}`, where
-`name` is an identifier consisting of letters, digits, underscores, and hyphens.
-A capture group matches a single path segment (equivalent to `*` in glob syntax)
-and captures the matched value so it can be referenced in `disallow` and
-`exclude_disallow` patterns using `{name}`.
+A target pattern can contain **capture groups** that match one or more path
+segments and capture the matched value so it can be referenced in `disallow` and
+`exclude_disallow` patterns. There are two types of capture groups:
 
-In `target` patterns, `{name}` defines a capture group. In `disallow` and
-`exclude_disallow` patterns, `{name}` references a previously captured value.
-Capture groups cannot be used in `exclude_target` patterns. Any `{name}`
-reference in `disallow` or `exclude_disallow` must correspond to a capture group
-defined in the `target` pattern of the same rule; referencing an undefined
-capture group is an error.
+- **Single-segment capture group** `{name}` — equivalent to `*` in glob syntax.
+  Matches exactly one path segment.
+- **Multi-segment capture group** `{...name}` — equivalent to `**` in glob
+  syntax. Matches one or more path segments (greedy).
 
-A single target pattern can contain multiple capture groups:
+In both cases, `name` is an identifier consisting of letters, digits,
+underscores, and hyphens.
+
+In `target` patterns, `{name}` and `{...name}` define capture groups. In
+`disallow` and `exclude_disallow` patterns, `{name}` and `{...name}` reference
+previously captured values. Capture groups cannot be used in `exclude_target`
+patterns. Any capture group reference in `disallow` or `exclude_disallow` must
+correspond to a capture group defined in the `target` pattern of the same rule;
+referencing an undefined capture group is an error.
+
+A single target pattern can contain multiple capture groups of either type:
 
 ```yaml
 # Capture a single path segment.
 target: "lib/entities/{module}/**"
 
-# Capture two path segments.
+# Capture two single path segments.
 target: "lib/{layer}/{module}/**"
+
+# Capture a multi-segment prefix and a single segment.
+target: "{...prefix}/{module}/src/**"
 ```
 
-**Syntax rules:** A capture group must occupy an **entire path segment** on its
-own (i.e., delimited by `/` or at the start/end of the pattern). It cannot be
-combined with other text, wildcards, or other capture groups within the same
-segment. Additionally, a capture group must not appear after a `**` wildcard,
-because `**` matches a variable number of segments, making the position of the
-capture group ambiguous.
+#### Matching algorithm
+
+Capture groups are matched **greedily from left to right**. Each multi-segment
+capture group `{...name}` takes as many segments as possible while leaving
+enough segments for remaining components. Every capture group — both `{name}`
+and `{...name}` — must match at least one segment. This is consistent with how
+the Dart [glob](https://pub.dev/packages/glob) package handles `/`-separated
+components: each component separated by `/` requires at least one segment.
+
+For example, matching `lib/a/b/c/d/e.dart` against
+`lib/{...foo}/{bar}/{...baz}/*.dart`:
+
+1. After `lib/`, remaining path has 5 segments: `a/b/c/d/e.dart`
+2. `{...foo}` is greedy, but must leave room for `{bar}` (1) + `{...baz}` (1) +
+   `*.dart` (1) = 3 segments → `foo` captures `a/b` (5 − 3 = 2 segments)
+3. `{bar}` captures `c` (1 segment)
+4. `{...baz}` is greedy, must leave room for `*.dart` (1) → `baz` captures `d`
+   (2 − 1 = 1 segment)
+5. `*.dart` matches `e.dart`
+
+#### Syntax rules
+
+A capture group must occupy an **entire path segment** on its own (i.e.,
+delimited by `/` or at the start/end of the pattern). It cannot be combined with
+other text, wildcards, or other capture groups within the same segment. Each
+capture group name must be unique within the pattern — the same name cannot be
+used twice, even across different capture group types.
 
 The following table summarizes valid and invalid uses of capture groups in
 target patterns:
@@ -143,11 +173,20 @@ target patterns:
 | `lib/{layer}/{module}/**`      | Yes    | Multiple captures, each occupying a full segment at a fixed position. |
 | `lib/{module}/**/service.dart` | Yes    | `{module}` is at a fixed position; `**` comes after it.               |
 | `{module}`                     | Yes    | Equivalent to `*`; a capture group can be the entire pattern.         |
+| `lib/{...path}/src/**`         | Yes    | `{...path}` matches one or more segments before `src/`.               |
+| `{...prefix}/{module}/**`      | Yes    | Multi-segment and single-segment captures mixed.                      |
+| `{...a}/{...b}`                | Yes    | Multiple multi-segment captures; greedy left-to-right matching.       |
+| `{...name}`                    | Yes    | Equivalent to `**`; captures the entire path.                         |
 | `lib/**/{dir}/**/src/**`       | **No** | `{dir}` appears after `**`, so its position is ambiguous.             |
 | `lib/{module}*.dart`           | **No** | Capture group mixed with wildcard `*` in the same segment.            |
+| `lib/{...path}*.dart`          | **No** | Multi-segment capture group mixed with `*` in the same segment.       |
 | `lib/{a}{b}/**`                | **No** | Two capture groups in the same segment.                               |
-| `lib/{module}/{module}/**`     | **No** | Same capture group name used twice; the captured value is ambiguous.  |
+| `lib/{...a}{b}/**`             | **No** | Two capture groups in the same segment.                               |
+| `lib/{module}/{module}/**`     | **No** | Same capture group name used twice.                                   |
+| `lib/{...foo}/{foo}/**`        | **No** | Same name used for different capture group types.                     |
+| `lib/{...path}/{...path}/**`   | **No** | Same multi-segment capture group name used twice.                     |
 | `lib/{}/src/**`                | **No** | Empty capture group name.                                             |
+| `lib/{...}/src/**`             | **No** | Empty multi-segment capture group name.                               |
 
 The captured values are substituted into `disallow` and `exclude_disallow`
 patterns at evaluation time. For example, if the target file is
@@ -155,6 +194,12 @@ patterns at evaluation time. For example, if the target file is
 `lib/entities/{module}/**`, then `module` captures `auth`, and a pattern like
 `lib/entities/{module}/**` in `exclude_disallow` expands to
 `lib/entities/auth/**`.
+
+For multi-segment capture groups, the captured value may contain `/`. For
+example, if the target file is `lib/features/auth/src/service.dart` and the
+target pattern is `lib/{...path}/src/**`, then `path` captures `features/auth`,
+and a pattern like `lib/{...path}/src/shared/**` in `exclude_disallow` expands
+to `lib/features/auth/src/shared/**`.
 
 This enables expressing **sibling isolation** with a single rule instead of
 enumerating each module:
@@ -181,7 +226,19 @@ rules:
     reason: Entity modules must be isolated from each other.
 ```
 
-See [Capture group variable](#capture-group-variables) for reference syntax
+Multi-segment capture groups enable rules that work across varying directory
+depths:
+
+```yaml
+# Enforce src/ directory isolation at any depth
+rules:
+  - target: "{...prefix}/src/**"
+    disallow: "{...prefix}/src/**"
+    exclude_disallow: "{...prefix}/src/**"
+    reason: Files under src/ are private to their parent directory.
+```
+
+See [Capture group variables](#capture-group-variables) for reference syntax
 details in disallow patterns.
 
 </br>
@@ -300,17 +357,20 @@ disallow: package:my_package/domain/**
 
 ### Capture group variables
 
-Capture groups are essentially labeled `*` wildcards in target patterns. They
-match a single path segment just like `*`, but also remember the matched value
-so it can be referenced in `disallow` and `exclude_disallow` patterns.
+Capture groups are essentially labeled wildcards in target patterns. A
+single-segment capture group `{name}` acts like `*`, matching exactly one path
+segment; a multi-segment capture group `{...name}` acts like `**`, matching one
+or more path segments. Both types remember the matched value so it can be
+referenced in `disallow` and `exclude_disallow` patterns.
 
 Disallow patterns can reference **capture group variables** defined in the
-`target` pattern of the same rule. The same `{name}` syntax is used in
-`disallow` and `exclude_disallow` patterns to substitute the captured value.
+`target` pattern of the same rule. The same `{name}` or `{...name}` syntax is
+used in `disallow` and `exclude_disallow` patterns to substitute the captured
+value.
 
-When a target file matches the target pattern, each `{name}` in the target
-captures the corresponding path segment, and all `{name}` references in disallow
-patterns are replaced with the captured value.
+When a target file matches the target pattern, each capture group extracts the
+corresponding segment(s), and all references in disallow patterns are replaced
+with the captured value before matching.
 
 ```yaml
 # {feature} captures a path segment in the target pattern.
@@ -334,6 +394,18 @@ rules:
     reason: Files can only import from their own layer and module.
 ```
 
+Multi-segment capture group variables are substituted the same way. The captured
+value may contain `/`:
+
+```yaml
+# {...prefix} captures one or more path segments.
+rules:
+  - target: "{...prefix}/src/**"
+    disallow: "{...prefix}/src/**"
+    exclude_disallow: "{...prefix}/src/**"
+    reason: Files under src/ are private to their parent directory.
+```
+
 The following table summarizes valid and invalid uses of capture group variables
 in `disallow` and `exclude_disallow` patterns, assuming the target pattern is
 `lib/features/{feature}/**`:
@@ -351,12 +423,12 @@ in `disallow` and `exclude_disallow` patterns, assuming the target pattern is
 
 **Validation rules:**
 
-- Every `{name}` reference in `disallow` or `exclude_disallow` must have a
-  corresponding `{name}` capture group in `target`. Referencing an undefined
+- Every `{name}` or `{...name}` reference in `disallow` or `exclude_disallow`
+  must have a corresponding capture group in `target`. Referencing an undefined
   variable is a parse error.
-- `{name}` cannot be used in `exclude_target` patterns.
-- `{name}` can only appear in the **path** portion of a disallow pattern. It
-  cannot be used in the scheme or package name portion (e.g.,
+- `{name}` and `{...name}` cannot be used in `exclude_target` patterns.
+- `{name}` and `{...name}` can only appear in the **path** portion of a disallow
+  pattern. They cannot be used in the scheme or package name portion (e.g.,
   `package:{name}/**` and `{name}:io` are invalid).
 
 See [Capture groups](#capture-groups) in the Target pattern section for more
@@ -372,13 +444,14 @@ file one by one, and tests the rule `R` against the pair of `F` and `I` as
 follows:
 
 1. **Does the path of file `F` match any `target` pattern in rule `R`?** If no,
-   skip this rule. If the target pattern contains capture groups (`{name}`),
-   extract the captured values from the matched path.
+   skip this rule. If the target pattern contains capture groups (`{name}` or
+   `{...name}`), extract the captured values from the matched path using greedy
+   left-to-right matching.
 2. **Does the path of file `F` match any `exclude_target` pattern in rule `R`?**
    If yes, skip this rule.
 3. **Does importee `I` match any `disallow` pattern in rule `R`?** If no, allow
-   the import. Before matching, substitute any capture group variables
-   (`{name}`) in the pattern with their resolved values.
+   the import. Before matching, substitute any capture group variables (`{name}`
+   or `{...name}`) in the pattern with their resolved values.
 4. **Does importee `I` match any `exclude_disallow` pattern in rule `R`?** If
    yes, allow the import. The same variable substitution applies here.
 
