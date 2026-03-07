@@ -188,12 +188,11 @@ function matchComponents(components, segments, captures):
       record captures[name] = join first maxTake segments with "/"
     return matchComponents(rest, segments after maxTake, captures)
 
-  # Case 4: glob segment (e.g., "*.dart", "_*")
-  if current is a glob pattern:
-    if first segment matches the glob:
-      return matchComponents(rest, remaining segments, captures)
-    else:
-      return failure
+  # Case 4: anything else is treated as a glob segment (e.g., "*.dart", "_*")
+  if first segment matches current as a glob:
+    return matchComponents(rest, remaining segments, captures)
+  else:
+    return failure
 
 function minRequired(components) → integer:
   # Minimum number of segments needed to satisfy all components.
