@@ -117,11 +117,12 @@ In both cases, `name` is an identifier consisting of letters, digits,
 underscores, and hyphens.
 
 In `target` patterns, `{name}` and `{...name}` define capture groups. In
-`disallow` and `exclude_disallow` patterns, `{name}` and `{...name}` reference
-previously captured values. Capture groups cannot be used in `exclude_target`
-patterns. Any capture group reference in `disallow` or `exclude_disallow` must
-correspond to a capture group defined in the `target` pattern of the same rule;
-referencing an undefined capture group is an error.
+`disallow` and `exclude_disallow` patterns, `${name}` references a previously
+captured value regardless of whether it was defined as `{name}` or `{...name}`.
+Capture groups cannot be used in `exclude_target` patterns. Any `${name}`
+reference in `disallow` or `exclude_disallow` must correspond to a capture group
+defined in the `target` pattern of the same rule; referencing an undefined
+capture group is an error.
 
 A single target pattern can contain multiple capture groups of either type:
 
@@ -189,17 +190,17 @@ target patterns:
 | `lib/{...}/src/**`             | **No** | Empty multi-segment capture group name.                               |
 
 The captured values are substituted into `disallow` and `exclude_disallow`
-patterns at evaluation time. For example, if the target file is
-`lib/entities/auth/service.dart` and the target pattern is
+patterns at evaluation time using `${name}` syntax. For example, if the target
+file is `lib/entities/auth/service.dart` and the target pattern is
 `lib/entities/{module}/**`, then `module` captures `auth`, and a pattern like
-`lib/entities/{module}/**` in `exclude_disallow` expands to
+`lib/entities/${module}/**` in `exclude_disallow` expands to
 `lib/entities/auth/**`.
 
 For multi-segment capture groups, the captured value may contain `/`. For
 example, if the target file is `lib/features/auth/src/service.dart` and the
 target pattern is `lib/{...path}/src/**`, then `path` captures `features/auth`,
-and a pattern like `lib/{...path}/src/shared/**` in `exclude_disallow` expands
-to `lib/features/auth/src/shared/**`.
+and a pattern like `lib/${path}/src/shared/**` in `exclude_disallow` expands to
+`lib/features/auth/src/shared/**`.
 
 This enables expressing **sibling isolation** with a single rule instead of
 enumerating each module:
@@ -222,7 +223,7 @@ rules:
 rules:
   - target: "lib/entities/{module}/**"
     disallow: lib/entities/**
-    exclude_disallow: "lib/entities/{module}/**"
+    exclude_disallow: "lib/entities/${module}/**"
     reason: Entity modules must be isolated from each other.
 ```
 
@@ -233,8 +234,8 @@ depths:
 # Enforce src/ directory isolation at any depth
 rules:
   - target: "{...prefix}/src/**"
-    disallow: "{...prefix}/src/**"
-    exclude_disallow: "{...prefix}/src/**"
+    disallow: "${prefix}/src/**"
+    exclude_disallow: "${prefix}/src/**"
     reason: Files under src/ are private to their parent directory.
 ```
 
@@ -248,8 +249,8 @@ details in disallow patterns.
 A disallow pattern is a URI based [glob](https://pub.dev/packages/glob#syntax)
 pattern that is tested against import directives of Dart files (called
 **importee**s). It is similar to target patterns, but it can also contain a
-scheme and [predefined variables](#predefined-variables). The possible forms of
-a disallow pattern are: path URI, package URI, or Dart URI.
+scheme and [capture group variables](#capture-group-variables). The possible
+forms of a disallow pattern are: path URI, package URI, or Dart URI.
 
 ### Path URI pattern
 
@@ -364,22 +365,23 @@ or more path segments. Both types remember the matched value so it can be
 referenced in `disallow` and `exclude_disallow` patterns.
 
 Disallow patterns can reference **capture group variables** defined in the
-`target` pattern of the same rule. The same `{name}` or `{...name}` syntax is
-used in `disallow` and `exclude_disallow` patterns to substitute the captured
-value.
+`target` pattern of the same rule. The `${name}` syntax is used in `disallow`
+and `exclude_disallow` patterns to substitute the captured value — the same
+syntax regardless of whether the capture group was defined as `{name}` or
+`{...name}`.
 
 When a target file matches the target pattern, each capture group extracts the
-corresponding segment(s), and all references in disallow patterns are replaced
-with the captured value before matching.
+corresponding segment(s), and all `${name}` references in disallow patterns are
+replaced with the captured value before matching.
 
 ```yaml
 # {feature} captures a path segment in the target pattern.
-# {feature} in exclude_disallow is substituted with the captured value.
+# ${feature} in exclude_disallow is substituted with the captured value.
 rules:
   - target: "lib/features/{feature}/**"
     disallow: lib/features/**
     exclude_disallow:
-      - "lib/features/{feature}/**"
+      - "lib/features/${feature}/**"
       - lib/features/shared/**
     reason: Features must be isolated from each other.
 ```
@@ -390,7 +392,7 @@ With multiple capture groups, each variable is substituted independently:
 rules:
   - target: "lib/{layer}/{module}/**"
     disallow: lib/**
-    exclude_disallow: "lib/{layer}/{module}/**"
+    exclude_disallow: "lib/${layer}/${module}/**"
     reason: Files can only import from their own layer and module.
 ```
 
@@ -399,10 +401,11 @@ value may contain `/`:
 
 ```yaml
 # {...prefix} captures one or more path segments.
+# ${prefix} references it — same syntax for both capture group types.
 rules:
   - target: "{...prefix}/src/**"
-    disallow: "{...prefix}/src/**"
-    exclude_disallow: "{...prefix}/src/**"
+    disallow: "${prefix}/src/**"
+    exclude_disallow: "${prefix}/src/**"
     reason: Files under src/ are private to their parent directory.
 ```
 
@@ -410,26 +413,26 @@ The following table summarizes valid and invalid uses of capture group variables
 in `disallow` and `exclude_disallow` patterns, assuming the target pattern is
 `lib/features/{feature}/**`:
 
-| Pattern                                 | Valid  | Reason                                                                           |
-| --------------------------------------- | ------ | -------------------------------------------------------------------------------- |
-| `lib/features/{feature}/**`             | Yes    | `{feature}` is defined in the target pattern.                                    |
-| `lib/features/{feature}.dart`           | Yes    | `{feature}` mixed with literal text in the same segment.                         |
-| `lib/{feature}/**`                      | Yes    | `{feature}` can appear at a different position than in the target pattern.       |
-| `lib/features/{feature}/{feature}.dart` | Yes    | Same variable used multiple times; both are substituted with the captured value. |
-| `lib/features/{unknown}/**`             | **No** | `{unknown}` is not defined in the target pattern.                                |
-| `lib/features/{feature}*.dart`          | **No** | `{feature}` mixed with wildcard `*` in the same segment.                         |
-| `lib/features/{feature}{other}/`        | **No** | Two variables in the same segment (and `{other}` is also undefined).             |
-| `package:{feature}/**`                  | **No** | `{feature}` is in the package name, not the path portion.                        |
+| Pattern                                   | Valid  | Reason                                                                           |
+| ----------------------------------------- | ------ | -------------------------------------------------------------------------------- |
+| `lib/features/${feature}/**`              | Yes    | `${feature}` is defined in the target pattern.                                   |
+| `lib/features/${feature}.dart`            | Yes    | `${feature}` mixed with literal text in the same segment.                        |
+| `lib/${feature}/**`                       | Yes    | `${feature}` can appear at a different position than in the target pattern.      |
+| `lib/features/${feature}/${feature}.dart` | Yes    | Same variable used multiple times; both are substituted with the captured value. |
+| `lib/features/${unknown}/**`              | **No** | `${unknown}` is not defined in the target pattern.                               |
+| `lib/features/${feature}*.dart`           | **No** | `${feature}` mixed with wildcard `*` in the same segment.                        |
+| `lib/features/${feature}${other}/`        | **No** | Two variables in the same segment (and `${other}` is also undefined).            |
+| `package:${feature}/**`                   | **No** | `${feature}` is in the package name, not the path portion.                       |
 
 **Validation rules:**
 
-- Every `{name}` or `{...name}` reference in `disallow` or `exclude_disallow`
-  must have a corresponding capture group in `target`. Referencing an undefined
-  variable is a parse error.
-- `{name}` and `{...name}` cannot be used in `exclude_target` patterns.
-- `{name}` and `{...name}` can only appear in the **path** portion of a disallow
-  pattern. They cannot be used in the scheme or package name portion (e.g.,
-  `package:{name}/**` and `{name}:io` are invalid).
+- Every `${name}` reference in `disallow` or `exclude_disallow` must have a
+  corresponding capture group (`{name}` or `{...name}`) in `target`. Referencing
+  an undefined variable is a parse error.
+- `${name}` cannot be used in `exclude_target` patterns.
+- `${name}` can only appear in the **path** portion of a disallow pattern. It
+  cannot be used in the scheme or package name portion (e.g.,
+  `package:${name}/**` and `${name}:io` are invalid).
 
 See [Capture groups](#capture-groups) in the Target pattern section for more
 details and examples.
@@ -450,8 +453,8 @@ follows:
 2. **Does the path of file `F` match any `exclude_target` pattern in rule `R`?**
    If yes, skip this rule.
 3. **Does importee `I` match any `disallow` pattern in rule `R`?** If no, allow
-   the import. Before matching, substitute any capture group variables (`{name}`
-   or `{...name}`) in the pattern with their resolved values.
+   the import. Before matching, substitute any capture group variables
+   (`${name}`) in the pattern with their resolved values.
 4. **Does importee `I` match any `exclude_disallow` pattern in rule `R`?** If
    yes, allow the import. The same variable substitution applies here.
 
