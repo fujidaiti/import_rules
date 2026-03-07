@@ -135,6 +135,11 @@ rules:
     reason: Files can only import from same or deeper directory levels.
 ```
 
+For example, `lib/features/auth/auth.dart` matches the target with `dir` =
+`lib/features/auth`. The `exclude_disallow` expands to `lib/features/auth/**`,
+so it can only import files within `lib/features/auth/` or deeper — but not from
+`lib/features/` or `lib/`.
+
 ### Enforce unidirectional layer dependencies
 
 In a layered architecture, the layers should have unidirectional dependencies,
@@ -200,6 +205,11 @@ rules:
       - lib/features/core/**
     reason: Features should be isolated from each other except the core module.
 ```
+
+For example, `lib/features/auth/login_page.dart` matches the target with
+`feature` = `auth`. The `exclude_disallow` expands to `lib/features/auth/**`, so
+it can import freely within the `auth` feature and from `lib/features/core/**`,
+but not from `lib/features/profile/**`.
 
 ### Enforcing custom component usage
 
@@ -385,3 +395,10 @@ rules:
     exclude_disallow: "lib/${dir}/_*.dart"
     reason: Implementation files should not be imported directly.
 ```
+
+For example, `lib/cache/cache.dart` matches the target with `dir` = `cache`, so
+its `exclude_disallow` expands to `lib/cache/_*.dart` — allowing it to import
+`_cache_*.dart` files in the same directory. But `lib/cache/utils/utils.dart`
+matches with `dir` = `cache/utils`, so its `exclude_disallow` expands to
+`lib/cache/utils/_*.dart`, which does not cover `lib/cache/_cache_*.dart`,
+correctly blocking access to the parent directory's implementation files.
