@@ -150,7 +150,58 @@ wildcard, or a literal — must match at least one segment. This is consistent
 with how the Dart [glob](https://pub.dev/packages/glob) package handles
 `/`-separated components.
 
-For example, matching `lib/a/b/c/d/e.dart` against
+```pseudocode
+function match(pattern, path) → captures or failure:
+  split pattern into components by "/"
+  split path into segments by "/"
+  return matchComponents(components, segments, captures = {})
+
+function matchComponents(components, segments, captures):
+  if components is empty:
+    return captures if segments is empty, otherwise failure
+
+  let current = first component
+  let rest = remaining components
+
+  # Case 1: literal segment (e.g., "lib", "src", "service.dart")
+  if current is a literal:
+    if first segment equals current:
+      return matchComponents(rest, remaining segments, captures)
+    else:
+      return failure
+
+  # Case 2: single-segment capture group or wildcard
+  if current is {name} or *:
+    if segments is empty:
+      return failure
+    if current is {name}:
+      record captures[name] = first segment
+    return matchComponents(rest, remaining segments, captures)
+
+  # Case 3: multi-segment capture group or wildcard (greedy)
+  if current is {...name} or **:
+    # Must leave at least minRequired(rest) segments for the rest.
+    let maxTake = length(segments) - minRequired(rest)
+    if maxTake < 1:
+      return failure
+    if current is {...name}:
+      record captures[name] = join first maxTake segments with "/"
+    return matchComponents(rest, segments after maxTake, captures)
+
+  # Case 4: glob segment (e.g., "*.dart", "_*")
+  if current is a glob pattern:
+    if first segment matches the glob:
+      return matchComponents(rest, remaining segments, captures)
+    else:
+      return failure
+
+function minRequired(components) → integer:
+  # Minimum number of segments needed to satisfy all components.
+  # Every component requires at least 1 segment.
+  return length(components)
+```
+
+**Example:** matching `lib/a/b/c/d/e.dart` against
 `lib/{...foo}/{bar}/{...baz}/*.dart`:
 
 1. After `lib/`, remaining path has 5 segments: `a/b/c/d/e.dart`
