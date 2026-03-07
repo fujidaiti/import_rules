@@ -40,12 +40,12 @@ import_rules:
 
 ## Top level fields
 
-Here are the descriptions of the top level fields in the rules file:
+- `rules` (required)
+  - List of [import rule](#import-rule) definitions.
 
-| Field      | Required     | Description                                                                                            |
-| ---------- | ------------ | ------------------------------------------------------------------------------------------------------ |
-| `rules`    | **Required** | List of [import rule](#import-rule) definitions.                                                       |
-| `severity` | Optional     | Sets the default severity for all rules. Valid values: `error`, `warning`, `info`. Defaults to `info`. |
+- `severity` (optional)
+  - Sets the default severity for all rules. Valid values: `error`, `warning`,
+    `info`. Defaults to `info`.
 
 </br>
 
@@ -56,14 +56,44 @@ evaluated independently in the definition order. See
 [How Rules Are Evaluated](#how-rules-are-evaluated) section for more details
 about the evaluation logic.
 
-| Field              | Required     | Description                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| ------------------ | ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `reason`           | **Required** | Human-readable explanation of why this rule exists. It will be displayed as a lint error message when the rule is violated in the IDE or in the output of `dart analyze`. All leading/trailing whitespaces are removed, and newline characters in the middle are replaced with whitespaces.                                                                                                                                                            |
-| `target`           | **Required** | A list of [target pattern](#target-pattern)s. If any of the patterns in the list matches the path of a Dart file in the project, the rule is applied to that file and such file is called a **target file**. </br></br> If the list contains only one pattern, it can be specified as a single string instead of a list: `target: lib/**`.                                                                                                             |
-| `exclude_target`   | Optional     | A list of [target pattern](#target-pattern)s. If the target file matches any of the patterns in the list, the rule is not applied to that file. </br></br> If the list contains only one pattern, it can be specified as a single string instead of a list: `exclude_target: lib/domain/**`.                                                                                                                                                           |
-| `disallow`         | **Required** | A list of [disallow pattern](#disallow-pattern)s. The plugin tests each of the specified patterns one by one against an import directive of the target file (called an **importee**), and if any of the patterns matches, the plugin reports a rule violation error with the `reason` at that line in the target file. </br></br> If the list contains only one pattern, it can be specified as a single string instead of a list: `disallow: lib/**`. |
-| `exclude_disallow` | Optional     | A list of [disallow pattern](#disallow-pattern)s. If the importee was matched any of the `disallow` patterns, but also matched any of the `exclude_disallow` patterns, the target file is exceptionally allowed to import that importee and no error is reported. </br></br> If the list contains only one pattern, it can be specified as a single string instead of a list: `exclude_disallow: lib/domain/**`.                                       |
-| `severity`         | Optional     | Overrides the global default severity for this specific rule. Valid values: `error`, `warning`, `info`.                                                                                                                                                                                                                                                                                                                                                |
+- `reason` (required)
+  - Human-readable explanation of why this rule exists. It will be displayed as
+    a lint error message when the rule is violated in the IDE or in the output
+    of `dart analyze`. All leading/trailing whitespaces are removed, and newline
+    characters in the middle are replaced with whitespaces.
+
+- `target` (required)
+  - A list of [target pattern](#target-pattern)s. If any of the patterns in the
+    list matches the path of a Dart file in the project, the rule is applied to
+    that file and such file is called a **target file**. If the list contains
+    only one pattern, it can be specified as a single string instead of a list:
+    `target: lib/**`.
+
+- `exclude_target` (optional)
+  - A list of [target pattern](#target-pattern)s. If the target file matches any
+    of the patterns in the list, the rule is not applied to that file. If the
+    list contains only one pattern, it can be specified as a single string
+    instead of a list: `exclude_target: lib/domain/**`.
+
+- `disallow` (required)
+  - A list of [disallow pattern](#disallow-pattern)s. The plugin tests each of
+    the specified patterns one by one against an import directive of the target
+    file (called an **importee**), and if any of the patterns matches, the
+    plugin reports a rule violation error with the `reason` at that line in the
+    target file. If the list contains only one pattern, it can be specified as a
+    single string instead of a list: `disallow: lib/**`.
+
+- `exclude_disallow` (optional)
+  - A list of [disallow pattern](#disallow-pattern)s. If the importee was
+    matched by any of the `disallow` patterns, but also matched any of the
+    `exclude_disallow` patterns, the target file is exceptionally allowed to
+    import that importee and no error is reported. If the list contains only one
+    pattern, it can be specified as a single string instead of a list:
+    `exclude_disallow: lib/domain/**`.
+
+- `severity` (optional)
+  - Overrides the global default severity for this specific rule. Valid values:
+    `error`, `warning`, `info`.
 
 </br>
 
@@ -381,7 +411,8 @@ Just like target patterns, a disallow pattern can also contain wildcards except
 in the scheme part of the pattern.
 
 ```yaml
-# Match any importee including those from external packages and the Dart standard libraries.
+# Match any importee including those from external packages and
+# the Dart standard libraries.
 disallow: "**"
 
 # Match any importee from external packages.
@@ -396,11 +427,13 @@ disallow: dart:*
 # Match any importee from the top-level "lib" directory.
 disallow: lib/**
 
-# Match any importee from the "src" directory at any level except the top-level "src" directory.
+# Match any importee from the "src" directory at any level except
+# the top-level "src" directory.
 disallow: "**/src/**"
 
 # This pattern also works, but very ambiguous. You don't want to use this.
-# It matches any importee for top-level Dart files in the project and any importee from the Dart standard library.
+# It matches any importee for top-level Dart files in the project and any
+# importee from the Dart standard library.
 disallow: "*"
 ```
 
