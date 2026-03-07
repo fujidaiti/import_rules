@@ -178,7 +178,7 @@ target patterns:
 | `{...prefix}/{module}/**`      | Yes    | Multi-segment and single-segment captures mixed.                      |
 | `{...a}/{...b}`                | Yes    | Multiple multi-segment captures; greedy left-to-right matching.       |
 | `{...name}`                    | Yes    | Equivalent to `**`; captures the entire path.                         |
-| `lib/**/{dir}/**/src/**`       | **No** | `{dir}` appears after `**`, so its position is ambiguous.             |
+| `lib/**/{dir}/**/src/**`       | Yes    | `**` acts as an anonymous `{...name}`; greedy left-to-right applies.  |
 | `lib/{module}*.dart`           | **No** | Capture group mixed with wildcard `*` in the same segment.            |
 | `lib/{...path}*.dart`          | **No** | Multi-segment capture group mixed with `*` in the same segment.       |
 | `lib/{a}{b}/**`                | **No** | Two capture groups in the same segment.                               |
