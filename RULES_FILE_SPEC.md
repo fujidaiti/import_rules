@@ -204,8 +204,10 @@ patterns; for example, `lib/common/style.dart` matches
 `lib/common/style.dart` also matches import directives like
 `import '../common/style.dart';` and `import '../../common/style.dart';`.
 
-> [!NOTE] Currently, disallow patterns ignore optional keywords in import
-> directives such as `as`, `hide`, and `show`. For example, the pattern
+> [!NOTE]
+>
+> Currently, disallow patterns ignore optional keywords in import directives
+> such as `as`, `hide`, and `show`. For example, the pattern
 > `lib/common/style.dart` also matches `import 'common/style.dart' as style;`.
 > The same is true for package URI and Dart URI patterns.
 >
@@ -303,9 +305,8 @@ match a single path segment just like `*`, but also remember the matched value
 so it can be referenced in `disallow` and `exclude_disallow` patterns.
 
 Disallow patterns can reference **capture group variables** defined in the
-`target` pattern of the same rule. The same
-`{name}` syntax is used in `disallow` and `exclude_disallow` patterns to
-substitute the captured value.
+`target` pattern of the same rule. The same `{name}` syntax is used in
+`disallow` and `exclude_disallow` patterns to substitute the captured value.
 
 When a target file matches the target pattern, each `{name}` in the target
 captures the corresponding path segment, and all `{name}` references in disallow
@@ -376,8 +377,8 @@ follows:
 2. **Does the path of file `F` match any `exclude_target` pattern in rule `R`?**
    If yes, skip this rule.
 3. **Does importee `I` match any `disallow` pattern in rule `R`?** If no, allow
-   the import. Before matching, substitute any capture group variables (`{name}`)
-   in the pattern with their resolved values.
+   the import. Before matching, substitute any capture group variables
+   (`{name}`) in the pattern with their resolved values.
 4. **Does importee `I` match any `exclude_disallow` pattern in rule `R`?** If
    yes, allow the import. The same variable substitution applies here.
 
