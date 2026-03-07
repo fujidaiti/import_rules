@@ -482,32 +482,45 @@ takes an importee `I` from the file one by one, takes a rule `R` from the rules
 file one by one, and tests the rule `R` against the pair of `F` and `I` as
 follows:
 
-1. **Does the path of file `F` match any `target` pattern in rule `R`?** If no,
-   skip this rule. If the target pattern contains capture groups (`{name}` or
-   `{...name}`), extract the captured values from the matched path using greedy
-   left-to-right matching.
-2. **Does the path of file `F` match any `exclude_target` pattern in rule `R`?**
-   If yes, skip this rule.
-3. **Does importee `I` match any `disallow` pattern in rule `R`?** If no, allow
-   the import. Before matching, substitute any capture group variables
-   (`${name}`) in the pattern with their resolved values.
-4. **Does importee `I` match any `exclude_disallow` pattern in rule `R`?** If
-   yes, allow the import. The same variable substitution applies here.
+```pseudocode
+function evaluate(file F, importee I, rule R) → allow or violation:
+  # Step 1: Check if F matches any target pattern in R.
+  captures = null
+  for each pattern T in R.target:
+    result = match(T, path of F)
+    if result is success:
+      captures = result.captures
+      break
 
-Otherwise, report a rule violation at the line of the importee `I` in the file
-`F` with the `R.reason` message.
+  # If no target matched, this rule does not apply.
+  if captures is null:
+    return allow
 
-```mermaid
-flowchart LR
-    Start([File F has import I]) --> CheckTarget{Does F<br/>match any target in R?}
-    CheckTarget -->|No| MoveNext[No violation, move to next rule]
-    CheckTarget -->|Yes| CheckExcludeTarget{Does F<br/>match any exclude_target in R?}
-     CheckExcludeTarget -->|Yes| MoveNext
-    CheckExcludeTarget -->|No| CheckDisallow{Does I<br/>match any disallow in R?}
-     CheckDisallow -->|No| MoveNext
-    CheckDisallow -->|Yes| CheckExcludeDisallow{Does I<br/>match any exclude_disallow in R?}
-     CheckExcludeDisallow -->|Yes| MoveNext
-    CheckExcludeDisallow -->|No| ReportViolation[Report rule violation]
+  # Step 2: Check if F matches any exclude_target pattern in R.
+  for each pattern ET in R.exclude_target:
+    if match(ET, path of F) is success:
+      return allow
+
+  # Step 3: Check if I matches any disallow pattern in R.
+  # Before matching, substitute any ${name} variables with captured values.
+  disallowed = false
+  for each pattern D in R.disallow:
+    D' = substitute captures into D
+    if match(D', normalized path of I) is success:
+      disallowed = true
+      break
+
+  if not disallowed:
+    return allow
+
+  # Step 4: Check if I matches any exclude_disallow pattern in R.
+  for each pattern ED in R.exclude_disallow:
+    ED' = substitute captures into ED
+    if match(ED', normalized path of I) is success:
+      return allow
+
+  # No exclusion matched — report a violation.
+  return violation with R.reason
 ```
 
 </br>
