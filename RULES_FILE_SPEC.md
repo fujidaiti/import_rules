@@ -298,6 +298,10 @@ disallow: package:my_package/domain/**
 
 ### Capture group variables
 
+Capture groups are essentially labeled `*` wildcards in target patterns. They
+match a single path segment just like `*`, but also remember the matched value
+so it can be referenced in `disallow` and `exclude_disallow` patterns.
+
 Disallow patterns can reference **capture group variables** defined in the
 `target` pattern of the same rule. The same
 `{name}` syntax is used in `disallow` and `exclude_disallow` patterns to
