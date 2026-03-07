@@ -463,30 +463,12 @@ rules:
     reason: Files under src/ are private to their parent directory.
 ```
 
-The following table summarizes valid and invalid uses of capture group variables
-in `disallow` and `exclude_disallow` patterns, assuming the target pattern is
-`lib/features/{feature}/**`:
-
-| Pattern                                   | Valid  | Reason                                                                           |
-| ----------------------------------------- | ------ | -------------------------------------------------------------------------------- |
-| `lib/features/${feature}/**`              | Yes    | `${feature}` is defined in the target pattern.                                   |
-| `lib/features/${feature}.dart`            | Yes    | `${feature}` mixed with literal text in the same segment.                        |
-| `lib/${feature}/**`                       | Yes    | `${feature}` can appear at a different position than in the target pattern.      |
-| `lib/features/${feature}/${feature}.dart` | Yes    | Same variable used multiple times; both are substituted with the captured value. |
-| `lib/features/${unknown}/**`              | **No** | `${unknown}` is not defined in the target pattern.                               |
-| `lib/features/${feature}*.dart`           | **No** | `${feature}` mixed with wildcard `*` in the same segment.                        |
-| `lib/features/${feature}${other}/`        | **No** | Two variables in the same segment (and `${other}` is also undefined).            |
-| `package:${feature}/**`                   | **No** | `${feature}` is in the package name, not the path portion.                       |
-
 **Validation rules:**
 
 - Every `${name}` reference in `disallow` or `exclude_disallow` must have a
   corresponding capture group (`{name}` or `{...name}`) in `target`. Referencing
   an undefined variable is a parse error.
 - `${name}` cannot be used in `exclude_target` patterns.
-- `${name}` can only appear in the **path** portion of a disallow pattern. It
-  cannot be used in the scheme or package name portion (e.g.,
-  `package:${name}/**` and `${name}:io` are invalid).
 
 See [Capture groups](#capture-groups) in the Target pattern section for more
 details and examples.
