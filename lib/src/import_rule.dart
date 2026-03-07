@@ -1,6 +1,7 @@
-import 'package:glob/glob.dart';
 import 'package:meta/meta.dart';
 import 'package:path/path.dart' as p;
+
+import 'glob_matcher.dart';
 
 /// Severity level for import rule violations.
 enum Severity { error, warning, info }
@@ -27,7 +28,7 @@ class TargetPattern {
 
   /// Checks if the given file path matches this target pattern.
   bool matches(String file) {
-    final glob = Glob(pattern);
+    final glob = GlobMatcher(pattern);
     return glob.matches(file);
   }
 
@@ -54,7 +55,7 @@ class DisallowPattern {
   /// The [dirValue] parameter is used to substitute $TARGET_DIR placeholders in the pattern.
   bool matches(String importUri, String dirValue) {
     final substitutedPattern = pattern.replaceAll(r'$TARGET_DIR', dirValue);
-    final glob = Glob(substitutedPattern);
+    final glob = GlobMatcher(substitutedPattern);
     return glob.matches(importUri);
   }
 
