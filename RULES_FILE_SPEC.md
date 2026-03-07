@@ -219,29 +219,61 @@ other text, wildcards, or other capture groups within the same segment. Each
 capture group name must be unique within the pattern — the same name cannot be
 used twice, even across different capture group types.
 
-The following table summarizes valid and invalid uses of capture groups in
-target patterns:
+Valid examples:
 
-| Pattern                        | Valid  | Reason                                                                |
-| ------------------------------ | ------ | --------------------------------------------------------------------- |
-| `lib/entities/{module}/**`     | Yes    | `{module}` is a full segment at a fixed position.                     |
-| `lib/{layer}/{module}/**`      | Yes    | Multiple captures, each occupying a full segment at a fixed position. |
-| `lib/{module}/**/service.dart` | Yes    | `{module}` is at a fixed position; `**` comes after it.               |
-| `{module}`                     | Yes    | Equivalent to `*`; a capture group can be the entire pattern.         |
-| `lib/{...path}/src/**`         | Yes    | `{...path}` matches one or more segments before `src/`.               |
-| `{...prefix}/{module}/**`      | Yes    | Multi-segment and single-segment captures mixed.                      |
-| `{...a}/{...b}`                | Yes    | Multiple multi-segment captures; greedy left-to-right matching.       |
-| `{...name}`                    | Yes    | Equivalent to `**`; captures the entire path.                         |
-| `lib/**/{dir}/**/src/**`       | Yes    | `**` acts as an anonymous `{...name}`; greedy left-to-right applies.  |
-| `lib/{module}*.dart`           | **No** | Capture group mixed with wildcard `*` in the same segment.            |
-| `lib/{...path}*.dart`          | **No** | Multi-segment capture group mixed with `*` in the same segment.       |
-| `lib/{a}{b}/**`                | **No** | Two capture groups in the same segment.                               |
-| `lib/{...a}{b}/**`             | **No** | Two capture groups in the same segment.                               |
-| `lib/{module}/{module}/**`     | **No** | Same capture group name used twice.                                   |
-| `lib/{...foo}/{foo}/**`        | **No** | Same name used for different capture group types.                     |
-| `lib/{...path}/{...path}/**`   | **No** | Same multi-segment capture group name used twice.                     |
-| `lib/{}/src/**`                | **No** | Empty capture group name.                                             |
-| `lib/{...}/src/**`             | **No** | Empty multi-segment capture group name.                               |
+```yaml
+# Single-segment capture at a fixed position.
+target: lib/entities/{module}/**
+
+# Multiple captures, each occupying a full segment.
+target: lib/{layer}/{module}/**
+
+# Capture group followed by ** and a literal.
+target: lib/{module}/**/service.dart
+
+# A capture group can be the entire pattern (equivalent to *).
+target: "{module}"
+
+# Multi-segment capture matching one or more segments before "src/".
+target: lib/{...path}/src/**
+
+# Multi-segment and single-segment captures mixed.
+target: "{...prefix}/{module}/**"
+
+# Multiple multi-segment captures; greedy left-to-right matching.
+target: "{...a}/{...b}"
+
+# Captures the entire path (equivalent to **).
+target: "{...name}"
+
+# ** acts as an anonymous multi-segment capture; greedy left-to-right applies.
+target: "lib/**/{dir}/**/src/**"
+```
+
+Invalid examples:
+
+```yaml
+# Capture group mixed with wildcard in the same segment.
+target: lib/{module}*.dart     # ERROR
+target: lib/{...path}*.dart    # ERROR
+
+# Two capture groups in the same segment.
+target: lib/{a}{b}/**          # ERROR
+target: lib/{...a}{b}/**       # ERROR
+
+# Same capture group name used twice.
+target: lib/{module}/{module}/**       # ERROR
+
+# Same name used for different capture group types.
+target: lib/{...foo}/{foo}/**          # ERROR
+
+# Same multi-segment capture group name used twice.
+target: lib/{...path}/{...path}/**     # ERROR
+
+# Empty capture group name.
+target: lib/{}/src/**          # ERROR
+target: lib/{...}/src/**       # ERROR
+```
 
 The captured values are substituted into `disallow` and `exclude_disallow`
 patterns at evaluation time using `${name}` syntax. For example, if the target
