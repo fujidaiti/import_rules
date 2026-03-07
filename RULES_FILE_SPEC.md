@@ -296,23 +296,10 @@ disallow: package:my_package/domain/**
 
 </br>
 
-### Predefined variables
-
-There are several predefined variables that can be referenced in the path part
-of a disallow pattern with the prefix of `$`. These variables are substituted
-with actual values at evaluation time. See
-[How Rules Are Evaluated](#how-rules-are-evaluated) section for more details.
-
-| Variable     | Description                                                                                                                                                                                                                                                                                                                                                              |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `TARGET_DIR` | The path to the target file's parent directory, relative to the project root. For example, if the target file is `lib/domain/user.dart`, the pattern `$TARGET_DIR/**` expands to `lib/domain/**` at evaluation time. An example of using this variable can be found in [Case study: Implementation detail encapsulation](README.md#implementation-detail-encapsulation). |
-
-</br>
-
 ### Capture group variables
 
-In addition to predefined variables, disallow patterns can reference **capture
-group variables** defined in the `target` pattern of the same rule. The same
+Disallow patterns can reference **capture group variables** defined in the
+`target` pattern of the same rule. The same
 `{name}` syntax is used in `disallow` and `exclude_disallow` patterns to
 substitute the captured value.
 
@@ -381,8 +368,8 @@ follows:
 2. **Does the path of file `F` match any `exclude_target` pattern in rule `R`?**
    If yes, skip this rule.
 3. **Does importee `I` match any `disallow` pattern in rule `R`?** If no, allow
-   the import. Before matching, substitute any `$TARGET_DIR` and capture group
-   variables (`{name}`) in the pattern with their resolved values.
+   the import. Before matching, substitute any capture group variables (`{name}`)
+   in the pattern with their resolved values.
 4. **Does importee `I` match any `exclude_disallow` pattern in rule `R`?** If
    yes, allow the import. The same variable substitution applies here.
 
