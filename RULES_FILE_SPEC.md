@@ -342,6 +342,7 @@ in `disallow` and `exclude_disallow` patterns, assuming the target pattern is
 | `lib/features/{unknown}/**`             | **No** | `{unknown}` is not defined in the target pattern.                                |
 | `lib/features/{feature}*.dart`          | **No** | `{feature}` mixed with wildcard `*` in the same segment.                         |
 | `lib/features/{feature}{other}/`        | **No** | Two variables in the same segment (and `{other}` is also undefined).             |
+| `package:{feature}/**`                  | **No** | `{feature}` is in the package name, not the path portion.                        |
 
 **Validation rules:**
 
@@ -349,6 +350,9 @@ in `disallow` and `exclude_disallow` patterns, assuming the target pattern is
   corresponding `{name}` capture group in `target`. Referencing an undefined
   variable is a parse error.
 - `{name}` cannot be used in `exclude_target` patterns.
+- `{name}` can only appear in the **path** portion of a disallow pattern. It
+  cannot be used in the scheme or package name portion (e.g.,
+  `package:{name}/**` and `{name}:io` are invalid).
 
 See [Capture groups](#capture-groups) in the Target pattern section for more
 details and examples.
