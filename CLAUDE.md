@@ -53,9 +53,10 @@ timestamps. Check these logs when debugging rule matching issues.
 **Rule Engine** (`lib/src/import_rule.dart`):
 
 - `ImportRule`: Core rule evaluation logic with the `canImport()` method
-- `TargetPattern`: Pattern matching for source files using `*` and `**` wildcards
-- `DisallowPattern`: Pattern matching for import URIs using `*` and `**` wildcards, supports
-  `$TARGET_DIR` variable
+- `TargetPattern`: Pattern matching for source files using `*` and `**`
+  wildcards
+- `DisallowPattern`: Pattern matching for import URIs using `*` and `**`
+  wildcards, supports `$TARGET_DIR` variable
 - Rule evaluation follows a specific order: target → exclude_target → disallow →
   exclude_disallow
 
