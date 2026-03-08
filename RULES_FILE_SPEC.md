@@ -347,12 +347,12 @@ Multi-segment capture groups enable rules that work across varying directory
 depths:
 
 ```yaml
-# Enforce src/ directory isolation at any depth
 rules:
-  - target: "{...prefix}/src/**"
-    disallow: "${prefix}/src/**"
-    exclude_disallow: "${prefix}/src/**"
-    reason: Files under src/ are private to their parent directory.
+  # Enforces downward dependencies only
+  - target: "{...dir}/*"
+    disallow: "**"
+    exclude_disallow: "${dir}/**"
+    reason: Files can only import from same or deeper directory levels.
 ```
 
 See [Capture group variables](#capture-group-variables) for reference syntax

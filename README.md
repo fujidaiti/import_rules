@@ -7,8 +7,10 @@ from simple allow/disallow lists to complex module dependency constraints for
 architectural patterns such as layered architecture, feature isolation, and
 encapsulation.
 
-> [!IMPORTANT] Dart SDK 3.10.0+ (Flutter SDK 3.38.0+) is required to enable Dart
-> analyzer plugins.
+> [!IMPORTANT]
+>
+> Dart SDK 3.10.0+ (Flutter SDK 3.38.0+) is required to enable Dart analyzer
+> plugins.
 
 ## Getting started
 
@@ -111,9 +113,9 @@ rules:
 
 ### Downward dependencies only
 
-Enforce that files can only import from the same directory level or deeper,
+Enforce that files can only import from their own directory or deeper,
 preventing upward dependencies. This creates a clear dependency hierarchy where
-higher-level directories cannot depend on lower-level ones.
+low-level directories cannot depend on higher-level ones.
 
 ```file tree
 lib/
@@ -127,7 +129,7 @@ lib/
       cart.dart
 ```
 
-```import_rules.yaml
+```yaml
 rules:
   - target: "{...dir}/*"
     disallow: "**"
