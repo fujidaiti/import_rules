@@ -152,7 +152,13 @@ captured value regardless of whether it was defined as `{name}` or `{...name}`.
 Capture groups cannot be used in `exclude_target` patterns. Any `${name}`
 reference in `disallow` or `exclude_disallow` must correspond to a capture group
 defined in the `target` pattern of the same rule; referencing an undefined
-capture group is an error.
+capture group is an error. When a rule has multiple `target` patterns, all of
+them must define the same set of capture group names; a mismatch is a
+configuration error. This is because a capture group must match at least one
+segment — if one target pattern defines a group and another does not, a file
+matching the pattern without the group would leave the group with no captured
+value, making variable substitution in `disallow` or `exclude_disallow`
+undefined.
 
 A single target pattern can contain multiple capture groups of either type:
 
@@ -278,6 +284,21 @@ target: "{...name}"
 
 # ** acts as an anonymous multi-segment capture; greedy left-to-right applies.
 target: "lib/**/{dir}/**/src/**"
+
+# Valid: both patterns define {module}.
+target:
+  - lib/{module}/**
+  - test/{module}/**
+
+# Valid: both patterns define {layer} and {module}.
+target:
+  - lib/{layer}/{module}/**
+  - test/{layer}/{module}/**
+
+# Valid: capture group types may differ as long as names match.
+target:
+  - lib/{...path}/src/**
+  - test/{path}/src/**
 ```
 
 Invalid examples:
@@ -303,6 +324,16 @@ target: lib/{...path}/{...path}/**     # ERROR
 # Empty capture group name.
 target: lib/{}/src/**          # ERROR
 target: lib/{...}/src/**       # ERROR
+
+# Multiple target patterns with mismatched capture group names.
+target:
+  - lib/{module}/**            # defines {module}
+  - lib/{feature}/**           # ERROR: defines {feature}, not {module}
+
+# One target defines a capture group, the other does not.
+target:
+  - lib/{module}/**            # defines {module}
+  - test/**                    # ERROR: defines no capture groups
 ```
 
 The captured values are substituted into `disallow` and `exclude_disallow`
