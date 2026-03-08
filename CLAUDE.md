@@ -53,9 +53,10 @@ timestamps. Check these logs when debugging rule matching issues.
 **Rule Engine** (`lib/src/import_rule.dart`):
 
 - `ImportRule`: Core rule evaluation logic with the `canImport()` method
-- `TargetPattern`: Glob patterns for matching source files
-- `DisallowPattern`: Glob patterns for matching disallowed imports, supports
-  `$TARGET_DIR` variable
+- `TargetPattern`: Pattern matching for source files using `*` and `**`
+  wildcards
+- `DisallowPattern`: Pattern matching for import URIs using `*` and `**`
+  wildcards, supports `$TARGET_DIR` variable
 - Rule evaluation follows a specific order: target → exclude_target → disallow →
   exclude_disallow
 
@@ -100,6 +101,17 @@ file matched by `target`. It's extracted using `_extractDir()` in
 `lib/src/import_rule.dart` and substituted into `disallow` and
 `exclude_disallow` patterns at evaluation time. This enables rules like "files
 can only import from their own directory" without hardcoding paths.
+
+### Pattern Matching
+
+The plugin uses a custom glob-like matcher (`lib/src/glob_matcher.dart`) that
+supports only `*` (single-level) and `**` (recursive) wildcards:
+
+- `*` matches zero or more characters except `/` (single directory level)
+- `**` matches one or more path segments including `/` (recursive)
+
+The glob package remains in `dev_dependencies` for comparative testing to ensure
+the custom implementation maintains compatible behavior.
 
 ## Configuration Files
 

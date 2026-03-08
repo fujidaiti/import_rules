@@ -69,11 +69,21 @@ about the evaluation logic.
 
 ## Target pattern
 
-A target pattern is a glob path pattern used to determine which files an import
-rule applies to. A path pattern must be relative to the project root, and can
-contain wildcards to match multiple files. See the documentation of
-[glob](https://pub.dev/packages/glob#syntax) package for more details about the
-wildcards.
+A target pattern is a glob-like path pattern used to determine which files an
+import rule applies to. A path pattern must be relative to the project root, and
+can contain wildcards to match multiple files.
+
+### Wildcards
+
+- `*` - Matches zero or more characters except `/` (single directory level)
+  - Example: `lib/*.dart` matches `lib/app.dart` but not `lib/src/app.dart`
+
+- `**` - Matches one or more path segments including `/` (recursive)
+  - Example: `lib/**` matches `lib/app.dart` and `lib/src/app.dart`
+  - Example: `**/src/**` matches `lib/src/app.dart` and
+    `features/auth/src/user.dart`
+
+### Examples
 
 ```yaml
 # Match a specific Dart file.
