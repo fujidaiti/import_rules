@@ -2,7 +2,7 @@ name: import_rules
 description: |
   A lint plugin for the Dart analyzer that enforces custom import rules in your projects,
   enabling everything from simple allow/disallow lists to complex module dependency constraints.
-version: 0.0.7
+version: 0.0.8
 repository: https://github.com/fujidaiti/import_rules.git
 
 environment:

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.8
+
+- Support `analyzer` v13.
+
 ## 0.0.7
 
 - Add a global and per-rule `severity` field to change the severity level of
