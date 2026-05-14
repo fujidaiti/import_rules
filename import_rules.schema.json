@@ -1,0 +1,132 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/fujidaiti/import_rules/main/import_rules.schema.json",
+  "title": "import_rules.yaml",
+  "description": "Schema for import_rules rule files.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "rules": {
+      "type": "array",
+      "description": "List of import rule definitions.",
+      "items": {
+        "$ref": "#/definitions/rule"
+      }
+    },
+    "severity": {
+      "$ref": "#/definitions/severity",
+      "description": "Default severity level applied to all rules. Individual rules can override this value."
+    }
+  },
+  "required": ["rules"],
+  "definitions": {
+    "severity": {
+      "type": "string",
+      "description": "The severity level of the lint diagnostic. 'error' marks violations as errors, 'warning' as warnings, and 'info' as informational messages.",
+      "enum": ["error", "warning", "info"]
+    },
+    "targetPattern": {
+      "type": "string",
+      "description": "A glob pattern for matching source files relative to the package root. Must not use 'package:' URIs or the '$TARGET_DIR' variable.",
+      "pattern": "^(?!package:)(?!.*\\$TARGET_DIR).+",
+      "examples": [
+        "lib/domain/**",
+        "lib/features/auth/**",
+        "test/unit/**",
+        "**"
+      ]
+    },
+    "disallowPattern": {
+      "type": "string",
+      "description": "A glob pattern for matching disallowed imports. Supports relative paths (e.g., 'lib/**'), 'package:' URIs for external packages, 'dart:' URIs for core libraries, and the '$TARGET_DIR' variable which expands to the parent directory of the matched source file.",
+      "minLength": 1,
+      "examples": [
+        "lib/domain/**",
+        "package:flutter/material.dart",
+        "dart:io",
+        "$TARGET_DIR/**"
+      ]
+    },
+    "targetOrList": {
+      "description": "A single target pattern or a list of target patterns.",
+      "oneOf": [
+        {
+          "$ref": "#/definitions/targetPattern"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/targetPattern"
+          }
+        }
+      ]
+    },
+    "disallowOrList": {
+      "description": "A single disallow pattern or a list of disallow patterns.",
+      "oneOf": [
+        {
+          "$ref": "#/definitions/disallowPattern"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/disallowPattern"
+          }
+        }
+      ]
+    },
+    "rule": {
+      "type": "object",
+      "description": "An import rule that defines which imports are disallowed for files matching the target pattern. Rules are evaluated in the order: target, exclude_target, disallow, exclude_disallow.",
+      "additionalProperties": false,
+      "properties": {
+        "reason": {
+          "type": "string",
+          "description": "A human-readable message explaining why this import is disallowed. This message is shown in the lint diagnostic.",
+          "minLength": 1,
+          "examples": [
+            "The domain layer should not depend on other layers.",
+            "Features should be isolated from each other except the core module.",
+            "Use custom components instead of directly importing built-in widgets."
+          ]
+        },
+        "target": {
+          "$ref": "#/definitions/targetOrList",
+          "description": "Glob pattern(s) specifying which source files this rule applies to.",
+          "examples": ["lib/domain/**", ["lib/features/**", "lib/shared/**"]]
+        },
+        "exclude_target": {
+          "$ref": "#/definitions/targetOrList",
+          "description": "Glob pattern(s) specifying source files to exclude from this rule, even if they match 'target'.",
+          "examples": [
+            "lib/components/**",
+            ["lib/features/legacy/**", "lib/features/profile/**"]
+          ]
+        },
+        "disallow": {
+          "$ref": "#/definitions/disallowOrList",
+          "description": "Glob pattern(s) specifying which imports are disallowed for the matched source files.",
+          "examples": [
+            "**",
+            "dart:io",
+            ["package:flutter/material.dart", "package:flutter/cupertino.dart"]
+          ]
+        },
+        "exclude_disallow": {
+          "$ref": "#/definitions/disallowOrList",
+          "description": "Glob pattern(s) specifying imports to allow, even if they match 'disallow'. Supports the '$TARGET_DIR' variable.",
+          "examples": [
+            "$TARGET_DIR/**",
+            "lib/domain/domain.dart",
+            ["lib/domain/**", "dart:collection", "dart:math"]
+          ]
+        },
+        "severity": {
+          "$ref": "#/definitions/severity",
+          "description": "Severity level for this specific rule, overriding the top-level default."
+        }
+      },
+      "required": ["reason", "target", "disallow"]
+    }
+  }
+}
