@@ -7,8 +7,10 @@ from simple allow/disallow lists to complex module dependency constraints for
 architectural patterns such as layered architecture, feature isolation, and
 encapsulation.
 
-> [!IMPORTANT] Dart SDK 3.10.0+ (Flutter SDK 3.38.0+) is required to enable Dart
-> analyzer plugins.
+> [!IMPORTANT]
+>
+> Dart SDK 3.10.0+ (Flutter SDK 3.38.0+) is required to enable Dart analyzer
+> plugins.
 
 ## Getting started
 
@@ -111,9 +113,9 @@ rules:
 
 ### Downward dependencies only
 
-Enforce that files can only import from the same directory level or deeper,
+Enforce that files can only import from their own directory or deeper,
 preventing upward dependencies. This creates a clear dependency hierarchy where
-higher-level directories cannot depend on lower-level ones.
+low-level directories cannot depend on higher-level ones.
 
 ```file tree
 lib/
@@ -127,13 +129,18 @@ lib/
       cart.dart
 ```
 
-```import_rules.yaml
+```yaml
 rules:
-  - target: "**"
+  - target: "{...dir}/*"
     disallow: "**"
-    exclude_disallow: "$TARGET_DIR/**"
+    exclude_disallow: "${dir}/**"
     reason: Files can only import from same or deeper directory levels.
 ```
+
+For example, `lib/features/auth/auth.dart` matches the target with `dir` =
+`lib/features/auth`. The `exclude_disallow` expands to `lib/features/auth/**`,
+so it can only import files within `lib/features/auth/` or deeper — but not from
+`lib/features/` or `lib/`.
 
 ### Enforce unidirectional layer dependencies
 
@@ -193,13 +200,18 @@ lib/
 
 ```import_rules.yaml
 rules:
-  - target: lib/features/**
+  - target: "lib/features/{feature}/**"
     disallow: lib/features/**
     exclude_disallow:
-      - $TARGET_DIR/** # Allow internal dependencies within the same feature.
+      - "lib/features/${feature}/**" # Allow internal dependencies within the same feature.
       - lib/features/core/**
     reason: Features should be isolated from each other except the core module.
 ```
+
+For example, `lib/features/auth/login_page.dart` matches the target with
+`feature` = `auth`. The `exclude_disallow` expands to `lib/features/auth/**`, so
+it can import freely within the `auth` feature and from `lib/features/core/**`,
+but not from `lib/features/profile/**`.
 
 ### Enforcing custom component usage
 
@@ -376,11 +388,19 @@ can import `_cache_*.dart` files. The others including
 `lib/cache/utils/utils.dart` should not be able to import `_cache_*.dart` files
 because they are not in the same directory as the implementation files.
 
-```import_rules.yaml
+```yaml
 rules:
-  - target: lib/**
+  - target:
+      - lib/{...dir}/* # Match any files in subdirectories of lib/ at any level.
     disallow: _*.dart
     # Allow to depend on implementation files within the same directory.
-    exclude_disallow: $TARGET_DIR/_*.dart
+    exclude_disallow: "lib/${dir}/_*.dart"
     reason: Implementation files should not be imported directly.
 ```
+
+For example, `lib/cache/cache.dart` matches the target with `dir` = `cache`, so
+its `exclude_disallow` expands to `lib/cache/_*.dart` — allowing it to import
+`_cache_*.dart` files in the same directory. But `lib/cache/utils/utils.dart`
+matches with `dir` = `cache/utils`, so its `exclude_disallow` expands to
+`lib/cache/utils/_*.dart`, which does not cover `lib/cache/_cache_*.dart`,
+correctly blocking access to the parent directory's implementation files.
