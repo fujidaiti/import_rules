@@ -20,7 +20,12 @@ class AnalyzerOutput {
         message: match.group(5)!,
         code: match.group(6)!,
       );
-      errors.add(LintError(file: match.group(2)!, diagnostic: diagnostic));
+      errors.add(
+        LintError(
+          file: match.group(2)!.replaceAll(r"\", "/"), // normalize separators
+          diagnostic: diagnostic,
+        ),
+      );
     }
 
     return AnalyzerOutput(List.unmodifiable(errors));

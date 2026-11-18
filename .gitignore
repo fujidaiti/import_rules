@@ -131,3 +131,10 @@ $RECYCLE.BIN/
 
 # E2E test environment
 .e2e/
+
+# IntelliJ
+.idea
+
+# FVM
+.fvm
+.fvmrc
