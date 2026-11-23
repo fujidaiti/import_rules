@@ -272,11 +272,11 @@ violate the first rule.
 
 ```yaml
 rules:
-    target: lib/ui/**
+  - target: lib/ui/**
     disallow: lib/domain/**
     reason: UI should not directly depend on the domain layer.
 
-    target: lib/ui/**
+  - target: lib/ui/**
     disallow: package:http/**
     reason: UI should not make direct network calls.
 ```
@@ -288,11 +288,11 @@ second rule would otherwise allow `home.dart` to import
 
 ```yaml
 rules:
-    target: lib/ui/**
+  - target: lib/ui/**
     disallow: package:http/**
     reason: UI should not make direct network calls.
 
-    target: lib/ui/home.dart
+  - target: lib/ui/home.dart
     disallow: "**"
     exclude_disallow: package:http/**
     reason: This rule contradicts the first rule.
