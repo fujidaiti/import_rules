@@ -2,7 +2,7 @@
 
 ## 0.0.9
 
-- Support `analyzer` v14 (Flutter SDK 3.50.0).
+- Support `analyzer` v14.
 
 ## 0.0.8
 

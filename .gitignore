@@ -58,6 +58,7 @@ doc/api/
 # Icon must end with two \r
 Icon
 
+
 # Thumbnails
 ._*
 
@@ -130,6 +131,3 @@ $RECYCLE.BIN/
 
 # E2E test environment
 .e2e/
-
-# FVM Version Cache
-.fvm/
