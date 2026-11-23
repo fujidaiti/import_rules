@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.9
+
+- Support `analyzer` v14 (Flutter SDK 3.50.0).
+
 ## 0.0.8
 
 - Support `analyzer` v13.

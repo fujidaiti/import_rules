@@ -20,7 +20,13 @@ class AnalyzerOutput {
         message: match.group(5)!,
         code: match.group(6)!,
       );
-      errors.add(LintError(file: match.group(2)!, diagnostic: diagnostic));
+      errors.add(
+        LintError(
+          // Normalize Windows path separators to match the expected outputs.
+          file: match.group(2)!.replaceAll(r'\', '/'),
+          diagnostic: diagnostic,
+        ),
+      );
     }
 
     return AnalyzerOutput(List.unmodifiable(errors));
