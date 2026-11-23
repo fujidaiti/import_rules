@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.0.9
+
+- Support `analyzer` v14.
+
 ## 0.0.8
 
 - Support `analyzer` v13.
